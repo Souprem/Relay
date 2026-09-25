@@ -11,7 +11,7 @@ def invoke(tmp_path, *args):
     return runner.invoke(app, ["--env-file", str(tmp_path / "missing.env"), *args])
 
 
-def generate(tmp_path, count=8, seed=3, dataset_id="gen-test"):
+def generate(tmp_path, count=8, seed=3, dataset_id="gen-test", *extra):
     return invoke(
         tmp_path,
         "generate",
@@ -25,6 +25,7 @@ def generate(tmp_path, count=8, seed=3, dataset_id="gen-test"):
         str(tmp_path / dataset_id),
         "--manifests-dir",
         str(tmp_path / "manifests"),
+        *extra,
     )
 
 
@@ -69,7 +70,7 @@ def test_verify_fails_after_a_document_is_edited(tmp_path):
 
 def test_non_empty_out_is_refused_with_the_path(tmp_path):
     generate(tmp_path)
-    result = generate(tmp_path)
+    result = generate(tmp_path, 8, 3, "gen-test", "--force")  # past the manifest check
     assert result.exit_code == 2
     assert "gen-test" in result.output and "not empty" in result.output
 
@@ -142,3 +143,69 @@ def test_verify_exits_2_with_invalid_json_manifest(tmp_path):
     )
     assert result.exit_code == 2
     assert "error:" in result.output
+
+
+def test_existing_manifest_is_not_overwritten_without_force(tmp_path):
+    assert generate(tmp_path).exit_code == 0
+    manifest_path = tmp_path / "manifests" / "gen-test.json"
+    before = manifest_path.read_text()
+    result = invoke(
+        tmp_path,
+        "generate",
+        "--count",
+        "4",
+        "--seed",
+        "5",
+        "--dataset-id",
+        "gen-test",
+        "--out",
+        str(tmp_path / "second"),
+        "--manifests-dir",
+        str(tmp_path / "manifests"),
+    )
+    assert result.exit_code == 2
+    assert "gen-test.json" in result.output and "--force" in result.output
+    assert manifest_path.read_text() == before
+    assert not (tmp_path / "second").exists()  # refused before generating anything
+
+
+def test_force_overwrites_an_existing_manifest(tmp_path):
+    assert generate(tmp_path).exit_code == 0
+    manifest_path = tmp_path / "manifests" / "gen-test.json"
+    result = invoke(
+        tmp_path,
+        "generate",
+        "--count",
+        "4",
+        "--seed",
+        "5",
+        "--dataset-id",
+        "gen-test",
+        "--out",
+        str(tmp_path / "second"),
+        "--manifests-dir",
+        str(tmp_path / "manifests"),
+        "--force",
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(manifest_path.read_text())["seed"] == 5
+
+
+def test_manifests_dir_help_says_it_is_relative(tmp_path):
+    result = invoke(tmp_path, "generate", "--help")
+    assert result.exit_code == 0
+    assert "relative" in result.output and "--force" in result.output
+
+
+def test_verify_with_a_missing_out_dir_fails(tmp_path):
+    generate(tmp_path)
+    result = invoke(
+        tmp_path,
+        "generate",
+        "--verify",
+        str(tmp_path / "manifests" / "gen-test.json"),
+        "--out",
+        str(tmp_path / "does-not-exist"),
+    )
+    assert result.exit_code == 2
+    assert "--out path does not exist" in result.output

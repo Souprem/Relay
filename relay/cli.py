@@ -229,13 +229,22 @@ def generate(
         typer.Option(exists=True, dir_okay=False, help="Manifest to verify instead of generating."),
     ] = None,
     manifests_dir: Annotated[
-        Path, typer.Option(help="Where the dataset manifest is written.")
+        Path,
+        typer.Option(
+            help="Where the dataset manifest is written (a relative path is resolved against "
+            "the current directory; run from the repository root)."
+        ),
     ] = MANIFEST_DIR,
+    force: Annotated[
+        bool, typer.Option("--force", help="Overwrite an existing manifest for this dataset id.")
+    ] = False,
 ) -> None:
     """Generate a seeded synthetic dataset, or verify one against its manifest."""
     if verify is not None:
         if count is not None or seed is not None or dataset_id is not None:
             raise _fail("--verify cannot be combined with --count, --seed or --dataset-id")
+        if out is not None and not out.exists():
+            raise _fail(f"--out path does not exist: {out}")
         try:
             manifest = read_manifest(verify)
             problems = verify_dataset(manifest, out)
@@ -245,7 +254,7 @@ def generate(
             for problem in problems:
                 typer.echo(f"MISMATCH: {problem}", err=True)
             raise typer.Exit(code=2)
-        checked = str(out) if out is not None and out.exists() else "not checked"
+        checked = str(out) if out is not None else "not checked"
         typer.echo(
             f"OK: {manifest.dataset_id} regenerates to {manifest.dataset_hash} "
             f"(files on disk: {checked})"
@@ -253,11 +262,13 @@ def generate(
         return
     if out is None or count is None or seed is None or dataset_id is None:
         raise _fail("generating requires --out, --count, --seed and --dataset-id")
+    manifest_path = manifests_dir / f"{dataset_id}.json"
+    if manifest_path.exists() and not force:
+        raise _fail(f"manifest {manifest_path} already exists; pass --force to overwrite it")
     try:
         manifest = generate_dataset(count, seed, dataset_id, out)
     except (FileExistsError, ValueError) as error:
         raise _fail(str(error)) from error
-    manifest_path = manifests_dir / f"{dataset_id}.json"
     write_manifest(manifest, manifest_path)
     typer.echo(f"Generated {manifest.count} cases in {out}")
     typer.echo(f"Manifest: {manifest_path}")
