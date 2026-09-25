@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 
@@ -109,3 +110,48 @@ def test_a_submitted_batch_is_attached_to_its_reservation_and_can_be_found():
     assert find_batch(ledger, "msgbatch_other") is None
     with pytest.raises(KeyError):
         attach_batch(ledger, "unknown", "msgbatch_1")
+
+
+def test_write_ledger_is_atomic_and_survives_crash_mid_write(tmp_path):
+    """Write to temp file, fsync, then atomic replace. No temp file left after success."""
+    path = tmp_path / "results" / "claude-spend.json"
+    ledger = ledger_with(("smoke", "sync", 10, "0.60"))
+    write_ledger(path, ledger)
+
+    # Verify no temp file is left behind
+    tmp_files = list(tmp_path.glob("results/*.tmp"))
+    assert len(tmp_files) == 0, f"Temp file(s) left behind: {tmp_files}"
+
+    # Verify content round-trips
+    assert load_ledger(path) == ledger
+
+    # Simulate a crash during write: replace() fails, old file should be intact
+    old_content = path.read_text()
+    with patch("os.replace", side_effect=OSError("Simulated crash")):
+        with pytest.raises(IOError):
+            write_ledger(path, SpendLedger())
+
+    # Old ledger should still be intact
+    assert path.read_text() == old_content
+    assert load_ledger(path) == ledger
+
+
+def test_reserve_refuses_duplicate_run_ids():
+    """Cannot reserve a run_id that already exists (prevents leaked entries)."""
+    ledger = reserve(
+        SpendLedger(),
+        run_id="r",
+        dataset_id="d",
+        mode="sync",
+        cases=10,
+        projected=Decimal("5"),
+    )
+    with pytest.raises(ValueError, match="run_id 'r' already reserved"):
+        reserve(
+            ledger,
+            run_id="r",
+            dataset_id="d2",
+            mode="sync",
+            cases=20,
+            projected=Decimal("10"),
+        )

@@ -10,6 +10,7 @@ x case count, x 0.5 in batch mode. Before any sync run is settled, a deliberatel
 prior per case is used instead.
 """
 
+import os
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -62,7 +63,13 @@ def load_ledger(path: Path) -> SpendLedger:
 
 def write_ledger(path: Path, ledger: SpendLedger) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(ledger.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    # Write to a temp file first, fsync, then atomically replace the original
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    tmp_path.write_text(ledger.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    # Ensure the temp file is flushed to disk before replacing
+    with open(tmp_path, "rb") as f:
+        os.fsync(f.fileno())
+    os.replace(tmp_path, path)
 
 
 def cost_per_case(ledger: SpendLedger) -> Decimal | None:
@@ -94,6 +101,8 @@ def reserve(
     projected: Decimal,
     now: datetime | None = None,
 ) -> SpendLedger:
+    if any(e.run_id == run_id for e in ledger.entries):
+        raise ValueError(f"run_id '{run_id}' already reserved")
     entry = SpendEntry(
         run_id=run_id,
         dataset_id=dataset_id,
