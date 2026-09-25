@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Fieldstone Rheumatology - Consultation Note - 2026-08-18
+Patient reference SYN-4488. This 45-year-old man was diagnosed with seropositive rheumatoid arthritis at this practice on August 12, 2022, after symmetric small-joint swelling and a strongly positive anti-CCP result.
+
+He was treated with oral methotrexate 20 mg weekly from 2025-12-01 to 2026-06-01, with an excellent response: swelling resolved, morning stiffness dropped to under fifteen minutes, and his CDAI fell into the low-activity range. The medication was stopped only because he relocated out of state before his next refill and lost contact with this office. He otherwise tolerated it well with no side effects.
+
+He is being transferred to a new rheumatology practice for continued care.

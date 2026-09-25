@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Summit Arthritis Center - Rheumatology Visit - 2026-07-15
+Patient reference SYN-3315.
+
+Subjective: 61-year-old woman with seropositive rheumatoid arthritis, diagnosed at this clinic in 2020, presents for reassessment of persistent hand and wrist pain.
+Objective: Synovitis at bilateral wrists and second and third MCP joints bilaterally. No rash. Blood pressure 122/78.
+Assessment: Rheumatoid arthritis remains active. She took oral methotrexate for seven weeks before it was stopped on 2026-07-01 because of inadequate response despite dose escalation.
+Plan: Proceed with Immunara. Continue calcium and vitamin D supplementation. Follow up in six weeks.

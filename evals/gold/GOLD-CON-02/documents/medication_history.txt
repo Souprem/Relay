@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Summit Arthritis Center - Medication History - 2026-05-10
+Patient reference SYN-2277.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-03-02 - end 2026-04-27 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-03-02
+OMEPRAZOLE 20 MG PO DAILY - status: active

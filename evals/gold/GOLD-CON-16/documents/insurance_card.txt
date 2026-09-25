@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - ExampleHealth Gold - Member Insurance Card - Issued 2026-01-01
+Payer: ExampleHealth
+Plan: ExampleHealth Gold
+Member ID: EXH-227781
+Group Number: EXHG-55019
+Member Services: 555-0118

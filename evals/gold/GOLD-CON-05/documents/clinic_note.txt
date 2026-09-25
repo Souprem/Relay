@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Cascade Rheumatology - Follow-up Visit - 2026-06-10
+Patient reference SYN-5502. A second clinician at this practice saw this 34-year-old woman this week for ongoing joint symptoms.
+
+Her chart carries an established diagnosis of rheumatoid arthritis, and her hand and wrist swelling has continued despite treatment. She completed oral methotrexate 20 mg weekly from 2026-01-05 to 2026-05-18, which was stopped because her synovitis had not improved, an inadequate response. She works as a dental hygienist and describes ongoing difficulty gripping instruments.
+
+Immunara is recommended given her sustained disease activity.

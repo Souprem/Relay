@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "physician_note describes methotrexate taken for seven weeks before stopping 2026-07-01. medication_history gives a start of 2026-02-15 for the same stop date, one hundred thirty-six days. The two sources disagree on how long the course ran."
+}

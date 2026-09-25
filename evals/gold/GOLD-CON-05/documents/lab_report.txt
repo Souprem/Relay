@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Cascade Rheumatology - Laboratory Report - 2026-05-28
+Patient reference SYN-5502.
+Rheumatoid factor: negative, 8 IU/mL (reference <14).
+Anti-CCP antibody: negative, 4 U/mL (reference <20).
+ESR: 30 mm/hr (elevated).
+CRP: 1.6 mg/dL (elevated).

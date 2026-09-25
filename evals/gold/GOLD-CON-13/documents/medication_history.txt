@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Pinehurst Rheumatology - Medication History - 2026-05-20
+Patient reference SYN-4456.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-01-12 - end 2026-05-11 - reason: cost
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-12
+GABAPENTIN 300 MG PO NIGHTLY - status: active

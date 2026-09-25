@@ -1,0 +1,8 @@
+SYNTHETIC RECORD - Example Prairie Rheumatology - Office Visit - 2026-07-10
+Patient reference SYN-1042.
+
+This 52-year-old woman returns with ongoing symmetric swelling of both wrists and the small joints of her hands. Her rheumatoid arthritis, seropositive, was diagnosed at this practice in 2019 after persistent synovitis and a positive rheumatoid factor. Morning stiffness now lasts close to two hours.
+
+Her chart shows no DMARD trial to date: methotrexate has never been tried for this patient, nor has any other disease-modifying agent. She has managed with over-the-counter naproxen alone, which she reports gives only partial relief. She works part time as a librarian and mentions that gripping books has become difficult.
+
+Given the extent of her joint involvement and the lack of any prior DMARD trial, she is otherwise healthy aside from well-controlled hypothyroidism. Immunara is being requested for consideration.

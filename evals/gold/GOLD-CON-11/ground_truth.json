@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "medication_history states its dates are MM/DD/YYYY and gives methotrexate 02/06/2026 to 07/20/2026, one hundred sixty-four days. physician_note gives 2026-06-02 to 2026-07-20, forty-eight days. The two sources disagree on the start date of the course."
+}

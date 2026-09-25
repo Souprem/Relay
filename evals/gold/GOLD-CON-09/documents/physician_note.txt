@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Meadowlark Rheumatology - Office Visit - 2026-05-04
+Patient reference SYN-9915. This 41-year-old woman carries an established diagnosis of rheumatoid arthritis, made at this practice in 2023 after months of symmetric wrist and finger swelling with a positive rheumatoid factor.
+
+Methotrexate has not yet been tried; she has managed her symptoms with over-the-counter ibuprofen alone. Her joint pain has worsened over the past several months, now affecting her ability to type at her office job. Plan is to discuss starting a DMARD trial versus proceeding directly to biologic therapy given the severity of her symptoms.

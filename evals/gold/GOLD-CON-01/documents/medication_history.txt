@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Prairie Rheumatology - Medication History - 2026-07-08
+Patient reference SYN-1042.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-01-12 - end 2026-06-22 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-12
+LEVOTHYROXINE 50 MCG PO DAILY - status: active

@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Pinehurst Rheumatology - Office Visit - 2026-05-25
+
+Subjective: 48-year-old woman with seropositive rheumatoid arthritis, diagnosed at this clinic in 2020, presents for medication review.
+Objective: Synovitis at bilateral wrists and PIP joints. No jaundice or scleral icterus currently. Vitals stable.
+Assessment: Rheumatoid arthritis, active. Oral methotrexate 20 mg weekly, 2026-01-12 to 2026-05-11, was discontinued because of hepatotoxicity, with liver enzymes rising to more than three times normal on routine monitoring.
+Plan: Discuss Immunara. Repeat liver panel in two weeks.

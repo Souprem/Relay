@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Brookhaven Medical Center - Medication History - 2026-09-01
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-02-01 - end 2026-03-10 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-02-01
+METOPROLOL 25 MG PO DAILY - status: active

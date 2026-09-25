@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "physician_note, dated on as_of_date, says methotrexate continues since 2026-02-01 with inadequate response. medication_history, printed the same day, shows methotrexate discontinued 2026-03-10. The two sources disagree on whether the course is still running."
+}

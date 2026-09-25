@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "problem_list says methotrexate has continued since March 2025 with inadequate response. medication_history, dated the same day, shows methotrexate starting 2026-07-14 and still active. The two sources disagree on when the current course began."
+}

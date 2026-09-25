@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "physician_note states an established diagnosis of rheumatoid arthritis. consult_note, the same month, attributes her joint pattern to gout instead. Both agree methotrexate has never been taken, so the diagnosis is the contested fact."
+}
