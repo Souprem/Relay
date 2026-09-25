@@ -22,6 +22,11 @@ RULES_NOTE = (
     "rules provider: deterministic pattern-matching baseline; probabilities are 0, 0.5 or 1 "
     "and are not calibrated."
 )
+CLAUDE_NOTE = (
+    "claude provider: conventional LLM baseline (claude-opus-5, structured outputs); its "
+    "probabilities are self-reported, and refusal fallbacks are disabled, so a refusal goes to "
+    "HUMAN_REVIEW."
+)
 _LABEL_WIDTH = 26
 
 
@@ -171,6 +176,8 @@ def render_run_report(
         lines += [f"**{GROUNDTRUTH_NOTE}** Decisions come from labels, not a model.", ""]
     if manifest.provider == "rules":
         lines += [f"**{RULES_NOTE}**", ""]
+    if manifest.provider == "claude":
+        lines += [f"**{CLAUDE_NOTE}**", ""]
     lines += ["| Case | Action | First reason |", "|---|---|---|"]
     for t in traces:
         first = t.decision_reasons[0] if t.decision_reasons else ""

@@ -26,7 +26,7 @@ packages = ["relay"]
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
-markers = ["live: calls the real TypeSafe API (requires TYPESAFE_API_KEY)"]
+markers = ["live: calls a real provider API (TypeSafe or Anthropic; requires its key in .env)"]
 addopts = "-m 'not live'"
 
 [tool.ruff]

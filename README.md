@@ -34,19 +34,22 @@ Relay: What is software permitted to do given those judgments and their confiden
 
 ```bash
 uv sync
-cp .env.example .env   # then set TYPESAFE_API_KEY
+cp .env.example .env   # then set TYPESAFE_API_KEY (Jev) and ANTHROPIC_API_KEY (Claude baseline)
 ```
 
 ## Commands
 
 ```bash
 uv run pytest                                                     # unit + integration (no network)
-uv run pytest -m live                                             # one real Jev call
+uv run pytest -m live                                             # one real Jev call and one real Claude call (a few cents)
 uv run relay run  --dataset evals/smoke --provider jev --policy v0.1
 uv run relay eval --dataset evals/smoke --provider jev --policy v0.1
 uv run relay eval --dataset evals/smoke --traces traces/<run_id>.jsonl   # re-score, no API calls
 uv run relay eval --dataset evals/smoke --provider groundtruth           # pipeline validation only
 uv run relay eval --dataset evals/smoke --provider rules                 # rules-only baseline, no key
+uv run relay eval --dataset evals/smoke --provider claude                # Claude LLM baseline, sync (ANTHROPIC_API_KEY; spends money)
+uv run relay eval --dataset <dir> --provider claude --mode batch         # Message Batches: half price, no latency
+uv run relay eval --dataset <dir> --provider claude --limit 100 --sample-seed 7   # deterministic subsample
 uv run relay eval --dataset evals/smoke --provider jev --questions q-v0.1      # pick a question set (jev only; an error with other providers)
 uv run relay sweep   --dataset <dir> --traces <file>                            # threshold frontier, no API calls
 uv run relay report  --dataset <dir> --traces <file> [--at 0.95]                 # report bundle, no API calls
@@ -56,6 +59,13 @@ uv run relay compare --dataset <dir> --traces <a> --traces <b> [--labels a,b]   
 `relay run` writes `traces/<run_id>.jsonl` and `reports/<run_id>.md`, a per-case explanation
 covering the documents, decisions, step-therapy derivation, gates, and action. `relay eval` also
 writes `results/<run_id>.json`.
+
+`--provider claude` costs real money, so every Claude run passes a budget guard first. The CLI
+projects the run's cost from the measured mean cost per case of earlier sync runs (×0.5 in batch
+mode; a pessimistic $0.25 per case before any sync run) and exits 2 if the ledger's spend plus the
+projection exceeds `--budget-usd` (default 60). The ledger is `results/claude-spend.json`
+(`--ledger`). A batch run prints its batch id when it submits; if the run is interrupted,
+re-attach with `--mode batch --batch-id <id>` rather than paying for a second batch.
 
 ## Reference smoke run
 
@@ -345,7 +355,7 @@ Artifacts: smoke
 
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
-  document variety. No gold set or LLM baseline yet (Phase 2D–2E); the rules-only baseline is above.
+  document variety. No gold set yet (Phase 2E); the rules-only baseline is above.
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
   being guessed. The generator doesn't produce them.
@@ -357,7 +367,7 @@ Artifacts: smoke
   (`tests/unit/test_rules_anti_shortcut.py`).
 - rules-v0.1 is frozen (no pattern/logic changes) and reported above exactly as it runs on
   gen-v0.2; that decision was made before any gold-set results exist, and rules-v0.1 will be run
-  on the future gold set (Phase 2D) as-is and reported honestly. Its patterns have demonstrated
+  on the future gold set (Phase 2E) as-is and reported honestly. Its patterns have demonstrated
   out-of-template failure modes on hand-written text — none of which occur on gen-v0.2's fixed
   templates — that would produce an unsafe `AUTO_PROCESS`: a response cue with no negation counts
   as a response (e.g. "tolerating it well without nausea or side effects"); a response cue on a
@@ -381,3 +391,5 @@ Artifacts: smoke
 - [Phase 2B implementation plan](docs/superpowers/plans/2026-09-25-phase2b-evaluation-depth.md)
 - [Phase 2C rules baseline design](docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md)
 - [Phase 2C implementation plan](docs/superpowers/plans/2026-09-25-phase2c-rules-baseline.md)
+- [Phase 2D LLM baseline design](docs/superpowers/specs/2026-09-25-phase2d-llm-baseline-design.md)
+- [Phase 2D implementation plan](docs/superpowers/plans/2026-09-25-phase2d-llm-baseline.md)

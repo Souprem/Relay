@@ -2,25 +2,46 @@
 
 import asyncio
 import os
+from collections.abc import Callable
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
 import typer
+from anthropic import AsyncAnthropic
 from dotenv import load_dotenv
+from pydantic import ValidationError
 from typesafe_sdk import AsyncTypeSafeClient
 
 from relay.cases.loader import CaseLoadError, load_dataset
 from relay.cases.models import PriorAuthCase
 from relay.decisions.base import DecisionProvider
+from relay.decisions.claude import ClaudeProvider, Mode
+from relay.decisions.claude_batch import ClaudeBatchProvider
+from relay.decisions.claude_prompt import CLAUDE_QUESTION_SETS
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
-from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, QUESTION_SET_VERSIONS
+from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_2, QUESTION_SET_VERSIONS
 from relay.decisions.rules_baseline import RulesBaselineProvider
 from relay.evaluation.artifacts import write_eval_bundle
+from relay.evaluation.budget import (
+    DEFAULT_BUDGET_USD,
+    DEFAULT_LEDGER,
+    BudgetExceeded,
+    SpendLedger,
+    attach_batch,
+    check_budget,
+    find_batch,
+    load_ledger,
+    project_cost,
+    reserve,
+    settle,
+    write_ledger,
+)
 from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
@@ -35,6 +56,7 @@ from relay.evaluation.runner import (
 from relay.generation.generator import generate_dataset, verify_dataset
 from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest, write_manifest
 from relay.reporting import (
+    CLAUDE_NOTE,
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
     RULES_NOTE,
@@ -59,6 +81,25 @@ class ProviderName(StrEnum):
     jev = "jev"
     groundtruth = "groundtruth"
     rules = "rules"
+    claude = "claude"
+
+
+class ClaudeMode(StrEnum):
+    sync = "sync"
+    batch = "batch"
+
+
+CLAUDE_TIMEOUT_S = 300.0
+
+
+@dataclass(frozen=True)
+class ClaudeRun:
+    """Settings that only the claude provider takes: mode, budget guard, batch re-attachment."""
+
+    mode: Mode
+    budget_usd: Decimal
+    ledger: Path
+    batch_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,6 +114,7 @@ class QuestionSets:
 # --questions for it is a usage error rather than a silently ignored flag.
 PROVIDER_QUESTION_SETS: dict[ProviderName, QuestionSets] = {
     ProviderName.jev: QuestionSets(QUESTION_SET_VERSIONS, DEFAULT_QUESTION_SET_VERSION),
+    ProviderName.claude: QuestionSets(CLAUDE_QUESTION_SETS, Q_V0_2),
 }
 
 
@@ -102,10 +144,12 @@ PROVIDER_KEYS: dict[ProviderName, str | None] = {
     ProviderName.jev: "TYPESAFE_API_KEY",
     ProviderName.groundtruth: None,
     ProviderName.rules: None,
+    ProviderName.claude: "ANTHROPIC_API_KEY",
 }
 PROVIDER_NOTES: dict[ProviderName, str] = {
     ProviderName.groundtruth: GROUNDTRUTH_NOTE,
     ProviderName.rules: RULES_NOTE,
+    ProviderName.claude: CLAUDE_NOTE,
 }
 
 Limit = Annotated[
@@ -115,6 +159,28 @@ Limit = Annotated[
     ),
 ]
 SampleSeed = Annotated[int | None, typer.Option(min=0, help="Seed for the --limit subsample.")]
+
+ModeOption = Annotated[
+    ClaudeMode | None,
+    typer.Option(
+        "--mode", help="claude only: sync (default; latency measured) or batch (half price)."
+    ),
+]
+BudgetUsd = Annotated[
+    float | None,
+    typer.Option(
+        min=0.0,
+        help=f"claude only: refuse to start if ledger spend + projected cost exceeds this "
+        f"(default {DEFAULT_BUDGET_USD}).",
+    ),
+]
+LedgerOption = Annotated[
+    Path | None, typer.Option(help=f"claude only: spend ledger (default {DEFAULT_LEDGER}).")
+]
+BatchId = Annotated[
+    str | None,
+    typer.Option(help="claude --mode batch only: re-attach to this submitted Message Batch."),
+]
 
 TraceFile = Annotated[
     Path, typer.Option(exists=True, dir_okay=False, help="Trace file (.jsonl or .jsonl.gz).")
@@ -192,6 +258,106 @@ def _resolve_questions(provider: ProviderName, questions: str | None) -> str | N
     return questions
 
 
+def _resolve_claude(
+    provider: ProviderName,
+    mode: ClaudeMode | None = None,
+    budget_usd: float | None = None,
+    ledger: Path | None = None,
+    batch_id: str | None = None,
+) -> ClaudeRun | None:
+    """Claude run settings with defaults filled in, or None for other providers.
+
+    Claude-only flags given with another provider are a usage error, not silently ignored.
+    """
+    if provider is not ProviderName.claude:
+        flags = {
+            "--mode": mode,
+            "--budget-usd": budget_usd,
+            "--ledger": ledger,
+            "--batch-id": batch_id,
+        }
+        given = [flag for flag, value in flags.items() if value is not None]
+        if given:
+            raise _fail(f"{', '.join(given)} applies only to --provider claude")
+        return None
+    resolved: Mode = "sync" if mode is None else mode.value
+    if batch_id is not None and resolved != "batch":
+        raise _fail("--batch-id needs --mode batch")
+    return ClaudeRun(
+        mode=resolved,
+        budget_usd=DEFAULT_BUDGET_USD if budget_usd is None else Decimal(str(budget_usd)),
+        ledger=DEFAULT_LEDGER if ledger is None else ledger,
+        batch_id=batch_id,
+    )
+
+
+def _load_ledger(claude: ClaudeRun) -> SpendLedger:
+    try:
+        return load_ledger(claude.ledger)
+    except (ValidationError, OSError) as error:
+        raise _fail(f"{claude.ledger}: {error}") from error
+
+
+def _claude_budget_check(claude: ClaudeRun, cases: list[PriorAuthCase]) -> Decimal:
+    """The projected cost of this run; exits 2 with the numbers if it would break the budget.
+
+    Re-attaching to a batch already recorded in the ledger projects nothing new.
+    """
+    ledger = _load_ledger(claude)
+    known = claude.batch_id is not None and find_batch(ledger, claude.batch_id) is not None
+    projected = Decimal("0") if known else project_cost(ledger, len(cases), claude.mode)
+    try:
+        check_budget(ledger, projected, claude.budget_usd)
+    except BudgetExceeded as error:
+        raise _fail(str(error)) from error
+    typer.echo(
+        f"Claude budget: spent ${ledger.spent_usd:.4f}, projected ${projected:.4f} for "
+        f"{len(cases)} cases ({claude.mode}), budget ${claude.budget_usd:.2f}"
+    )
+    return projected
+
+
+def _reserve(
+    claude: ClaudeRun, run_id: str, cases: list[PriorAuthCase], projected: Decimal
+) -> None:
+    ledger = reserve(
+        _load_ledger(claude),
+        run_id=run_id,
+        dataset_id=cases[0].input.dataset_id,
+        mode=claude.mode,
+        cases=len(cases),
+        projected=projected,
+    )
+    write_ledger(claude.ledger, ledger)
+
+
+def _record_batch(claude: ClaudeRun, run_id: str, batch_id: str) -> None:
+    write_ledger(claude.ledger, attach_batch(_load_ledger(claude), run_id, batch_id))
+    typer.echo(
+        f"Submitted Message Batch {batch_id}. If this run is interrupted, re-attach with "
+        f"--mode batch --batch-id {batch_id} instead of submitting again."
+    )
+
+
+def _settle(
+    claude: ClaudeRun, run_id: str, traces: list[WorkflowTrace], batch_id: str | None
+) -> None:
+    """Settle this run at its actual estimated cost. A re-attached batch's earlier reservation
+    is settled at 0, because its cost now belongs to this run."""
+    actual = sum((t.decisions.estimated_cost_usd or Decimal("0") for t in traces), Decimal("0"))
+    ledger = _load_ledger(claude)
+    if claude.batch_id is not None:
+        earlier = find_batch(ledger, claude.batch_id)
+        if earlier is not None and earlier.run_id != run_id and earlier.status == "reserved":
+            ledger = settle(ledger, earlier.run_id, Decimal("0"), batch_id=claude.batch_id)
+    ledger = settle(ledger, run_id, actual, batch_id=batch_id)
+    write_ledger(claude.ledger, ledger)
+    typer.echo(
+        f"Claude spend: this run ${actual:.4f}; total ${ledger.spent_usd:.4f} of the "
+        f"${claude.budget_usd:.2f} budget ({claude.ledger})"
+    )
+
+
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
     try:
         validate_run_config(cases, policy)
@@ -207,6 +373,8 @@ async def _build_provider(
     cases: list[PriorAuthCase],
     questions: str | None,
     stack: AsyncExitStack,
+    claude: ClaudeRun | None = None,
+    on_submitted: Callable[[str], None] | None = None,
 ) -> DecisionProvider:
     """One explicit factory per provider. An unhandled name is a bug, never a silent Jev run."""
     if provider_name is ProviderName.jev:
@@ -218,6 +386,18 @@ async def _build_provider(
         return GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
     if provider_name is ProviderName.rules:
         return RulesBaselineProvider()
+    if provider_name is ProviderName.claude:
+        if questions is None or claude is None:
+            raise ValueError("the claude provider needs a question set and Claude run settings")
+        client = await stack.enter_async_context(AsyncAnthropic(timeout=CLAUDE_TIMEOUT_S))
+        if claude.mode == "batch":
+            return ClaudeBatchProvider(
+                client.messages.batches,
+                question_set=questions,
+                batch_id=claude.batch_id,
+                on_submitted=on_submitted,
+            )
+        return ClaudeProvider(client.messages, question_set=questions)
     raise ValueError(f"no factory for provider {provider_name!r}")
 
 
@@ -230,13 +410,26 @@ async def _execute(
     dataset: Path,
     questions: str | None,
     sample: tuple[int, int] | None = None,
+    claude: ClaudeRun | None = None,
+    projected: Decimal = Decimal("0"),
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
     git_sha = current_git_sha()
+    on_submitted = None
+    if claude is not None:
+        _reserve(claude, run_id, cases, projected)
+
+        def on_submitted(batch_id: str) -> None:
+            _record_batch(claude, run_id, batch_id)
+
+    provider: DecisionProvider | None = None
+    traces: list[WorkflowTrace] = []
     try:
         async with AsyncExitStack() as stack:
-            provider = await _build_provider(provider_name, cases, questions, stack)
+            provider = await _build_provider(
+                provider_name, cases, questions, stack, claude, on_submitted
+            )
             traces = await run_dataset(
                 cases,
                 provider,
@@ -246,10 +439,17 @@ async def _execute(
                 concurrency=concurrency,
                 git_sha=git_sha,
             )
-    except Exception:
+    except BaseException:
+        # Settle even a failed run (API error, batch submission failure, Ctrl-C, ...) so its
+        # reservation never leaks: it counts against the budget at whatever it actually cost
+        # (0 if the run died before producing any traces), not at its full projected cost.
+        if claude is not None:
+            _settle(claude, run_id, traces, getattr(provider, "batch_id", None))
         if store.path.exists() and store.path.stat().st_size == 0:
             store.path.unlink()
         raise
+    if claude is not None:
+        _settle(claude, run_id, traces, getattr(provider, "batch_id", None))
     manifest = RunManifest(
         run_id=run_id,
         created_at=datetime.now(UTC),
@@ -278,13 +478,26 @@ def _run_and_report(
     dataset: Path,
     questions: str | None,
     sample: tuple[int, int] | None = None,
+    claude: ClaudeRun | None = None,
 ) -> list[WorkflowTrace]:
     resolved = _resolve_questions(provider, questions)
     _preflight(cases, provider, policy)
+    projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
     if provider in PROVIDER_NOTES:
         typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
     manifest, traces = asyncio.run(
-        _execute(cases, provider, policy, concurrency, traces_dir, dataset, resolved, sample)
+        _execute(
+            cases,
+            provider,
+            policy,
+            concurrency,
+            traces_dir,
+            dataset,
+            resolved,
+            sample,
+            claude,
+            projected,
+        )
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -308,11 +521,25 @@ def run(
     questions: Questions = None,
     limit: Limit = None,
     sample_seed: SampleSeed = None,
+    mode: ModeOption = None,
+    budget_usd: BudgetUsd = None,
+    ledger: LedgerOption = None,
+    batch_id: BatchId = None,
 ) -> None:
     """Decide every case in DATASET; write traces and a Markdown report."""
+    claude = _resolve_claude(provider, mode, budget_usd, ledger, batch_id)
     cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
     _run_and_report(
-        cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions, sample
+        cases,
+        provider,
+        policy,
+        concurrency,
+        traces_dir,
+        reports_dir,
+        dataset,
+        questions,
+        sample,
+        claude,
     )
 
 
@@ -338,10 +565,15 @@ def eval_command(
     questions: Questions = None,
     limit: Limit = None,
     sample_seed: SampleSeed = None,
+    mode: ModeOption = None,
+    budget_usd: BudgetUsd = None,
+    ledger: LedgerOption = None,
+    batch_id: BatchId = None,
 ) -> None:
     """Run (or re-score) DATASET and print action-level and decision-level metrics."""
     cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
     if traces is None:
+        claude = _resolve_claude(provider, mode, budget_usd, ledger, batch_id)
         trace_list = _run_and_report(
             cases,
             provider,
@@ -352,6 +584,7 @@ def eval_command(
             dataset,
             questions,
             sample,
+            claude,
         )
     else:
         trace_list = _read_trace_file(traces)

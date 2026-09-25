@@ -11,10 +11,12 @@ from typer.testing import CliRunner
 import relay.cli as cli_module
 from relay.cases.loader import load_dataset
 from relay.cli import PROVIDER_KEYS, PROVIDER_QUESTION_SETS, ProviderName, app
+from relay.decisions.claude_batch import ClaudeBatchProvider
 from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, QUESTION_SET_VERSIONS
 from relay.decisions.rules_baseline import RULES_VERSION, rules_hash
 from relay.reporting import RULES_NOTE
 from relay.traces.store import read_traces
+from tests.claude_fakes import FakeBatches, FakeMessages, message
 
 REPO = Path(__file__).resolve().parents[2]
 SMOKE = REPO / "evals" / "smoke"
@@ -35,8 +37,10 @@ def dirs(tmp_path):
 
 
 class FakeAsyncClient:
+    """Stands in for AsyncTypeSafeClient and AsyncAnthropic (never called here)."""
+
     def __init__(self, **kwargs):
-        pass
+        self.messages = FakeMessages(message(), batches=FakeBatches([]))
 
     async def __aenter__(self):
         return self
@@ -54,20 +58,28 @@ def test_env_file_help_text_is_provider_generic():
     assert "TYPESAFE_API_KEY" not in result.output
 
 
-def test_every_provider_has_a_key_entry_and_only_jev_needs_one():
+def test_every_provider_has_a_key_entry_and_only_jev_and_claude_need_one():
     assert set(PROVIDER_KEYS) == set(ProviderName)
-    assert {p for p, key in PROVIDER_KEYS.items() if key} == {ProviderName.jev}
+    assert {p for p, key in PROVIDER_KEYS.items() if key} == {ProviderName.jev, ProviderName.claude}
     assert PROVIDER_KEYS[ProviderName.jev] == "TYPESAFE_API_KEY"
+    assert PROVIDER_KEYS[ProviderName.claude] == "ANTHROPIC_API_KEY"
 
 
 async def test_every_provider_name_has_an_explicit_factory(monkeypatch):
     monkeypatch.setattr(cli_module, "AsyncTypeSafeClient", FakeAsyncClient)
+    monkeypatch.setattr(cli_module, "AsyncAnthropic", FakeAsyncClient)
     cases = load_dataset(SMOKE)
     async with AsyncExitStack() as stack:
         for name in ProviderName:
             questions = cli_module._resolve_questions(name, None)
-            provider = await cli_module._build_provider(name, cases, questions, stack)
+            claude = cli_module._resolve_claude(name)
+            provider = await cli_module._build_provider(name, cases, questions, stack, claude)
             assert provider.name == name.value
+        batch = cli_module._resolve_claude(ProviderName.claude, cli_module.ClaudeMode.batch)
+        provider = await cli_module._build_provider(
+            ProviderName.claude, cases, "q-v0.2", stack, batch
+        )
+        assert isinstance(provider, ClaudeBatchProvider)
 
 
 def test_rules_eval_on_smoke_needs_no_key(tmp_path, monkeypatch):
@@ -120,7 +132,7 @@ def test_explicit_questions_is_rejected_for_providers_without_a_question_set(tmp
     )
     assert result.exit_code == 2
     assert f"the {provider} provider has no question set" in result.output
-    assert "providers with one: jev" in result.output
+    assert "providers with one: jev, claude" in result.output
     assert not (tmp_path / "traces").exists()
 
 
@@ -143,9 +155,11 @@ def test_jev_key_preflight_still_fails_fast_with_an_explicit_question_set(tmp_pa
 
 
 def test_question_sets_are_declared_per_provider():
-    assert set(PROVIDER_QUESTION_SETS) == {ProviderName.jev}
+    assert set(PROVIDER_QUESTION_SETS) == {ProviderName.jev, ProviderName.claude}
     jev = PROVIDER_QUESTION_SETS[ProviderName.jev]
     assert (jev.allowed, jev.default) == (QUESTION_SET_VERSIONS, DEFAULT_QUESTION_SET_VERSION)
+    claude = PROVIDER_QUESTION_SETS[ProviderName.claude]
+    assert (claude.allowed, claude.default) == (("q-v0.2",), "q-v0.2")
 
 
 def test_resolve_questions_defaults_per_provider_and_checks_membership():
