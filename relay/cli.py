@@ -3,6 +3,7 @@
 import asyncio
 import os
 from contextlib import AsyncExitStack
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -17,7 +18,7 @@ from relay.cases.models import PriorAuthCase
 from relay.decisions.base import DecisionProvider
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
-from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_1, Q_V0_2
+from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, QUESTION_SET_VERSIONS
 from relay.decisions.rules_baseline import RulesBaselineProvider
 from relay.evaluation.artifacts import write_eval_bundle
 from relay.evaluation.calibration import calibrate_run
@@ -55,9 +56,19 @@ class ProviderName(StrEnum):
     rules = "rules"
 
 
-class QuestionSet(StrEnum):
-    q_v0_1 = Q_V0_1
-    q_v0_2 = Q_V0_2
+@dataclass(frozen=True)
+class QuestionSets:
+    """The question sets a provider accepts for --questions, and the one it runs by default."""
+
+    allowed: tuple[str, ...]
+    default: str
+
+
+# Providers that take --questions. A provider missing here has no question set, and an explicit
+# --questions for it is a usage error rather than a silently ignored flag.
+PROVIDER_QUESTION_SETS: dict[ProviderName, QuestionSets] = {
+    ProviderName.jev: QuestionSets(QUESTION_SET_VERSIONS, DEFAULT_QUESTION_SET_VERSION),
+}
 
 
 Dataset = Annotated[
@@ -70,13 +81,16 @@ Concurrency = Annotated[int, typer.Option(min=1, help="Cases decided at once.")]
 TracesDir = Annotated[Path, typer.Option(help="Where trace files are written.")]
 ReportsDir = Annotated[Path, typer.Option(help="Where Markdown reports are written.")]
 Questions = Annotated[
-    QuestionSet | None,
+    str | None,
     typer.Option(
-        help=f"Jev question set (default {DEFAULT_QUESTION_SET_VERSION}). Only valid with "
-        "--provider jev."
+        help="Question set, for providers that have one ("
+        + "; ".join(
+            f"{name.value}: {', '.join(sets.allowed)}, default {sets.default}"
+            for name, sets in PROVIDER_QUESTION_SETS.items()
+        )
+        + "). An error with any other provider."
     ),
 ]
-DEFAULT_QUESTIONS = QuestionSet(DEFAULT_QUESTION_SET_VERSION)
 
 # The environment variable each provider needs, or None if it needs no key. One entry per provider.
 PROVIDER_KEYS: dict[ProviderName, str | None] = {
@@ -84,8 +98,6 @@ PROVIDER_KEYS: dict[ProviderName, str | None] = {
     ProviderName.groundtruth: None,
     ProviderName.rules: None,
 }
-# Providers that accept --questions; the others reject an explicit --questions.
-QUESTION_SET_PROVIDERS: frozenset[ProviderName] = frozenset({ProviderName.jev})
 PROVIDER_NOTES: dict[ProviderName, str] = {
     ProviderName.groundtruth: GROUNDTRUTH_NOTE,
     ProviderName.rules: RULES_NOTE,
@@ -131,20 +143,29 @@ def _read_trace_file(path: Path) -> list[WorkflowTrace]:
         raise _fail(f"{path}: {error}") from error
 
 
-def _resolve_questions(provider: ProviderName, questions: QuestionSet | None) -> QuestionSet | None:
-    """The question set to run with: the default for jev, None for providers without one.
+def _resolve_questions(provider: ProviderName, questions: str | None) -> str | None:
+    """The question set to run with: the provider's default, or None if it has no question set.
 
-    An explicit --questions for a provider that has no question set is a usage error, not a
-    silently ignored flag.
+    An explicit --questions must be one the provider allows; for a provider without a question
+    set it is a usage error.
     """
-    if provider not in QUESTION_SET_PROVIDERS:
+    sets = PROVIDER_QUESTION_SETS.get(provider)
+    if sets is None:
         if questions is not None:
+            names = ", ".join(p.value for p in PROVIDER_QUESTION_SETS)
             raise _fail(
-                f"--questions applies only to --provider jev; the {provider.value} provider "
-                "has no question set"
+                f"--questions does not apply to --provider {provider.value}: the "
+                f"{provider.value} provider has no question set (providers with one: {names})"
             )
         return None
-    return questions if questions is not None else DEFAULT_QUESTIONS
+    if questions is None:
+        return sets.default
+    if questions not in sets.allowed:
+        raise _fail(
+            f"--questions {questions!r} is not available for --provider {provider.value}; "
+            f"choose one of: {', '.join(sets.allowed)}"
+        )
+    return questions
 
 
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
@@ -160,7 +181,7 @@ def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) 
 async def _build_provider(
     provider_name: ProviderName,
     cases: list[PriorAuthCase],
-    questions: QuestionSet | None,
+    questions: str | None,
     stack: AsyncExitStack,
 ) -> DecisionProvider:
     """One explicit factory per provider. An unhandled name is a bug, never a silent Jev run."""
@@ -168,7 +189,7 @@ async def _build_provider(
         if questions is None:
             raise ValueError("the jev provider needs a question set")
         client = await stack.enter_async_context(AsyncTypeSafeClient(timeout=30.0))
-        return JevProvider(client, question_set_version=questions.value)
+        return JevProvider(client, question_set_version=questions)
     if provider_name is ProviderName.groundtruth:
         return GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
     if provider_name is ProviderName.rules:
@@ -183,7 +204,7 @@ async def _execute(
     concurrency: int,
     traces_dir: Path,
     dataset: Path,
-    questions: QuestionSet | None,
+    questions: str | None,
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
@@ -228,7 +249,7 @@ def _run_and_report(
     traces_dir: Path,
     reports_dir: Path,
     dataset: Path,
-    questions: QuestionSet | None,
+    questions: str | None,
 ) -> list[WorkflowTrace]:
     resolved = _resolve_questions(provider, questions)
     _preflight(cases, provider, policy)

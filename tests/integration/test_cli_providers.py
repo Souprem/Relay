@@ -5,11 +5,13 @@ from contextlib import AsyncExitStack
 from pathlib import Path
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
 import relay.cli as cli_module
 from relay.cases.loader import load_dataset
-from relay.cli import PROVIDER_KEYS, QUESTION_SET_PROVIDERS, ProviderName, app
+from relay.cli import PROVIDER_KEYS, PROVIDER_QUESTION_SETS, ProviderName, app
+from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, QUESTION_SET_VERSIONS
 from relay.decisions.rules_baseline import RULES_VERSION, rules_hash
 from relay.reporting import RULES_NOTE
 from relay.traces.store import read_traces
@@ -56,7 +58,6 @@ def test_every_provider_has_a_key_entry_and_only_jev_needs_one():
     assert set(PROVIDER_KEYS) == set(ProviderName)
     assert {p for p, key in PROVIDER_KEYS.items() if key} == {ProviderName.jev}
     assert PROVIDER_KEYS[ProviderName.jev] == "TYPESAFE_API_KEY"
-    assert QUESTION_SET_PROVIDERS == {ProviderName.jev}
 
 
 async def test_every_provider_name_has_an_explicit_factory(monkeypatch):
@@ -118,8 +119,8 @@ def test_explicit_questions_is_rejected_for_providers_without_a_question_set(tmp
         *dirs(tmp_path),
     )
     assert result.exit_code == 2
-    assert "--questions applies only to --provider jev" in result.output
-    assert provider in result.output
+    assert f"the {provider} provider has no question set" in result.output
+    assert "providers with one: jev" in result.output
     assert not (tmp_path / "traces").exists()
 
 
@@ -138,4 +139,37 @@ def test_jev_key_preflight_still_fails_fast_with_an_explicit_question_set(tmp_pa
     )
     assert result.exit_code == 2
     assert "TYPESAFE_API_KEY" in result.output
+    assert not (tmp_path / "traces").exists()
+
+
+def test_question_sets_are_declared_per_provider():
+    assert set(PROVIDER_QUESTION_SETS) == {ProviderName.jev}
+    jev = PROVIDER_QUESTION_SETS[ProviderName.jev]
+    assert (jev.allowed, jev.default) == (QUESTION_SET_VERSIONS, DEFAULT_QUESTION_SET_VERSION)
+
+
+def test_resolve_questions_defaults_per_provider_and_checks_membership():
+    assert cli_module._resolve_questions(ProviderName.jev, None) == DEFAULT_QUESTION_SET_VERSION
+    assert cli_module._resolve_questions(ProviderName.jev, "q-v0.1") == "q-v0.1"
+    assert cli_module._resolve_questions(ProviderName.rules, None) is None
+    with pytest.raises(typer.Exit):
+        cli_module._resolve_questions(ProviderName.jev, "q-v9")
+    with pytest.raises(typer.Exit):
+        cli_module._resolve_questions(ProviderName.groundtruth, "q-v0.2")
+
+
+def test_a_question_set_the_provider_does_not_allow_lists_the_choices(tmp_path):
+    result = invoke(
+        tmp_path,
+        "run",
+        "--dataset",
+        str(SMOKE),
+        "--provider",
+        "jev",
+        "--questions",
+        "q-v9",
+        *dirs(tmp_path),
+    )
+    assert result.exit_code == 2
+    assert "choose one of: q-v0.1, q-v0.2" in result.output
     assert not (tmp_path / "traces").exists()
