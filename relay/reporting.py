@@ -1,6 +1,6 @@
 """Human-readable output: terminal run table, Markdown run report, eval summary."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
@@ -97,6 +97,11 @@ def _case_section(trace: WorkflowTrace, case: CaseInput) -> list[str]:
     return out
 
 
+def _distinct(values: Iterable[str | None], missing: str = "unknown") -> str:
+    present = sorted({v for v in values if v is not None})
+    return ", ".join(present) if present else missing
+
+
 def render_run_report(
     manifest: RunManifest, traces: Sequence[WorkflowTrace], cases: Mapping[str, CaseInput]
 ) -> str:
@@ -108,6 +113,9 @@ def render_run_report(
         f"- Dataset: `{manifest.dataset_id}` ({manifest.dataset_path})",
         f"- Provider: `{manifest.provider}`",
         f"- Policy version: `{manifest.policy_version}`",
+        f"- Policy text hash: `{_distinct(t.policy_text_hash for t in traces)}`",
+        f"- Question set: `{_distinct(t.question_set_version for t in traces)}`",
+        f"- Client: `{_distinct((t.decisions.client_version for t in traces), 'n/a')}`",
         f"- Cases: {manifest.case_count}",
         f"- Relay commit: `{manifest.relay_git_sha or 'unknown'}`",
         f"- Traces: `{manifest.trace_file}`",

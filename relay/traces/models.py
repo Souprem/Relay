@@ -25,6 +25,7 @@ class WorkflowTrace(BaseModel):
     question_set_hash: str
     policy_id: str
     policy_version: str
+    policy_text_hash: str | None = None
     thresholds: Thresholds
     decisions: DecisionBundle
     action: WorkflowAction

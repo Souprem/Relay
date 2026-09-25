@@ -1,5 +1,6 @@
 import json
 from decimal import Decimal
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -9,7 +10,7 @@ from typesafe_sdk import SystemOneResponse, TypeSafeError
 from relay.cases.loader import load_case
 from relay.cases.policies import load_policy
 from relay.decisions.base import DecisionId
-from relay.decisions.jev import JEV_MODEL, JevProvider, build_state
+from relay.decisions.jev import CLIENT_VERSION, JEV_MODEL, JevProvider, build_state
 from relay.decisions.questions import QUESTION_IDS
 from relay.workflow.engine import bundle_problem, determine_action
 from relay.workflow.outcomes import WorkflowAction
@@ -155,3 +156,11 @@ async def test_out_of_range_choice_probability_yields_error_bundle():
     assert bundle.decisions == []
     assert bundle.error is not None
     assert "missing_evidence" in bundle.error
+
+
+async def test_bundles_record_the_sdk_client_version():
+    assert CLIENT_VERSION == f"typesafe-sdk=={version('typesafe-sdk')}"
+    ok, _ = await decide()
+    failed, _ = await decide(error=FakeRateLimit("rate limited"))
+    assert ok.client_version == CLIENT_VERSION
+    assert failed.client_version == CLIENT_VERSION

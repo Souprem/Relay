@@ -96,6 +96,7 @@ class DecisionBundle(BaseModel):
     input_tokens: int | None = None
     estimated_cost_usd: Decimal | None = None
     error: str | None = None
+    client_version: str | None = None
 
     def get(self, question_id: DecisionId) -> Decision | None:
         return next((d for d in self.decisions if d.question_id == question_id), None)

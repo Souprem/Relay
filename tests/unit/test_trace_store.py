@@ -1,5 +1,7 @@
+import gzip
 import re
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
@@ -76,3 +78,37 @@ def test_current_git_sha_in_repo():
 
 def test_current_git_sha_outside_repo(tmp_path):
     assert current_git_sha(tmp_path) is None
+
+
+REPO = Path(__file__).resolve().parents[2]
+SMOKE_BASELINE = (
+    REPO
+    / "evals"
+    / "baselines"
+    / "smoke-v0.1"
+    / "run_20260925T042324Z_eee114"
+    / "run_20260925T042324Z_eee114.jsonl"
+)
+
+
+def test_gzipped_trace_file_round_trips(tmp_path):
+    traces = [make_trace(make_case("T-01")), make_trace(make_case("T-02"))]
+    path = tmp_path / "traces.jsonl.gz"
+    with gzip.open(path, "wt", encoding="utf-8") as handle:
+        for trace in traces:
+            handle.write(trace.model_dump_json() + "\n")
+    assert read_traces(path) == traces
+
+
+def test_corrupt_gzip_is_a_value_error_naming_the_file(tmp_path):
+    path = tmp_path / "broken.jsonl.gz"
+    path.write_bytes(b"this is not gzip data")
+    with pytest.raises(ValueError, match="broken.jsonl.gz"):
+        read_traces(path)
+
+
+def test_committed_v0_1_baseline_still_loads_without_new_fields():
+    traces = read_traces(SMOKE_BASELINE)
+    assert len(traces) == 10
+    assert all(t.policy_text_hash is None for t in traces)
+    assert all(t.decisions.client_version is None for t in traces)

@@ -8,6 +8,7 @@ import math
 import time
 from collections.abc import Callable, Mapping
 from decimal import Decimal
+from importlib.metadata import version
 from typing import Any, Protocol
 
 from pydantic import ValidationError
@@ -27,6 +28,7 @@ from relay.decisions.step_therapy import DateParts, p_duration_at_least
 JEV_MODEL = "jev-1.13.0"
 PRICE_PER_INPUT_TOKEN_USD = Decimal("0.042") / Decimal(1_000_000)
 PROVIDER_NAME = "jev"
+CLIENT_VERSION = f"typesafe-sdk=={version('typesafe-sdk')}"
 
 
 class SystemOneClient(Protocol):
@@ -152,6 +154,7 @@ class JevProvider:
             "provider": self.name,
             "question_set_version": QUESTION_SET_VERSION,
             "question_set_hash": question_set_hash(policy),
+            "client_version": CLIENT_VERSION,
         }
         started = time.perf_counter()
         try:

@@ -95,3 +95,23 @@ def test_cost_is_formatted():
     case = make_case("A")
     trace = make_trace(case, make_bundle("A", cost=Decimal("0.0000756")))
     assert "$0.0000756" in render_eval_summary(score_run([trace], [case]))
+
+
+def test_run_report_shows_trace_identity():
+    cases, traces = sample()
+    bundle = make_bundle("T-01").model_copy(update={"client_version": "typesafe-sdk==0.7.1"})
+    stamped = [
+        make_trace(cases[0], bundle).model_copy(update={"policy_text_hash": "sha256:abc"}),
+        traces[1].model_copy(update={"policy_text_hash": "sha256:abc"}),
+    ]
+    report = render_run_report(run_manifest(), stamped, {c.input.id: c.input for c in cases})
+    assert "- Policy text hash: `sha256:abc`" in report
+    assert "- Question set: `q-test`" in report
+    assert "- Client: `typesafe-sdk==0.7.1`" in report
+
+
+def test_run_report_marks_missing_identity_fields():
+    cases, traces = sample()
+    report = render_run_report(run_manifest(), traces, {c.input.id: c.input for c in cases})
+    assert "- Policy text hash: `unknown`" in report
+    assert "- Client: `n/a`" in report

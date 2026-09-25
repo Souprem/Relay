@@ -1,6 +1,7 @@
 """Run a dataset through a provider and the policy engine, tracing every case."""
 
 import asyncio
+import hashlib
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
@@ -15,6 +16,10 @@ from relay.workflow.thresholds import load_thresholds
 
 class RunConfigError(ValueError):
     """The requested policy version or policies cannot be used for these cases."""
+
+
+def policy_text_hash(policy: AuthorizationPolicy) -> str:
+    return "sha256:" + hashlib.sha256(policy.text.encode("utf-8")).hexdigest()
 
 
 def validate_run_config(
@@ -73,6 +78,7 @@ async def run_dataset(
             question_set_hash=bundle.question_set_hash,
             policy_id=policy.id,
             policy_version=policy.version,
+            policy_text_hash=policy_text_hash(policy),
             thresholds=thresholds,
             decisions=bundle,
             action=outcome.action,
