@@ -43,6 +43,15 @@ class FakeAsyncClient:
         return None
 
 
+def test_env_file_help_text_is_provider_generic():
+    """C4: more providers than jev may need a key (ANTHROPIC_API_KEY is coming), so the help
+    text should not name TYPESAFE_API_KEY specifically."""
+    result = runner.invoke(app, ["--help"])
+    assert result.exit_code == 0
+    assert "dotenv file with provider API keys" in result.output
+    assert "TYPESAFE_API_KEY" not in result.output
+
+
 def test_every_provider_has_a_key_entry_and_only_jev_needs_one():
     assert set(PROVIDER_KEYS) == set(ProviderName)
     assert {p for p, key in PROVIDER_KEYS.items() if key} == {ProviderName.jev}

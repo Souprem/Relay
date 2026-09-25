@@ -105,7 +105,7 @@ At = Annotated[
 
 @app.callback()
 def main(
-    env_file: Annotated[Path, typer.Option(help="dotenv file with TYPESAFE_API_KEY.")] = Path(
+    env_file: Annotated[Path, typer.Option(help="dotenv file with provider API keys.")] = Path(
         ".env"
     ),
 ) -> None:
