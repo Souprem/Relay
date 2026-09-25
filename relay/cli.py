@@ -1,4 +1,4 @@
-"""relay run / relay eval / relay generate."""
+"""relay run / eval / generate, and the offline analyses sweep / report / compare."""
 
 import asyncio
 import os
@@ -18,6 +18,7 @@ from relay.decisions.base import DecisionProvider
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
 from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_1, Q_V0_2
+from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
 from relay.evaluation.metrics import EvalError, score_run
 from relay.evaluation.runner import RunConfigError, run_dataset, validate_run_config
 from relay.generation.generator import generate_dataset, verify_dataset
@@ -26,6 +27,7 @@ from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
     render_eval_summary,
+    render_frontier_table,
     render_run_report,
     render_run_table,
 )
@@ -63,6 +65,17 @@ Questions = Annotated[
 ]
 DEFAULT_QUESTIONS = QuestionSet(DEFAULT_QUESTION_SET_VERSION)
 
+TraceFile = Annotated[
+    Path, typer.Option(exists=True, dir_okay=False, help="Trace file (.jsonl or .jsonl.gz).")
+]
+Ceiling = Annotated[
+    float, typer.Option(min=0.0, max=1.0, help="Maximum unsafe automation rate for selection.")
+]
+At = Annotated[
+    float | None,
+    typer.Option(min=0.0, max=1.0, help="Also report this auto_process threshold (e.g. from dev)."),
+]
+
 
 @app.callback()
 def main(
@@ -83,6 +96,13 @@ def _load_cases(dataset: Path) -> list[PriorAuthCase]:
         return load_dataset(dataset)
     except CaseLoadError as error:
         raise _fail(str(error)) from error
+
+
+def _read_trace_file(path: Path) -> list[WorkflowTrace]:
+    try:
+        return read_traces(path)
+    except (ValueError, KeyError, OSError) as error:
+        raise _fail(f"{path}: {error}") from error
 
 
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
@@ -214,10 +234,7 @@ def eval_command(
             cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions
         )
     else:
-        try:
-            trace_list = read_traces(traces)
-        except (ValueError, KeyError) as error:
-            raise _fail(str(error)) from error
+        trace_list = _read_trace_file(traces)
     try:
         summary = score_run(trace_list, cases)
     except (EvalError, ValueError, KeyError) as error:
@@ -228,6 +245,32 @@ def eval_command(
     typer.echo("")
     typer.echo(render_eval_summary(summary))
     typer.echo(f"\nResults: {results_path}")
+
+
+@app.command("sweep")
+def sweep_command(
+    dataset: Dataset,
+    traces: TraceFile,
+    ceiling: Ceiling = DEFAULT_CEILING,
+    at: At = None,
+    out: Annotated[Path, typer.Option(help="Where the sweep JSON and CSV are written.")] = Path(
+        "results"
+    ),
+) -> None:
+    """Sweep the auto_process threshold over stored traces (no provider calls)."""
+    cases = _load_cases(dataset)
+    trace_list = _read_trace_file(traces)
+    try:
+        result = run_sweep(trace_list, cases, ceiling=ceiling, at=at)
+    except (EvalError, ValueError, KeyError) as error:
+        raise _fail(str(error)) from error
+    out.mkdir(parents=True, exist_ok=True)
+    json_path = out / f"{result.run_id}.sweep.json"
+    csv_path = out / f"{result.run_id}.frontier.csv"
+    json_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    csv_path.write_text(frontier_csv(result.points), encoding="utf-8", newline="\n")
+    typer.echo(render_frontier_table(result))
+    typer.echo(f"\nSweep: {json_path}\nFrontier CSV: {csv_path}")
 
 
 @app.command()

@@ -6,6 +6,7 @@ from typing import Any
 
 from relay.cases.models import CaseInput
 from relay.decisions.base import DecisionBundle, DecisionId
+from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
 from relay.evaluation.metrics import EvalSummary
 from relay.traces.models import RunManifest, WorkflowTrace
 
@@ -184,4 +185,79 @@ def render_eval_summary(s: EvalSummary) -> str:
         if c.invalid_output:
             flags += "  INVALID OUTPUT"
         lines.append(f"  {c.case_id:<10}{c.expected_action:<14}-> {c.action:<14}{flags}")
+    return "\n".join(lines)
+
+
+FRONTIER_HEADERS: tuple[str, ...] = (
+    "auto_process >=",
+    "AUTO",
+    "Automation",
+    "Unsafe / auto (UAR)",
+    "Human review",
+    "Correct action",
+    "Note",
+)
+
+
+def _pct(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.1%}"
+
+
+def _threshold(value: float) -> str:
+    """0.5 -> '0.50', 0.97 -> '0.97', 0.935 -> '0.935'."""
+    text = f"{value:.4f}".rstrip("0")
+    return text if len(text.split(".")[1]) >= 2 else f"{value:.2f}"
+
+
+def frontier_rows(result: SweepResult) -> list[tuple[FrontierPoint, str]]:
+    """Every 0.05 step, plus the selected and --at points, in threshold order."""
+    chosen = {p.auto_threshold: p for p in result.points if round(p.auto_threshold * 100) % 5 == 0}
+    notes: dict[float, list[str]] = {t: [] for t in chosen}
+    for point, note in ((result.selected, "selected"), (result.at_point, "--at")):
+        if point is not None:
+            chosen.setdefault(point.auto_threshold, point)
+            notes.setdefault(point.auto_threshold, []).append(note)
+    return [(chosen[t], ", ".join(notes[t])) for t in sorted(chosen)]
+
+
+def _frontier_cells(point: FrontierPoint, note: str) -> list[str]:
+    uar = f"{point.unsafe}/{point.auto} ({_pct(point.uar)})" if point.auto else "n/a (no AUTO)"
+    return [
+        _threshold(point.auto_threshold),
+        str(point.auto),
+        _pct(point.automation_rate),
+        uar,
+        _pct(point.human_review_rate),
+        _pct(point.correct_action_rate),
+        note,
+    ]
+
+
+def describe_selection(result: SweepResult) -> str:
+    ceiling = f"UAR <= {result.ceiling:.1%}"
+    if result.selected is None:
+        return (
+            f"No threshold meets the ceiling ({ceiling} with at least one AUTO_PROCESS); "
+            "nothing selected."
+        )
+    p = result.selected
+    return (
+        f"Selected operating point: auto_process >= {_threshold(p.auto_threshold)} "
+        f"(automation {_pct(p.automation_rate)}, UAR {p.unsafe}/{p.auto}, "
+        f"correct action {_pct(p.correct_action_rate)}; ceiling {ceiling})"
+    )
+
+
+def render_frontier_table(result: SweepResult) -> str:
+    widths = (16, 6, 12, 21, 14, 16, 0)
+    n = result.points[0].n if result.points else 0
+    lines = [
+        f"Frontier — run {result.run_id} · dataset {result.dataset_id} · n={n}",
+        "auto_process swept 0.50-0.99; every other threshold fixed at the run's version.",
+        "".join(h.ljust(w) for h, w in zip(FRONTIER_HEADERS, widths, strict=True)).rstrip(),
+    ]
+    for point, note in frontier_rows(result):
+        cells = _frontier_cells(point, note)
+        lines.append("".join(c.ljust(w) for c, w in zip(cells, widths, strict=True)).rstrip())
+    lines += ["", describe_selection(result), f"Rule: {SELECTION_RULE}."]
     return "\n".join(lines)
