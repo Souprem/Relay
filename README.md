@@ -171,7 +171,10 @@ uv run relay compare --dataset evals/generated/gen-v0.2-dev --traces A.jsonl --t
    (`--at`), with calibration measured on holdout.
 
 **Results** (Jev `jev-1.13.0`, policy `v0.1`; all runs committed under
-[`evals/baselines/`](evals/baselines/)):
+[`evals/baselines/`](evals/baselines/)). The **Correct action**, **Automation**, and **Unsafe /
+auto** columns are computed at each run's own recorded thresholds (policy `v0.1`, `auto_process`
+0.95 by default) — not at the dev-chosen threshold — which is why the holdout row's 81.5% differs
+from the 89.5% in the `--at` table further down:
 
 | Dataset | Questions | Run | Correct action | Automation | Unsafe / auto | Invalid | Selected (in-sample) | At `--at` | Cost |
 |---|---|---|---|---|---|---|---|---|---|
@@ -180,6 +183,29 @@ uv run relay compare --dataset evals/generated/gen-v0.2-dev --traces A.jsonl --t
 | `gen-v0.2-holdout` | `q-v0.2` | `run_20260925T075242Z_fd455f` | 815/1000 (81.5%) | 172/1000 (17.2%) | 0/172 (0.0%) | 0 | 0.91 (auto 252/1000 (25.2%), unsafe 0) | 0.89 (auto 252/1000 (25.2%), unsafe 0) | $0.1120 |
 
 Total estimated cost of these runs: $0.2010
+
+**Caveats.**
+
+- The UAR ceiling never actually binds on these datasets: unsafe automation rate is 0 at every
+  swept threshold from 0.50 to 0.97 (and nothing automates at 0.98–0.99) in all three committed
+  frontiers ([dev q-v0.1](evals/baselines/gen-v0.2-dev/run_20260925T071157Z_d6b218/report/frontier.csv),
+  [dev q-v0.2](evals/baselines/gen-v0.2-dev/run_20260925T071231Z_6f0b73/frontier.csv),
+  [holdout](evals/baselines/gen-v0.2-holdout/run_20260925T075242Z_fd455f/frontier.csv)). So the
+  selected threshold t\* is really the automation-plateau tie-break (the highest threshold with
+  the same automation as the plateau), not a point where the 1% safety ceiling excluded anything.
+  The sweep shows the automation cost of raising `auto_process`, not a safety trade-off; on these
+  runs, unsafe automation is being prevented upstream, most likely by the contradiction and
+  documentation gates rather than by `auto_process` itself (inferred from the gate order, not
+  measured directly here).
+- Small-n uncertainty: holdout saw 0 unsafe automations out of 252 (exact one-sided 95% upper
+  bound on the true rate ≈ 1.18%, from 1 − 0.05^(1/n)); the dev threshold selection itself rests on
+  0 unsafe out of 99 automated cases (≈ 2.98% upper bound). "Within the 1% ceiling" above is a point
+  estimate (0.0%), not a statistical guarantee at this sample size.
+- Part of q-v0.2's measured gain over q-v0.1 is alignment with the generator's own labelling
+  convention — gen-v0.2's ground truth counts a record stating the patient never took
+  methotrexate as documented treatment history, and q-v0.2's question wording says so explicitly
+  (§6 of the [design spec](docs/superpowers/specs/2026-09-25-phase2b-evaluation-depth-design.md))
+  — not solely because Jev reads the same evidence more accurately under q-v0.2.
 
 **Question set.** Adoption on dev:
 
@@ -219,13 +245,18 @@ and its unsafe-automation count (0) is no worse than q-v0.1's (0), so both legs 
 | missing_evidence | 1000 | 0.212 | 0.078 |
 
 Per-decision ECE on holdout ranges from 0.022 (`step_therapy`) to 0.121 (`material_contradiction`),
-the highest of the five. `diagnosis_support` and `step_therapy` each have four of their five
-non-empty confidence bins flagged low-n (fewer than 20 predictions), so most of their reliability
-curve besides the dominant [0.9, 1.0] bin is not statistically meaningful; `material_contradiction`
-and `missing_evidence`, by contrast, have enough mass in every mid-confidence bin to read the curve.
-There were 0 invalid outputs on the full 1000-case holdout. Unexpectedly, `documentation_complete`
-is overconfident rather than underconfident in its low-confidence bins: at mean confidence 0.643
-its actual accuracy is only 0.314 (gap −0.329), the largest miscalibration of any bin in this run.
+the highest of the five; unlike the other decisions, `material_contradiction`'s gap runs entirely in
+the conservative direction — accuracy exceeds confidence in every one of its bins, i.e.
+under-confidence rather than over-confidence. `step_therapy` has four of its five non-empty
+confidence bins flagged low-n (fewer than 20 predictions); `diagnosis_support` has only three
+non-empty bins to begin with (n=1, 8, 991), two of which are low-n. In both cases most of the
+reliability curve besides the dominant [0.9, 1.0] bin is not statistically meaningful;
+`material_contradiction` and `missing_evidence`, by contrast, have enough mass in every
+mid-confidence bin to read the curve. There were 0 invalid outputs on the full 1000-case holdout.
+Unexpectedly, `documentation_complete` is overconfident rather than underconfident in its
+low-confidence bins: at mean confidence 0.643 its actual accuracy is only 0.314 (gap −0.329, n=35)
+— the largest gap among bins with n >= 20. The largest gap of any bin in this run is actually a
+low-n `documentation_complete` bin, [0.7, 0.8) at −0.402 (n=18).
 
 These are template-generated synthetic cases scored against the generator's own ground truth,
 so they show how the pipeline and thresholds behave on this distribution, not real-world accuracy.
@@ -238,6 +269,11 @@ so they show how the pipeline and thresholds behave on this distribution, not re
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
   being guessed. The generator doesn't produce them.
+- gen-v0.2 has a residual contradiction tell: a day-precision, non-split MTX medication-history
+  line predicts a contradiction roughly 81% of the time (never 100%), and the
+  `NEVER_TAKEN_OTHER_DMARD` distractor wording has a weak base-rate skew of its own. Both bear on
+  `material_contradiction` metrics above and on any rule-based baseline built from surface
+  phrasing rather than genuine reasoning.
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs
