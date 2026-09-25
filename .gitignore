@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Relay run artifacts (reference baselines live in evals/baselines/)
+traces/
+reports/
+results/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
