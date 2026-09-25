@@ -288,6 +288,11 @@ LIMITATIONS: tuple[str, ...] = (
     "the pipeline treats a date without a stated year as unknown (gen-v0.2 does not emit them).",
     "Calibration bins with few predictions are unreliable, and thresholds chosen on one dataset "
     "must be confirmed on held-out data.",
+    "gen-v0.2 has a residual contradiction tell: a day-precision, non-split MTX "
+    "medication-history line predicts a contradiction roughly 81% of the time (never 100%), "
+    "and the NEVER_TAKEN_OTHER_DMARD distractor wording has a weak base-rate skew of its own. "
+    "Both bear on material_contradiction metrics and on any rule-based baseline built from "
+    "surface phrasing.",
 )
 
 

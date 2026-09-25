@@ -13,6 +13,7 @@ from relay.evaluation.frontier import run_sweep
 from relay.evaluation.metrics import run_identity, score_run
 from relay.reporting import (
     DISCLAIMER,
+    LIMITATIONS,
     LOW_BIN_N,
     REPORT_SECTIONS,
     render_eval_report,
@@ -96,6 +97,19 @@ def test_report_has_every_section_in_order_and_no_ground_truth_fields():
     assert "independent" in report  # step-therapy approximation in Limitations
     for field in GROUND_TRUTH_FIELDS:
         assert field not in report, field
+
+
+def test_limitations_names_the_residual_gen_v0_2_contradiction_tell():
+    """C1: a day-precision, non-split MTX medication-history line predicts a contradiction most
+    (but never all) of the time in gen-v0.2; NEVER_TAKEN_OTHER_DMARD also skews the base rate.
+    Both bear on material_contradiction metrics and any rule-based baseline built on wording."""
+    assert any(
+        "day-precision" in item
+        and "medication-history" in item
+        and "material_contradiction" in item
+        for item in LIMITATIONS
+    )
+    assert any("NEVER_TAKEN_OTHER_DMARD" in item for item in LIMITATIONS)
 
 
 def test_calibration_csv_header_is_stable():
