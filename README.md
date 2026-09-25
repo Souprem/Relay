@@ -273,6 +273,18 @@ lines about relatives, and uses the fax cover only for the member-ID check. Its 
 [2C spec](docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md)'s §3, fixed before
 any rules run. Nothing was tuned after seeing results.
 
+Those §3 patterns were written by someone who had already read the generator's phrase banks in
+[`relay/generation/render.py`](relay/generation/render.py): the diagnosis negators
+(`pending|suspected|not yet established|differential|...`) are the generator's own
+pending-diagnosis vocabulary; the member-ID-missing pattern matches the generator's exact
+`MEMBER_ID_MISSING` string verbatim; the ongoing/response cues ("continues", "remains on",
+"ongoing", "inadequate response", "nausea", "side effect") are drawn from its treatment-outcome
+templates; and the relative list is the generator's own relatives (mother, father, sister,
+brother, aunt) plus uncle and grandparents, and also matches its "family history" phrasing. This
+is template fit to gen-v0.2, not label leakage: the rules never read a case's or document's ID, a
+dataset ID, or document ordering — only structured fields (`insurance.member_id`), a document's
+declared `kind`, and its text.
+
 Every rules probability is 0, 0.5 (abstain) or 1, so the rules are not calibrated and their
 automation/safety **frontier is flat**: `auto_process` has no effect anywhere from 0.50 to 0.99.
 `relay sweep` and `relay report` print `Frontier is flat across all thresholds.`, and every
@@ -299,14 +311,28 @@ higher automation rate (17.2% vs. 13.4%); neither provider has any unsafe automa
 holdout (Jev 0/172, rules 0/134). Where the rules do not automate, they lean toward asking for more
 documentation rather than escalating to a person: request-info is 56.9% for the rules against 31.3%
 for Jev, while human review is 29.7% for the rules against 51.5% for Jev. Rules automate less than
-Jev but just as safely on this holdout. `compare-jev-vs-rules.txt` puts the action-level disagreement
-at "Action differences jev-q-v0.2 -> rules-v0.1: 416 cases (0 new unsafe automations)".
+Jev but just as safely — on the templates their patterns were written against. `compare-jev-vs-rules.txt`
+puts the action-level disagreement at "Action differences jev-q-v0.2 -> rules-v0.1: 416 cases (0 new
+unsafe automations)".
+
+The holdout confusion matrices back that qualifier up: four of the five decisions
+(`diagnosis_support`, `step_therapy`, `documentation_complete`, `missing_evidence`) never commit to
+a confidently wrong answer on this holdout — the rules either match ground truth or abstain
+(`p=0.5`, routed to `REQUEST_INFO`/`HUMAN_REVIEW`), never a confidently wrong `p=0` or `p=1`. Only
+`material_contradiction` commits wrong answers, and even there it has zero false positives (0/881
+`no`-truth cases predicted `yes`); every one of its 26 misses on this holdout turns out to use a
+"never taken" phrasing outside `mtx_never`'s pattern list (e.g. "never been prescribed" rather than
+"never tried/taken/took/received"). The rules' better `material_contradiction` calibration than Jev
+on this holdout (Brier 0.026 / ECE 0.026 vs. Jev's 0.030 / 0.121) reflects that template fit, not a
+general reasoning advantage over Jev.
 
 The rules see only explicit conflicts and fixed phrasings. Wording outside their pattern lists
 makes them abstain (usually `REQUEST_INFO`), and a contradiction they cannot see as an explicit
-cue stays at 0. Both are documented weaknesses of a pattern floor, not things to tune away.
-`tests/unit/test_rules_anti_shortcut.py` checks that the rules do not key on gen-v0.2's residual
-contradiction tell (see Limitations).
+cue stays at 0. Both are documented weaknesses of a pattern floor, not things to tune away. The
+rules do not key on generator IDs or document structure beyond a document's declared `kind`, so
+that pattern floor is fit to gen-v0.2's fixed wording, not to anything about how the dataset is
+generated or organized. `tests/unit/test_rules_anti_shortcut.py` checks that the rules do not key
+on gen-v0.2's residual contradiction tell (see Limitations).
 
 Artifacts: smoke
 [`run_20260925T092347Z_cca17f`](evals/baselines/smoke-v0.1/run_20260925T092347Z_cca17f/), dev
@@ -329,6 +355,19 @@ Artifacts: smoke
   `material_contradiction` metrics above and on any rule-based baseline built from surface
   phrasing rather than genuine reasoning. The rules baseline is tested not to key on the tell
   (`tests/unit/test_rules_anti_shortcut.py`).
+- rules-v0.1 is frozen (no pattern/logic changes) and reported above exactly as it runs on
+  gen-v0.2; that decision was made before any gold-set results exist, and rules-v0.1 will be run
+  on the future gold set (Phase 2D) as-is and reported honestly. Its patterns have demonstrated
+  out-of-template failure modes on hand-written text — none of which occur on gen-v0.2's fixed
+  templates — that would produce an unsafe `AUTO_PROCESS`: a response cue with no negation counts
+  as a response (e.g. "tolerating it well without nausea or side effects"); a response cue on a
+  neighbouring line about a different, non-MTX medication counts; the nearest date-role keyword
+  has no distance bound, so a later, unrelated visit date can become the stop date; "since"
+  anywhere on a line counts as a start; `mtx_ongoing` fires on symptom words (e.g. "due to ongoing
+  nausea"); the diagnosis negators miss "ruled out", "does not meet criteria" and "no evidence of";
+  a "line" is a whole paragraph because the generator joins sentences with a single space rather
+  than a newline; and an ISO-shaped date embedded in a hyphenated ID (e.g. a claim number) can be
+  matched as a real date.
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs
