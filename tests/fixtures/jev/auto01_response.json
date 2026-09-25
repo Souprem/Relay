@@ -1,0 +1,45 @@
+{
+  "model": "jev-1.13.0",
+  "answers": {
+    "diagnosis_support": {"type": "noul", "noul": 0.98},
+    "documentation_complete": {"type": "noul", "noul": 0.97},
+    "material_contradiction": {"type": "noul", "noul": 0.03},
+    "missing_evidence": {
+      "type": "choice",
+      "choice": "NONE",
+      "confidence": 0.91,
+      "probabilities": {
+        "DIAGNOSIS": 0.01,
+        "TREATMENT_HISTORY": 0.03,
+        "LAB_RESULT": 0.01,
+        "DOSAGE": 0.01,
+        "INSURANCE_INFORMATION": 0.0,
+        "NONE": 0.94
+      }
+    },
+    "mtx_start_month": {
+      "type": "choice",
+      "choice": "January",
+      "confidence": 0.98,
+      "probabilities": {"January": 0.99, "none": 0.01}
+    },
+    "mtx_start_day": {"type": "choice", "choice": "12", "confidence": 1.0, "probabilities": {"12": 1.0}},
+    "mtx_start_year": {
+      "type": "choice",
+      "choice": "2026",
+      "confidence": 1.0,
+      "probabilities": {"2025": 0.0, "2026": 1.0, "none": 0.0}
+    },
+    "mtx_end_status": {
+      "type": "choice",
+      "choice": "ended",
+      "confidence": 1.0,
+      "probabilities": {"ended": 1.0, "ongoing": 0.0, "not_stated": 0.0}
+    },
+    "mtx_end_month": {"type": "choice", "choice": "June", "confidence": 1.0, "probabilities": {"June": 1.0}},
+    "mtx_end_day": {"type": "choice", "choice": "1", "confidence": 1.0, "probabilities": {"1": 1.0}},
+    "mtx_end_year": {"type": "choice", "choice": "2026", "confidence": 1.0, "probabilities": {"2026": 1.0}},
+    "mtx_inadequate_response": {"type": "noul", "noul": 0.97}
+  },
+  "usage": {"input_tokens": 1800, "output_tokens": 120}
+}
