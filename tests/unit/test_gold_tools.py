@@ -9,6 +9,7 @@ from tests.gold_tools import (
     compute_agreement,
     export_blind_packet,
     import_second_pass,
+    per_category_rows,
 )
 
 
@@ -107,3 +108,47 @@ def test_export_contains_only_label_free_inputs(tmp_path):
     with pytest.raises(ValueError, match="inside the repository"):
         export_blind_packet(REPO / "evals" / "blind-should-not-exist")
     assert not (REPO / "evals" / "blind-should-not-exist").exists()
+
+
+def test_per_category_rows_group_scored_cases_by_prefix():
+    def scored(case_id, action, expected, unsafe=False, invalid=False):
+        return {
+            "case_id": case_id,
+            "expected_action": expected,
+            "action": action,
+            "correct": action == expected,
+            "unsafe_automation": unsafe,
+            "invalid_output": invalid,
+        }
+
+    results = {
+        "cases": [
+            scored("GOLD-STR-01", "AUTO_PROCESS", "AUTO_PROCESS"),
+            scored("GOLD-CON-01", "AUTO_PROCESS", "HUMAN_REVIEW", unsafe=True),
+            scored("GOLD-TMP-01", "HUMAN_REVIEW", "HUMAN_REVIEW", invalid=True),
+        ]
+    }
+    rows = {r["category"]: r for r in per_category_rows(results)}
+    assert list(rows) == ["STR", "MIS", "CON", "TMP", "TRK", "ALL"]
+    assert rows["STR"] == {
+        "category": "STR",
+        "n": 1,
+        "correct": 1,
+        "auto": 1,
+        "unsafe": 0,
+        "request_info": 0,
+        "review": 0,
+        "invalid": 0,
+    }
+    assert rows["CON"]["unsafe"] == 1 and rows["CON"]["correct"] == 0
+    assert rows["MIS"]["n"] == 0
+    assert rows["ALL"] == {
+        "category": "ALL",
+        "n": 3,
+        "correct": 2,
+        "auto": 2,
+        "unsafe": 1,
+        "request_info": 0,
+        "review": 1,
+        "invalid": 1,
+    }

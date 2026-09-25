@@ -74,7 +74,7 @@ legitimate finding.
 - **Never tune on gold.** No question, threshold, rule pattern, prompt or code change may be
   motivated by gold results. Tune on `gen-v0.2-dev` only. Each provider configuration runs on gold
   once.
-- **Frozen.** `gold-v0.1` is pinned by its dataset hash in `tests/unit/test_gold_dataset.py`. Fix
+- **Frozen.** `gold-v0.1` is pinned by its dataset hash `sha256:3ba49030a21f4d715e56df2b3cb3e0b03f07dbdcb097205be15e5674c8e42679` (`relay.generation.manifest.dataset_hash`) in `tests/unit/test_gold_dataset.py`. Fix
   mistakes by publishing a new dataset id, never by editing these files.
 
 ## How to run

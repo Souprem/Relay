@@ -11,6 +11,7 @@ from relay.cases.models import GroundTruth, PriorAuthCase
 from tests.gold_support import (
     ALL_IDS,
     ALLOWED_MISSING,
+    CATEGORIES,
     FACTS,
     GUIDE_PATH,
     REPO,
@@ -156,4 +157,46 @@ def agreement_markdown(result: Mapping[str, Any]) -> str:
     lines += [f"| `{fact}` | {_pct(result['per_fact'][fact])} |" for fact in FACTS]
     lines.append(f"| all five facts | {_pct(result['all_five'])} |")
     lines.append(f"| derived action | {_pct(result['action'])} |")
+    return "\n".join(lines)
+
+
+def per_category_rows(results: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Per-category counts from a results.json (EvalSummary) dict, then an ALL row."""
+    groups: dict[str, list[Mapping[str, Any]]] = {c: [] for c in CATEGORIES}
+    for scored in results["cases"]:
+        groups[scored["case_id"].split("-")[1]].append(scored)
+    groups["ALL"] = [s for c in CATEGORIES for s in groups[c]]
+    return [
+        {
+            "category": name,
+            "n": len(items),
+            "correct": sum(bool(s["correct"]) for s in items),
+            "auto": sum(s["action"] == "AUTO_PROCESS" for s in items),
+            "unsafe": sum(bool(s["unsafe_automation"]) for s in items),
+            "request_info": sum(s["action"] == "REQUEST_INFO" for s in items),
+            "review": sum(s["action"] == "HUMAN_REVIEW" for s in items),
+            "invalid": sum(bool(s["invalid_output"]) for s in items),
+        }
+        for name, items in groups.items()
+    ]
+
+
+def _count(k: int, n: int) -> str:
+    return f"{k}/{n} ({k / n:.0%})" if n else "n/a"
+
+
+def per_category_markdown(runs: Sequence[tuple[str, Mapping[str, Any]]]) -> str:
+    lines = [
+        "| Provider | Category | Correct action | Automation | Unsafe / auto "
+        "| Request info | Review | Invalid |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for label, results in runs:
+        for r in per_category_rows(results):
+            n = r["n"]
+            lines.append(
+                f"| {label} | {r['category']} | {_count(r['correct'], n)} "
+                f"| {_count(r['auto'], n)} | {r['unsafe']}/{r['auto']} "
+                f"| {_count(r['request_info'], n)} | {_count(r['review'], n)} | {r['invalid']} |"
+            )
     return "\n".join(lines)

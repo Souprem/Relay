@@ -1,17 +1,19 @@
 """gold-v0.1 (Phase 2E): scenario table, per-case rules, category composition, whole-set checks.
 
 Per-case checks run on every authored case directory, so authors get feedback case by case.
-Category checks run once a category has any case directory. The whole-set check is skipped until
-all 100 case directories exist; Task 9 of the 2E plan deletes that skip.
+Category checks run once a category has any case directory. The whole-set check requires all 100 case directories.
 """
 
 from collections import Counter
 
 import pytest
 
+from relay.cases.loader import load_dataset
+from relay.generation.manifest import dataset_hash
 from tests.gold_support import (
     ALL_IDS,
     CATEGORIES,
+    GOLD_DIR,
     GUIDE_PATH,
     INTENDED,
     RULES_BEGIN,
@@ -88,6 +90,14 @@ def test_category_composition_and_floors(category):
     assert category_problems(category) == []
 
 
-@pytest.mark.skipif(len(PRESENT) < 100, reason="gold set incomplete; 2E Task 9 removes this skip")
 def test_full_gold_set():
     assert set_problems() == []
+
+
+# Frozen by 2E Task 9. Any edit to a gold case, document or label changes this value. Never edit
+# gold-v0.1 in place: publish a new dataset id instead, and never because of provider results.
+GOLD_DATASET_HASH = "sha256:3ba49030a21f4d715e56df2b3cb3e0b03f07dbdcb097205be15e5674c8e42679"
+
+
+def test_gold_v0_1_is_frozen():
+    assert dataset_hash(load_dataset(GOLD_DIR)) == GOLD_DATASET_HASH
