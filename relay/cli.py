@@ -26,7 +26,12 @@ from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
 from relay.evaluation.metrics import EvalError, run_identity, score_run
-from relay.evaluation.runner import RunConfigError, run_dataset, validate_run_config
+from relay.evaluation.runner import (
+    RunConfigError,
+    run_dataset,
+    sample_cases,
+    validate_run_config,
+)
 from relay.generation.generator import generate_dataset, verify_dataset
 from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest, write_manifest
 from relay.reporting import (
@@ -103,6 +108,14 @@ PROVIDER_NOTES: dict[ProviderName, str] = {
     ProviderName.rules: RULES_NOTE,
 }
 
+Limit = Annotated[
+    int | None,
+    typer.Option(
+        min=1, help="Use a deterministic subsample of this many cases (needs --sample-seed)."
+    ),
+]
+SampleSeed = Annotated[int | None, typer.Option(min=0, help="Seed for the --limit subsample.")]
+
 TraceFile = Annotated[
     Path, typer.Option(exists=True, dir_okay=False, help="Trace file (.jsonl or .jsonl.gz).")
 ]
@@ -134,6 +147,17 @@ def _load_cases(dataset: Path) -> list[PriorAuthCase]:
         return load_dataset(dataset)
     except CaseLoadError as error:
         raise _fail(str(error)) from error
+
+
+def _apply_limit(
+    cases: list[PriorAuthCase], limit: int | None, seed: int | None
+) -> tuple[list[PriorAuthCase], tuple[int, int] | None]:
+    """The cases to use and the (limit, seed) subsample, if one was requested."""
+    if limit is None and seed is None:
+        return cases, None
+    if limit is None or seed is None:
+        raise _fail("--limit and --sample-seed must be given together")
+    return sample_cases(cases, limit, seed), (limit, seed)
 
 
 def _read_trace_file(path: Path) -> list[WorkflowTrace]:
@@ -205,6 +229,7 @@ async def _execute(
     traces_dir: Path,
     dataset: Path,
     questions: str | None,
+    sample: tuple[int, int] | None = None,
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
@@ -236,6 +261,8 @@ async def _execute(
         case_count=len(traces),
         trace_file=str(store.path),
         relay_git_sha=git_sha,
+        sample_limit=None if sample is None else sample[0],
+        sample_seed=None if sample is None else sample[1],
     )
     store.write_manifest(manifest)
     return manifest, traces
@@ -250,13 +277,14 @@ def _run_and_report(
     reports_dir: Path,
     dataset: Path,
     questions: str | None,
+    sample: tuple[int, int] | None = None,
 ) -> list[WorkflowTrace]:
     resolved = _resolve_questions(provider, questions)
     _preflight(cases, provider, policy)
     if provider in PROVIDER_NOTES:
         typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
     manifest, traces = asyncio.run(
-        _execute(cases, provider, policy, concurrency, traces_dir, dataset, resolved)
+        _execute(cases, provider, policy, concurrency, traces_dir, dataset, resolved, sample)
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -278,11 +306,13 @@ def run(
     traces_dir: TracesDir = Path("traces"),
     reports_dir: ReportsDir = Path("reports"),
     questions: Questions = None,
+    limit: Limit = None,
+    sample_seed: SampleSeed = None,
 ) -> None:
     """Decide every case in DATASET; write traces and a Markdown report."""
-    cases = _load_cases(dataset)
+    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
     _run_and_report(
-        cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions
+        cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions, sample
     )
 
 
@@ -306,12 +336,22 @@ def eval_command(
         "results"
     ),
     questions: Questions = None,
+    limit: Limit = None,
+    sample_seed: SampleSeed = None,
 ) -> None:
     """Run (or re-score) DATASET and print action-level and decision-level metrics."""
-    cases = _load_cases(dataset)
+    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
     if traces is None:
         trace_list = _run_and_report(
-            cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions
+            cases,
+            provider,
+            policy,
+            concurrency,
+            traces_dir,
+            reports_dir,
+            dataset,
+            questions,
+            sample,
         )
     else:
         trace_list = _read_trace_file(traces)

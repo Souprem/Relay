@@ -48,3 +48,6 @@ class RunManifest(BaseModel):
     case_count: int
     trace_file: str
     relay_git_sha: str | None
+    # Set when the run used --limit/--sample-seed (a deterministic subsample of the dataset).
+    sample_limit: int | None = None
+    sample_seed: int | None = None

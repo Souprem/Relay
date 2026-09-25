@@ -11,6 +11,7 @@ from relay.evaluation.runner import (
     RunConfigError,
     policy_text_hash,
     run_dataset,
+    sample_cases,
     validate_run_config,
 )
 from relay.traces.store import TraceStore, read_traces
@@ -185,3 +186,16 @@ async def test_runner_fills_policy_text_hash(tmp_path):
     expected = policy_text_hash(load_policy("immunara-v0.1"))
     assert {t.policy_text_hash for t in traces} == {expected}
     assert {t.policy_text_hash for t in read_traces(store.path)} == {expected}
+
+
+def test_sample_cases_is_deterministic_sorted_and_order_independent():
+    data = [make_case(f"T-{i:02d}") for i in range(20)]
+    first = [c.input.id for c in sample_cases(data, 5, seed=7)]
+    assert first == [c.input.id for c in sample_cases(list(reversed(data)), 5, seed=7)]
+    assert first == sorted(first) and len(set(first)) == 5
+    assert first != [c.input.id for c in sample_cases(data, 5, seed=8)]
+
+
+def test_sample_cases_keeps_everything_when_the_limit_covers_the_dataset():
+    data = [make_case("T-02"), make_case("T-01")]
+    assert [c.input.id for c in sample_cases(data, 5, seed=7)] == ["T-01", "T-02"]

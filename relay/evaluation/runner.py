@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+import random
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
@@ -20,6 +21,15 @@ class RunConfigError(ValueError):
 
 def policy_text_hash(policy: AuthorizationPolicy) -> str:
     return "sha256:" + hashlib.sha256(policy.text.encode("utf-8")).hexdigest()
+
+
+def sample_cases(cases: Sequence[PriorAuthCase], limit: int, seed: int) -> list[PriorAuthCase]:
+    """A deterministic subsample: random.Random(seed).sample over the cases sorted by id,
+    returned sorted by id. A limit at or above the case count keeps every case."""
+    ordered = sorted(cases, key=lambda c: c.input.id)
+    if limit >= len(ordered):
+        return ordered
+    return sorted(random.Random(seed).sample(ordered, limit), key=lambda c: c.input.id)
 
 
 def validate_run_config(

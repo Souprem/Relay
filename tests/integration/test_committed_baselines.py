@@ -17,6 +17,7 @@ import pytest
 
 from relay.cases.loader import CaseLoadError, load_dataset
 from relay.evaluation.metrics import score_run
+from relay.evaluation.runner import sample_cases
 from relay.traces.store import read_traces
 
 REPO = Path(__file__).resolve().parents[2]
@@ -54,6 +55,9 @@ def test_committed_baseline_rescoring_matches_results_json(dataset_id, run_dir):
         cases = load_dataset(dataset_dir)
     except CaseLoadError as error:
         pytest.skip(f"{dataset_dir}: {error}")
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    if manifest.get("sample_limit") is not None:  # a --limit/--sample-seed run (2D latency sample)
+        cases = sample_cases(cases, manifest["sample_limit"], manifest["sample_seed"])
     traces = read_traces(trace_path)
     fresh = score_run(traces, cases)
 
