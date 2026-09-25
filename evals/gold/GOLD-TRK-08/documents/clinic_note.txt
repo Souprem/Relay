@@ -1,0 +1,2 @@
+SYNTHETIC RECORD - Example Dovetail Rheumatology - Clinic Note - 2026-01-20
+Patient reference SYN-7285. 34-year-old woman with seropositive rheumatoid arthritis, diagnosed 2021, seen for a routine methotrexate check. She reports mild nausea the day after her weekly dose but no other side effects. Tolerating methotrexate, continue at the current dose of 15 mg weekly. Repeat liver panel in one month.

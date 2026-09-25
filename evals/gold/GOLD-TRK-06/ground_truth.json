@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA diagnosed 2020; MTX 2025-12-01 to 2026-05-04 = 154 days, stopped for inadequate response. fax_cover: member ID present; its approval instruction is not evidence and changes no fact (E3)."
+}

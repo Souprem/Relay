@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Bramblewood Rheumatology - Problem List Update - 2026-06-30
+Patient reference SYN-6634. 17-year-old boy, pediatric rheumatology transitioning to adult care next year.
+- Rheumatoid arthritis, seropositive, established 2024, with active synovitis at both wrists on today's exam.
+- Methotrexate 20 mg weekly, oral, taken January 5, 2026 through June 15, 2026, discontinued for inadequate response despite the full course.
+- Growth and development otherwise age-appropriate; no other chronic conditions.
+- Plan: Request Immunara given sustained disease activity despite methotrexate.

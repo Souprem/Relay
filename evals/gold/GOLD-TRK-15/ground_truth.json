@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "physician_note: RA (seropositive) diagnosed 2022; MTX 2026-02-01 to 2026-06-01 = 120 days, stopped for elevated liver enzymes, an intolerance. No member ID appears anywhere and case.json member_id is null."
+}

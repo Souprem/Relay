@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Ashgrove Rheumatology - Laboratory Report - 2026-01-20
+Patient reference SYN-4409.
+Rheumatoid factor: positive, 68 IU/mL (reference <14).
+Anti-CCP antibody: positive, 145 U/mL (reference <20).
+ESR: 42 mm/hr (elevated).
+CRP: 2.1 mg/dL (elevated).

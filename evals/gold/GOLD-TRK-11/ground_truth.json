@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter and medication_history agree: MTX 2026-01-12 to 2026-06-01 = 140 days, stopped for mouth ulcers, an intolerance. Patient is 18 per case.json and the letter."
+}

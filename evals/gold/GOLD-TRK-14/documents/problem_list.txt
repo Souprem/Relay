@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Thistledown Rheumatology - Problem List Update - 2026-07-01
+Patient reference SYN-3317. 55-year-old man.
+- Dx: seropositive RA since 2023, active synovitis at both wrists and MCPs today.
+- MTX 20 mg weekly, oral, 2026-01-26 to 2026-06-22, discontinued for inadequate response.
+- Hypertension, controlled on lisinopril.
+- Plan: Request Immunara given the inadequate response to MTX.

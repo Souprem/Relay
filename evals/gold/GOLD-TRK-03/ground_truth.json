@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "progress_note and medication_history agree: MTX 2025-11-17 to 2026-03-23 = 126 days, stopped for inadequate response. The father's two-week methotrexate trial is family history and not evidence about this patient (E2)."
+}

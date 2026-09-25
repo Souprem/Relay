@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - ExampleHealth Gold - Member Insurance Card
+Payer: ExampleHealth
+Plan: ExampleHealth Gold
+Member ID: EXH-771905
+Group Number: EH-40218
+Member Services: 555-0142

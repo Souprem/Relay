@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA diagnosed 2019; hydroxychloroquine and sulfasalazine, January 2025 to January 2026, inadequate response, but neither is methotrexate (E4). Methotrexate has not been taken, which documents the treatment history."
+}

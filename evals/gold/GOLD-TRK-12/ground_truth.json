@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA established 2024; MTX January 5, 2026 to June 15, 2026 = 161 days, stopped for inadequate response. Patient is 17 per case.json, so the engine's age gate routes this to review."
+}

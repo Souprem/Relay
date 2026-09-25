@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA established 2023; MTX October 1, 2025 to March 1, 2026 = 151 days, stopped for inadequate response. Patient is 17 per case.json on as_of_date 2026-07-10, turning 18 next month, so the age gate still applies."
+}

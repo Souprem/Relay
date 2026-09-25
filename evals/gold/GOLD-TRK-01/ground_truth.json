@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA established 2021; patient has taken hydroxychloroquine only and has not taken methotrexate. The mother's 2019 methotrexate course is family history, not evidence about this patient (E2)."
+}

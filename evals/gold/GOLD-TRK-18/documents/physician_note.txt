@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Hawksmoor Rheumatology - Visit Summary - 2026-07-01
+Patient reference SYN-1284. Six months of migrating joint pain, now settling into both wrists and hands, brought this 44-year-old man to rheumatology earlier this year.
+
+Given the pattern of symmetric small-joint swelling, suspected rheumatoid arthritis was noted at his first visit, and empiric methotrexate was started while further workup was pending. He took oral methotrexate 20 mg weekly from 2026-02-02 to 2026-06-22, discontinued because his swelling and stiffness had not improved despite the trial, an inadequate response. Serologic testing has not yet been completed.
+
+Immunara is being requested given his ongoing symptoms.

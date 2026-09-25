@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA since 2023 (Dx); MTX 2026-01-26 to 2026-06-22 = 147 days, stopped for inadequate response. RA and MTX are the only names used for the diagnosis and drug; insurance_card confirms the member ID."
+}
