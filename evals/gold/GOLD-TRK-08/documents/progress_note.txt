@@ -1,6 +1,7 @@
 SYNTHETIC RECORD - Example Dovetail Rheumatology - Progress Note - 2026-06-01
-Patient reference SYN-7285. 34-year-old woman, seropositive rheumatoid arthritis diagnosed 2021.
+Patient reference SYN-7285. Synovitis remains present at both wrists on today's exam for this 34-year-old woman.
+- Assessment: seropositive rheumatoid arthritis, diagnosed 2021.
 - Methotrexate 15 mg weekly, oral, started 2025-12-15.
 - Nausea worsened over time despite antiemetic support; methotrexate was stopped on 2026-03-02.
-- No further DMARD has been started since discontinuation; synovitis remains present at the wrists.
+- No further DMARD has been started since discontinuation.
 - Plan: Request Immunara given the intolerance to methotrexate.

@@ -1,4 +1,4 @@
 SYNTHETIC RECORD - Example Hazelwood Rheumatology - Clinic Note - 2025-11-12
-Patient reference SYN-6650. 41-year-old man with seropositive rheumatoid arthritis, diagnosed 2019, referred today for escalation of therapy after persistent wrist and knee synovitis on hydroxychloroquine.
+Patient reference SYN-6650. Persistent wrist and knee synovitis despite hydroxychloroquine brought this 41-year-old man in today for escalation of therapy. His seropositive rheumatoid arthritis was diagnosed in 2019.
 
 Plan: Start oral methotrexate 15 mg weekly. Provide folic acid and review liver monitoring requirements before the first dose.

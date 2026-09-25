@@ -1,6 +1,6 @@
 SYNTHETIC RECORD - Example Kettle Falls Rheumatology - Progress Note - 2026-06-16
 Patient reference SYN-2246.
-Subjective: This 46-year-old man returns for follow-up of wrist and knuckle swelling that has persisted despite completing a methotrexate trial. Family history: his father briefly tried methotrexate for two weeks in 2015 but stopped after starting a new job, unrelated to this patient's own treatment.
+Subjective: This 46-year-old man returns for follow-up of wrist and knuckle swelling that has persisted despite completing a methotrexate trial. He also mentioned, in passing, that his father had briefly tried methotrexate for two weeks in 2015 before stopping after starting a new job -- unrelated to this patient's own treatment.
 Objective: Synovitis remains present at the wrists and MCPs bilaterally. Vitals stable, blood pressure 122/78.
 Assessment: Seropositive rheumatoid arthritis, diagnosed 2022. Methotrexate 20 mg weekly, taken 2025-11-17 to 2026-03-23, discontinued for inadequate response given persistent synovitis.
 Plan: Start Immunara. Continue folic acid supplementation. Follow up in two months.

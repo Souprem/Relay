@@ -1,6 +1,6 @@
 SYNTHETIC RECORD - Example Amberwood Rheumatology - Follow-up Visit - 2026-07-14
 Patient reference SYN-7701. Morning stiffness lasting nearly two hours brought this 52-year-old woman back to clinic this week, along with new swelling across both hands.
 
-Her rheumatoid arthritis, seropositive and diagnosed in 2021, remains active; synovitis is present today at the wrists and MCP joints bilaterally. Family history: her mother was treated for rheumatoid arthritis and took methotrexate for six months, from March 2019 through September 2019, according to the patient. This patient herself has taken hydroxychloroquine 200 mg twice daily for the past year without adequate control of her joint symptoms; she has not taken methotrexate.
+Her rheumatoid arthritis, seropositive and diagnosed in 2021, remains active; synovitis is present today at the wrists and MCP joints bilaterally. She mentioned that her mother had also been treated for rheumatoid arthritis, taking methotrexate for six months, from March 2019 through September 2019. This patient herself has taken hydroxychloroquine 200 mg twice daily for the past year without adequate control of her joint symptoms; she has not taken methotrexate.
 
 Plan: Request Immunara given the inadequate response to hydroxychloroquine. Continue current supportive care and repeat labs in six weeks.
