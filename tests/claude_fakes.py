@@ -93,3 +93,28 @@ def status_error(status: int) -> anthropic.APIStatusError:
 
 def connection_error() -> anthropic.APIConnectionError:
     return anthropic.APIConnectionError(request=_REQUEST)
+
+
+class FakeMessages:
+    """Stands in for AsyncAnthropic().messages. create() replays scripted outcomes (a Message or
+    an exception to raise) in order; the last one repeats."""
+
+    def __init__(self, *outcomes, batches=None):
+        self.outcomes = list(outcomes)
+        self.calls: list[dict] = []
+        self.batches = batches
+
+    async def create(self, **params):
+        self.calls.append(params)
+        outcome = self.outcomes.pop(0) if len(self.outcomes) > 1 else self.outcomes[0]
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return outcome
+
+
+class SleepRecorder:
+    def __init__(self):
+        self.delays: list[float] = []
+
+    async def __call__(self, delay: float) -> None:
+        self.delays.append(delay)

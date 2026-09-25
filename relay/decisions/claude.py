@@ -10,19 +10,22 @@ measures. A refusal or a truncated reply becomes an error bundle, which the engi
 HUMAN_REVIEW.
 """
 
+import asyncio
 import json
 import math
-from collections.abc import Mapping, Sequence
+import time
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from decimal import Decimal
 from importlib.metadata import version
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
+import anthropic
 from anthropic.types import Message, Usage
 from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
 from pydantic import ValidationError
 
 from relay.cases.models import CaseInput
-from relay.cases.policies import AuthorizationPolicy
+from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import DecisionBundle
 from relay.decisions.claude_prompt import (
     case_schema,
@@ -60,6 +63,9 @@ BATCH_DISCOUNT = Decimal("0.5")
 # means the model did not give a distribution, so it is rejected instead.
 MISSING_EVIDENCE_SUM_TOLERANCE = 0.1
 Mode = Literal["sync", "batch"]
+# The SDK already retries 429, >= 500 and connection errors twice (max_retries=2); the provider
+# adds one more attempt after this pause before giving up on a case (2D spec L10).
+RETRY_DELAY_S = 5.0
 
 
 class ClaudeResponseError(Exception):
@@ -270,3 +276,77 @@ def bundle_from_message(
     derivations |= composed
     derivations["missing_evidence"] = normalization
     return DecisionBundle(**common, decisions=decisions, derivations=derivations)
+
+
+class MessagesClient(Protocol):
+    """The part of anthropic.AsyncAnthropic().messages the sync provider uses."""
+
+    async def create(self, **params: Any) -> Message: ...
+
+
+class ClaudeProvider:
+    """Sync mode: one awaited Messages API request per case, latency measured."""
+
+    name = PROVIDER_NAME
+
+    def __init__(
+        self,
+        messages: MessagesClient,
+        *,
+        question_set: str = Q_V0_2,
+        policy_loader: Callable[[str], AuthorizationPolicy] = load_policy,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        retry_delay_s: float = RETRY_DELAY_S,
+    ) -> None:
+        claude_question_set_version(question_set)
+        self._messages = messages
+        self._question_set = question_set
+        self._policy_loader = policy_loader
+        self._sleep = sleep
+        self._retry_delay_s = retry_delay_s
+
+    async def _create(self, params: MessageCreateParamsNonStreaming) -> Message:
+        """Most specific error first. Other 4xx errors are final at once; anything that is not
+        an Anthropic API error propagates."""
+        for attempt in (1, 2):
+            try:
+                return await self._messages.create(**params)
+            except anthropic.RateLimitError:
+                if attempt == 2:
+                    raise
+            except anthropic.APIStatusError as error:
+                if error.status_code < 500 or attempt == 2:
+                    raise
+            except anthropic.APIConnectionError:
+                if attempt == 2:
+                    raise
+            await self._sleep(self._retry_delay_s)
+        raise AssertionError("unreachable")
+
+    async def decide(self, case: CaseInput) -> DecisionBundle:
+        policy = self._policy_loader(case.policy_id)
+        params = request_params(case, policy, self._question_set)
+        started = time.perf_counter()
+        try:
+            message = await self._create(params)
+        except (
+            anthropic.RateLimitError,
+            anthropic.APIStatusError,
+            anthropic.APIConnectionError,
+        ) as error:
+            return error_bundle(
+                case.id,
+                policy,
+                f"{type(error).__name__}: {error}",
+                mode="sync",
+                question_set=self._question_set,
+                latency_ms=round((time.perf_counter() - started) * 1000),
+            )
+        return bundle_from_message(
+            message,
+            case,
+            policy,
+            mode="sync",
+            question_set=self._question_set,
+            latency_ms=round((time.perf_counter() - started) * 1000),
+        )
