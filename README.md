@@ -76,13 +76,13 @@ Per-question accuracy (yes/no at p >= 0.5; choice by top answer):
   missing_evidence          80.0%
 
 Cases (expected -> actual):
-  AUTO-02   AUTO_PROCESS  -> AUTO_PROCESS  ok
-  AUTO-01   AUTO_PROCESS  -> AUTO_PROCESS  ok
   ADV-01    HUMAN_REVIEW  -> HUMAN_REVIEW  ok
   ADV-02    HUMAN_REVIEW  -> REQUEST_INFO  MISS
+  AUTO-01   AUTO_PROCESS  -> AUTO_PROCESS  ok
+  AUTO-02   AUTO_PROCESS  -> AUTO_PROCESS  ok
   AUTO-03   AUTO_PROCESS  -> HUMAN_REVIEW  MISS
-  REV-02    HUMAN_REVIEW  -> HUMAN_REVIEW  ok
   REV-01    HUMAN_REVIEW  -> HUMAN_REVIEW  ok
+  REV-02    HUMAN_REVIEW  -> HUMAN_REVIEW  ok
   RI-01     REQUEST_INFO  -> REQUEST_INFO  ok
   RI-02     REQUEST_INFO  -> REQUEST_INFO  ok
   RI-03     REQUEST_INFO  -> REQUEST_INFO  ok
@@ -92,6 +92,13 @@ Results: results/run_20260925T042324Z_eee114.json
 
 These numbers come from **ten** hand-authored synthetic cases. They show the pipeline working end
 to end; they are not a statistically meaningful benchmark.
+
+The case list above is ordered by case ID (a fix landed after this run to make eval output
+deterministic regardless of run mode); every metric is unchanged from the original run. The
+committed manifest and report still reference the original, git-ignored `traces/` path used at
+run time, and the manifest's recorded git SHA ends in `-dirty` because the run happened before the
+README/baseline commit; `relay/` and `policies/` were unchanged between that SHA and the baseline
+commit.
 
 ## Limitations
 
