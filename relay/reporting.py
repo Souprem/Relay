@@ -1,4 +1,4 @@
-"""Human-readable output: terminal run table, Markdown run report, eval summary."""
+"""Human-readable output: run table and report, eval summary, frontier, and the eval report."""
 
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
@@ -6,8 +6,10 @@ from typing import Any
 
 from relay.cases.models import CaseInput
 from relay.decisions.base import DecisionBundle, DecisionId
+from relay.evaluation.calibration import CalibrationReport, RunCalibration
+from relay.evaluation.confusion import ConfusionMatrix
 from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
-from relay.evaluation.metrics import EvalSummary
+from relay.evaluation.metrics import EvalSummary, RunIdentity
 from relay.traces.models import RunManifest, WorkflowTrace
 
 DISCLAIMER = (
@@ -141,7 +143,7 @@ def _row(label: str, value: str) -> str:
     return f"  {label:<{_LABEL_WIDTH}}{value}"
 
 
-def render_eval_summary(s: EvalSummary) -> str:
+def render_eval_summary(s: EvalSummary, *, include_cases: bool = True) -> str:
     lines = [
         f"Relay eval — run {s.run_id}",
         f"provider {s.provider} ({', '.join(s.provider_versions)}) · policy {s.policy_version} · "
@@ -177,6 +179,8 @@ def render_eval_summary(s: EvalSummary) -> str:
     ]
     for question, accuracy in s.per_question_accuracy.items():
         lines.append(_row(question, "unavailable" if accuracy is None else f"{accuracy:.1%}"))
+    if not include_cases:
+        return "\n".join(lines)
     lines += ["", "Cases (expected -> actual):"]
     for c in s.cases:
         flags = "ok" if c.correct else "MISS"
@@ -261,3 +265,185 @@ def render_frontier_table(result: SweepResult) -> str:
         lines.append("".join(c.ljust(w) for c, w in zip(cells, widths, strict=True)).rstrip())
     lines += ["", describe_selection(result), f"Rule: {SELECTION_RULE}."]
     return "\n".join(lines)
+
+
+LOW_BIN_N = 20
+REPORT_SECTIONS: tuple[str, ...] = (
+    "## Run identity",
+    "## Action metrics",
+    "## Confusion matrices",
+    "## Calibration",
+    "## Automation/safety frontier",
+    "## Latency and cost",
+    "## Limitations",
+)
+LIMITATIONS: tuple[str, ...] = (
+    "Synthetic data only. Generated documents come from fixed templates and phrase banks, so "
+    "they exercise the policy logic and pipeline, not real-world document variety.",
+    "Expected actions are derived from the generator's ground-truth facts through the same "
+    "engine; they are not independent expert labels.",
+    "Step therapy is composed from date parts treated as independent, which is an approximation.",
+    "Generator and pipeline conventions apply: month-only dates are judged conservatively, and "
+    "the pipeline treats a date without a stated year as unknown (gen-v0.2 does not emit them).",
+    "Calibration bins with few predictions are unreliable, and thresholds chosen on one dataset "
+    "must be confirmed on held-out data.",
+)
+
+
+def _num(value: float | None, digits: int = 3) -> str:
+    return "—" if value is None else f"{value:.{digits}f}"
+
+
+def _ids(values: Sequence[str]) -> str:
+    return ", ".join(f"`{v}`" for v in values) if values else "unknown"
+
+
+def render_identity_markdown(identity: RunIdentity) -> list[str]:
+    dataset = f"`{identity.dataset_id}`"
+    if identity.dataset_hash:
+        dataset += f" (manifest hash `{identity.dataset_hash}`)"
+    else:
+        dataset += " (no dataset manifest)"
+    return [
+        "## Run identity",
+        "",
+        f"- Run: `{identity.run_id}`",
+        f"- Dataset: {dataset}",
+        f"- Provider: `{identity.provider}` · model {_ids(identity.provider_versions)}"
+        f" · client {_ids(identity.client_versions) if identity.client_versions else 'n/a'}",
+        f"- Question set: {_ids(identity.question_set_versions)}"
+        f" (hash {_ids(identity.question_set_hashes)})",
+        f"- Policy version: {_ids(identity.policy_versions)}"
+        f" · policy text hash {_ids(identity.policy_text_hashes)}",
+        f"- Thresholds version: {_ids(identity.thresholds_versions)}",
+        f"- Relay commit: {_ids(identity.relay_git_shas)}",
+        "",
+    ]
+
+
+def render_confusion_markdown(matrices: Mapping[str, ConfusionMatrix]) -> list[str]:
+    invalid = next(iter(matrices.values())).invalid_excluded if matrices else 0
+    lines = [
+        "## Confusion matrices",
+        "",
+        "Evaluation only: rows are the ground-truth answer, columns the provider's answer "
+        "(yes/no at p_yes >= 0.5; the missing-evidence choice by its top answer). "
+        f"Invalid bundles excluded: {invalid}.",
+        "",
+    ]
+    for decision, m in matrices.items():
+        lines += [
+            f"### {decision}",
+            "",
+            "| truth / predicted | " + " | ".join(m.labels) + " |",
+            "|---|" + "---|" * len(m.labels),
+        ]
+        for label, row in zip(m.labels, m.counts, strict=True):
+            lines.append(f"| {label} | " + " | ".join(str(c) for c in row) + " |")
+        lines.append("")
+    return lines
+
+
+def _calibration_table(decision: str, report: CalibrationReport) -> list[str]:
+    lines = [
+        f"### {decision}",
+        "",
+        f"n = {report.n} · Brier {_num(report.brier)} · ECE {_num(report.ece)}",
+        "",
+        "| Bin | n | Mean confidence | Accuracy | Gap (accuracy − confidence) | Flag |",
+        "|---|---|---|---|---|---|",
+    ]
+    for i, b in enumerate(report.bins):
+        closing = "]" if i == len(report.bins) - 1 else ")"
+        gap = None
+        if b.accuracy is not None and b.mean_confidence is not None:
+            gap = b.accuracy - b.mean_confidence
+        flag = "empty" if b.n == 0 else (f"low n (< {LOW_BIN_N})" if b.n < LOW_BIN_N else "")
+        lines.append(
+            f"| [{b.lower:.1f}, {b.upper:.1f}{closing} | {b.n} | {_num(b.mean_confidence)} | "
+            f"{_num(b.accuracy)} | {'—' if gap is None else f'{gap:+.3f}'} | {flag} |"
+        )
+    return lines + [""]
+
+
+def render_calibration_markdown(calibration: RunCalibration) -> list[str]:
+    lines = [
+        "## Calibration",
+        "",
+        "Confidence is max(p_yes, 1 − p_yes) for yes/no decisions and the probability of the "
+        "chosen answer for missing evidence. Calibration only means something on data that was "
+        "not used to tune anything (held-out data). Bins with fewer than "
+        f"{LOW_BIN_N} predictions are flagged: their accuracy is unreliable. "
+        f"Invalid bundles excluded: {calibration.invalid_excluded}.",
+        "",
+    ]
+    for decision, report in calibration.decisions.items():
+        lines += _calibration_table(decision, report)
+    return lines
+
+
+def render_frontier_markdown(result: SweepResult) -> list[str]:
+    lines = [
+        "## Automation/safety frontier",
+        "",
+        "Only `auto_process` is swept (0.50–0.99 in steps of 0.01); every other threshold stays "
+        "at the run's version. The engine is re-run on the stored decisions, so this costs no "
+        f"API calls. Ceiling: unsafe automation rate <= {result.ceiling:.1%}. "
+        f"Selection rule: {SELECTION_RULE}.",
+        "",
+        "| " + " | ".join(FRONTIER_HEADERS) + " |",
+        "|" + "---|" * len(FRONTIER_HEADERS),
+    ]
+    for point, note in frontier_rows(result):
+        lines.append("| " + " | ".join(_frontier_cells(point, note)) + " |")
+    lines += [
+        "",
+        describe_selection(result),
+        "",
+        "The selection above is computed on this run's own data. For a held-out report, the "
+        "threshold to judge is the `--at` row, chosen beforehand on the dev set; the in-sample "
+        "selection is shown for reference only.",
+        "",
+    ]
+    return lines
+
+
+def _latency_cost_markdown(s: EvalSummary) -> list[str]:
+    if s.latency_p50_ms is None or s.latency_p95_ms is None:
+        latency = "unavailable"
+    else:
+        latency = f"p50 {s.latency_p50_ms} ms · p95 {s.latency_p95_ms} ms"
+        if s.latency_low_sample:
+            latency += f" (low sample: n={s.n_cases})"
+    if s.total_cost_usd is None or s.cost_per_case_usd is None:
+        cost = "unavailable"
+    else:
+        cost = f"{_money(s.total_cost_usd)} total · {_money(s.cost_per_case_usd)} per case"
+    return ["## Latency and cost", "", f"- Latency: {latency}", f"- Estimated cost: {cost}", ""]
+
+
+def render_eval_report(
+    identity: RunIdentity,
+    summary: EvalSummary,
+    calibration: RunCalibration,
+    confusion: Mapping[str, ConfusionMatrix],
+    sweep: SweepResult,
+) -> str:
+    lines = [f"# Relay evaluation report — {identity.run_id}", "", f"> {DISCLAIMER}", ""]
+    if identity.provider == "groundtruth":
+        lines += [f"**{GROUNDTRUTH_NOTE}**", ""]
+    lines += render_identity_markdown(identity)
+    lines += [
+        "## Action metrics",
+        "",
+        "```text",
+        render_eval_summary(summary, include_cases=False),
+        "```",
+        "",
+    ]
+    lines += render_confusion_markdown(confusion)
+    lines += render_calibration_markdown(calibration)
+    lines += render_frontier_markdown(sweep)
+    lines += _latency_cost_markdown(summary)
+    lines += ["## Limitations", ""] + [f"- {item}" for item in LIMITATIONS]
+    return "\n".join(lines) + "\n"

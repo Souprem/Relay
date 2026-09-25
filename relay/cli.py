@@ -18,14 +18,18 @@ from relay.decisions.base import DecisionProvider
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
 from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_1, Q_V0_2
+from relay.evaluation.artifacts import write_eval_bundle
+from relay.evaluation.calibration import calibrate_run
+from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
-from relay.evaluation.metrics import EvalError, score_run
+from relay.evaluation.metrics import EvalError, run_identity, score_run
 from relay.evaluation.runner import RunConfigError, run_dataset, validate_run_config
 from relay.generation.generator import generate_dataset, verify_dataset
-from relay.generation.manifest import MANIFEST_DIR, read_manifest, write_manifest
+from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest, write_manifest
 from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
+    describe_selection,
     render_eval_summary,
     render_frontier_table,
     render_run_report,
@@ -271,6 +275,59 @@ def sweep_command(
     csv_path.write_text(frontier_csv(result.points), encoding="utf-8", newline="\n")
     typer.echo(render_frontier_table(result))
     typer.echo(f"\nSweep: {json_path}\nFrontier CSV: {csv_path}")
+
+
+def _manifest_hash(dataset: Path, cases: list[PriorAuthCase]) -> str | None:
+    """The dataset manifest hash if <dataset>/../manifests/<dataset_id>.json exists and matches."""
+    dataset_id = cases[0].input.dataset_id
+    path = dataset.parent / "manifests" / f"{dataset_id}.json"
+    if not path.exists():
+        return None
+    try:
+        manifest = read_manifest(path)
+    except (ValueError, OSError) as error:
+        raise _fail(f"{path}: {error}") from error
+    if manifest.dataset_hash != dataset_hash(cases):
+        raise _fail(f"{dataset} does not match its manifest {path} (dataset hash differs)")
+    return manifest.dataset_hash
+
+
+@app.command()
+def report(
+    dataset: Dataset,
+    traces: TraceFile,
+    ceiling: Ceiling = DEFAULT_CEILING,
+    at: At = None,
+    out: Annotated[
+        Path | None, typer.Option(help="Bundle directory (default reports/eval-<run_id>/).")
+    ] = None,
+) -> None:
+    """Write the evaluation report bundle for stored traces (no provider calls)."""
+    cases = _load_cases(dataset)
+    trace_list = _read_trace_file(traces)
+    try:
+        summary = score_run(trace_list, cases)
+        calibration = calibrate_run(trace_list, cases)
+        confusion = confusion_matrices(trace_list, cases)
+        sweep = run_sweep(trace_list, cases, ceiling=ceiling, at=at)
+    except (EvalError, ValueError, KeyError) as error:
+        raise _fail(str(error)) from error
+    identity = run_identity(trace_list, dataset_hash=_manifest_hash(dataset, cases))
+    out_dir = out if out is not None else Path("reports") / f"eval-{summary.run_id}"
+    paths = write_eval_bundle(
+        out_dir,
+        identity=identity,
+        summary=summary,
+        calibration=calibration,
+        confusion=confusion,
+        sweep=sweep,
+    )
+    typer.echo(render_eval_summary(summary, include_cases=False))
+    typer.echo("")
+    typer.echo(describe_selection(sweep))
+    typer.echo(f"\nReport bundle: {out_dir}")
+    for path in paths:
+        typer.echo(f"  {path.name}")
 
 
 @app.command()

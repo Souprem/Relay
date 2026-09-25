@@ -1,7 +1,9 @@
 """Offline analysis commands (sweep, report, compare) on a ground-truth run of generated cases."""
 
 import csv
+import gzip
 import json
+import shutil
 
 import pytest
 from typer.testing import CliRunner
@@ -106,3 +108,74 @@ def test_sweep_with_a_corrupt_trace_file_exits_2(gt_run, tmp_path):
     )
     assert result.exit_code == 2
     assert result.output.startswith("error:")
+
+
+def test_report_writes_the_bundle_with_the_manifest_hash(gt_run, tmp_path, monkeypatch):
+    monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
+    root, dataset, trace_file = gt_run
+    out = tmp_path / "bundle"
+    result = invoke(
+        root,
+        "report",
+        "--dataset",
+        str(dataset),
+        "--traces",
+        str(trace_file),
+        "--at",
+        "0.95",
+        "--out",
+        str(out),
+    )
+    assert result.exit_code == 0, result.output
+    names = sorted(p.name for p in out.iterdir())
+    assert names == sorted(
+        [
+            "summary.json",
+            "calibration.json",
+            "calibration.csv",
+            "frontier.csv",
+            "confusion.json",
+            "report.md",
+        ]
+    )
+    manifest_hash = json.loads((root / "manifests" / "gen-analysis.json").read_text())[
+        "dataset_hash"
+    ]
+    report = (out / "report.md").read_text()
+    assert f"manifest hash `{manifest_hash}`" in report
+    assert "## Calibration" in report and "## Automation/safety frontier" in report
+    assert "40/40 (100.0%)" in report
+    assert "Selected operating point: auto_process >= 0.99" in result.output
+
+
+def test_report_reads_gzipped_traces(gt_run, tmp_path):
+    root, dataset, trace_file = gt_run
+    gz = tmp_path / "traces.jsonl.gz"
+    gz.write_bytes(gzip.compress(trace_file.read_bytes()))
+    result = invoke(
+        root, "report", "--dataset", str(dataset), "--traces", str(gz), "--out", str(tmp_path / "b")
+    )
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "b" / "report.md").exists()
+
+
+def test_report_refuses_a_dataset_that_does_not_match_its_manifest(gt_run, tmp_path):
+    root, dataset, trace_file = gt_run
+    copy = tmp_path / "gen-analysis"
+    shutil.copytree(dataset, copy)
+    manifest = json.loads((root / "manifests" / "gen-analysis.json").read_text())
+    manifest["dataset_hash"] = "sha256:" + "0" * 64
+    (tmp_path / "manifests").mkdir()
+    (tmp_path / "manifests" / "gen-analysis.json").write_text(json.dumps(manifest))
+    result = invoke(
+        root,
+        "report",
+        "--dataset",
+        str(copy),
+        "--traces",
+        str(trace_file),
+        "--out",
+        str(tmp_path / "b"),
+    )
+    assert result.exit_code == 2
+    assert "does not match its manifest" in result.output

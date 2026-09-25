@@ -1,7 +1,7 @@
 """Workflow- and decision-level metrics. Unavailable metrics are None, never omitted."""
 
 import math
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -63,6 +63,48 @@ class EvalSummary(BaseModel):
     total_cost_usd: Decimal | None
     cost_per_case_usd: Decimal | None
     cases: list[ScoredCase]
+
+
+class RunIdentity(BaseModel):
+    """What produced a run: enough to tell whether two reports are comparable."""
+
+    run_id: str
+    dataset_id: str
+    dataset_hash: str | None
+    provider: str
+    provider_versions: list[str]
+    client_versions: list[str]
+    question_set_versions: list[str]
+    question_set_hashes: list[str]
+    policy_versions: list[str]
+    policy_text_hashes: list[str]
+    thresholds_versions: list[str]
+    relay_git_shas: list[str]
+
+
+def _present(values: Iterable[str | None]) -> list[str]:
+    return sorted({v for v in values if v is not None})
+
+
+def run_identity(
+    traces: Sequence[WorkflowTrace], *, dataset_hash: str | None = None
+) -> RunIdentity:
+    if not traces:
+        raise EvalError("no traces to describe")
+    return RunIdentity(
+        run_id=traces[0].run_id,
+        dataset_id=traces[0].dataset_id,
+        dataset_hash=dataset_hash,
+        provider=traces[0].provider,
+        provider_versions=_present(t.provider_version for t in traces),
+        client_versions=_present(t.decisions.client_version for t in traces),
+        question_set_versions=_present(t.question_set_version for t in traces),
+        question_set_hashes=_present(t.question_set_hash for t in traces),
+        policy_versions=_present(t.policy_version for t in traces),
+        policy_text_hashes=_present(t.policy_text_hash for t in traces),
+        thresholds_versions=_present(t.thresholds.version for t in traces),
+        relay_git_shas=_present(t.relay_git_sha for t in traces),
+    )
 
 
 def percentile(values: Sequence[int], pct: float) -> int | None:
