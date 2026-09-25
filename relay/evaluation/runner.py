@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 
 from relay.cases.models import PriorAuthCase
 from relay.cases.policies import AuthorizationPolicy, load_policy
-from relay.decisions.base import DecisionProvider
+from relay.decisions.base import DecisionProvider, PreparingProvider
 from relay.traces.models import WorkflowTrace
 from relay.traces.store import TraceStore, new_trace_id
 from relay.workflow.engine import determine_action
@@ -59,6 +59,8 @@ async def run_dataset(
     policies = validate_run_config(cases, policy_version)
     thresholds = load_thresholds(policy_version)
     semaphore = asyncio.Semaphore(concurrency)
+    if isinstance(provider, PreparingProvider):
+        await provider.prepare([case.input for case in cases])
 
     async def run_one(case: PriorAuthCase) -> WorkflowTrace:
         policy = policies[case.input.policy_id]
