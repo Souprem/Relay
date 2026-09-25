@@ -65,6 +65,11 @@ class EvalSummary(BaseModel):
     latency_n: int | None = None
     # derivations["execution"]["mode"] values seen in the run, e.g. ["batch"]; [] if none.
     execution_modes: list[str] = Field(default_factory=list)
+    # Bundles whose provider stopped with stop_reason "refusal"; None when no bundle in the run
+    # records a stop_reason (providers other than Claude, and pre-2D results.json files).
+    refusals: int | None = None
+    # Share of prompt tokens served from the prompt cache, over bundles that record usage.
+    cache_read_share: float | None = None
     total_cost_usd: Decimal | None
     cost_per_case_usd: Decimal | None
     cases: list[ScoredCase]
@@ -118,6 +123,27 @@ def execution_mode(bundle: DecisionBundle) -> str | None:
     if isinstance(execution, dict) and isinstance(execution.get("mode"), str):
         return execution["mode"]
     return None
+
+
+def _refusals(traces: Sequence[WorkflowTrace]) -> int | None:
+    reasons = [t.decisions.derivations.get("stop_reason") for t in traces]
+    if all(reason is None for reason in reasons):
+        return None
+    return sum(reason == "refusal" for reason in reasons)
+
+
+def _cache_read_share(traces: Sequence[WorkflowTrace]) -> float | None:
+    usages = [t.decisions.derivations.get("usage") for t in traces]
+    usages = [u for u in usages if isinstance(u, dict)]
+    prompt = sum(
+        u.get("input_tokens", 0)
+        + u.get("cache_creation_input_tokens", 0)
+        + u.get("cache_read_input_tokens", 0)
+        for u in usages
+    )
+    if not prompt:
+        return None
+    return sum(u.get("cache_read_input_tokens", 0) for u in usages) / prompt
 
 
 def percentile(values: Sequence[int], pct: float) -> int | None:
@@ -232,6 +258,8 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
         latency_low_sample=len(latencies) < LOW_SAMPLE_N,
         latency_n=len(latencies),
         execution_modes=_present(execution_mode(t.decisions) for t in traces),
+        refusals=_refusals(traces),
+        cache_read_share=_cache_read_share(traces),
         total_cost_usd=total_cost,
         cost_per_case_usd=None if total_cost is None else total_cost / n,
         cases=sorted(scored, key=lambda c: c.case_id),

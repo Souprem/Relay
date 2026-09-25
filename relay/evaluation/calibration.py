@@ -20,6 +20,12 @@ BINARY_EDGES: tuple[float, ...] = (0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 CHOICE_EDGES: tuple[float, ...] = (0.0, *BINARY_EDGES)
 MISSING_EVIDENCE_LABELS: tuple[str, ...] = tuple(m.value for m in MissingEvidence)
 _ROUND = 12  # float noise such as 0.7000000000000001 must not move a value across a bin edge
+PARTIAL_TOLERANCE = 1e-6
+
+
+def is_partial(probabilities: Mapping[str, float], labels: Sequence[str]) -> bool:
+    """True when the distribution leaves some probability mass on no label."""
+    return sum(probabilities.get(label, 0.0) for label in labels) < 1.0 - PARTIAL_TOLERANCE
 
 
 class CalibrationBin(BaseModel):
@@ -42,6 +48,9 @@ class RunCalibration(BaseModel):
 
     decisions: dict[str, CalibrationReport]
     invalid_excluded: int
+    # Missing-evidence distributions whose probabilities sum to less than 1: the Brier score
+    # counts the unassigned mass as 0 on every label. (0 in files written before Phase 2D.)
+    partial_choice_distributions: int = 0
 
 
 def _bin_index(confidence: float, edges: Sequence[float]) -> int:
@@ -139,5 +148,9 @@ def calibrate_run(
     reports = {q.value: binary_calibration(pairs) for q, pairs in binary.items()}
     reports[DecisionId.MISSING_EVIDENCE.value] = choice_calibration(choice, MISSING_EVIDENCE_LABELS)
     return RunCalibration(
-        decisions={q.value: reports[q.value] for q in DecisionId}, invalid_excluded=invalid
+        decisions={q.value: reports[q.value] for q in DecisionId},
+        invalid_excluded=invalid,
+        partial_choice_distributions=sum(
+            is_partial(probs, MISSING_EVIDENCE_LABELS) for probs, _, _ in choice
+        ),
     )

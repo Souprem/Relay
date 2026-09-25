@@ -34,6 +34,12 @@ def _money(value: Decimal | None) -> str:
     return "unavailable" if value is None else f"${value:.7f}"
 
 
+def _cache_text(s: EvalSummary) -> str:
+    if s.cache_read_share is None:
+        return "n/a"
+    return f"{s.cache_read_share:.1%} of prompt tokens"
+
+
 def _latency_count(s: EvalSummary) -> int:
     """Cases with a recorded latency (every case, for results written before latency_n)."""
     return s.n_cases if s.latency_n is None else s.latency_n
@@ -211,8 +217,10 @@ def render_eval_summary(s: EvalSummary, *, include_cases: bool = True) -> str:
         _row("Human escalation rate", _rate(s.human_review_count, s.n_cases)),
         _row("Unsafe automation rate", uar),
         _row("Invalid outputs", str(s.invalid_outputs)),
+        *([_row("Refusals", str(s.refusals))] if s.refusals is not None else []),
         _row("Latency p50 / p95", latency),
         _row("Cost", cost),
+        *([_row("Prompt cache reads", _cache_text(s))] if s.cache_read_share is not None else []),
         "",
         "Per-question accuracy (yes/no at p >= 0.5; choice by top answer):",
     ]
@@ -429,6 +437,11 @@ def render_calibration_markdown(calibration: RunCalibration) -> list[str]:
         f"{LOW_BIN_N} predictions are flagged: their accuracy is unreliable. "
         f"Invalid bundles excluded: {calibration.invalid_excluded}.",
         "",
+        "Partial missing_evidence distributions (probabilities summing to less than 1; the "
+        "unassigned mass counts as 0 on every label in the Brier score): "
+        f"{calibration.partial_choice_distributions} of "
+        f"{calibration.decisions[DecisionId.MISSING_EVIDENCE.value].n}.",
+        "",
     ]
     for decision, report in calibration.decisions.items():
         lines += _calibration_table(decision, report)
@@ -539,8 +552,17 @@ def _comparison_rows(c: Comparison) -> list[list[str]]:
         ["Human escalation rate"]
         + [_rate(r.summary.human_review_count, r.summary.n_cases) for r in c.runs],
         ["Invalid outputs"] + [str(r.summary.invalid_outputs) for r in c.runs],
+        ["Refusals"]
+        + ["n/a" if r.summary.refusals is None else str(r.summary.refusals) for r in c.runs],
         ["Latency p50 / p95"] + [_latency_cell(r.summary) for r in c.runs],
         ["Cost per case"] + [_money(r.summary.cost_per_case_usd) for r in c.runs],
+        ["Prompt cache reads"] + [_cache_text(r.summary) for r in c.runs],
+        ["Partial missing_evidence distributions"]
+        + [
+            f"{r.calibration.partial_choice_distributions}/"
+            f"{r.calibration.decisions[DecisionId.MISSING_EVIDENCE.value].n}"
+            for r in c.runs
+        ],
     ]
     for decision in c.runs[0].calibration.decisions:
         rows.append(
