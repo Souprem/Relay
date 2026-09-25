@@ -7,7 +7,7 @@ ground truth at probability 1.0/0.0, which makes them independent of auto_proces
 
 from collections.abc import Sequence
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from relay.cases.models import PriorAuthCase
 from relay.cases.policies import load_policy
@@ -114,6 +114,28 @@ class SweepResult(BaseModel):
     selected: FrontierPoint | None
     at_point: FrontierPoint | None
     points: list[FrontierPoint]
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def frontier_flat(self) -> bool:
+        """True when every swept point has identical auto/unsafe/correct counts.
+
+        A flat frontier means the threshold has no effect on this dataset over the swept range:
+        automation, safety and correctness are all determined by something other than
+        auto_process (for example, certain 0.0/1.0 probabilities).
+        """
+        shapes = {(p.auto, p.unsafe, p.correct) for p in self.points}
+        return len(shapes) <= 1
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def ceiling_binding(self) -> bool:
+        """True when at least one point with >= 1 AUTO_PROCESS has UAR above the ceiling.
+
+        When this is False, the ceiling never excludes an automated point on this run, so the
+        selection rule is really picking the automation-plateau tie-break, not trading off safety.
+        """
+        return any(p.auto >= 1 and p.uar is not None and p.uar > self.ceiling for p in self.points)
 
 
 def run_sweep(

@@ -241,16 +241,25 @@ def _frontier_cells(point: FrontierPoint, note: str) -> list[str]:
 def describe_selection(result: SweepResult) -> str:
     ceiling = f"UAR <= {result.ceiling:.1%}"
     if result.selected is None:
-        return (
+        lines = [
             f"No threshold meets the ceiling ({ceiling} with at least one AUTO_PROCESS); "
             "nothing selected."
-        )
-    p = result.selected
-    return (
-        f"Selected operating point: auto_process >= {_threshold(p.auto_threshold)} "
-        f"(automation {_pct(p.automation_rate)}, UAR {p.unsafe}/{p.auto}, "
-        f"correct action {_pct(p.correct_action_rate)}; ceiling {ceiling})"
+        ]
+    else:
+        p = result.selected
+        lines = [
+            f"Selected operating point: auto_process >= {_threshold(p.auto_threshold)} "
+            f"(automation {_pct(p.automation_rate)}, UAR {p.unsafe}/{p.auto}, "
+            f"correct action {_pct(p.correct_action_rate)}; ceiling {ceiling})"
+        ]
+    if result.frontier_flat:
+        lines.append("Frontier is flat across all thresholds.")
+    lines.append(
+        "The UAR ceiling does not bind at any threshold."
+        if not result.ceiling_binding
+        else "The UAR ceiling binds: at least one automated threshold's UAR exceeds it."
     )
+    return "\n".join(lines)
 
 
 def render_frontier_table(result: SweepResult) -> str:

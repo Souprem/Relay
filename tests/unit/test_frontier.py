@@ -189,6 +189,39 @@ def test_run_sweep_bundles_points_selection_and_at_point():
     assert run_sweep(traces, cases).at_point is None
 
 
+def test_frontier_flat_is_true_when_every_point_has_identical_counts():
+    # Certain (0.0/1.0) probabilities: automation and correctness never change with auto_process.
+    cases = [
+        make_case("A"),
+        make_case("B", truth=make_truth(contradiction_present=True)),
+        make_case("C", age=16),
+    ]
+    traces = [make_trace(c, bundle_from_truth(c.input.id, c.ground_truth)) for c in cases]
+    result = run_sweep(traces, cases)
+    assert result.frontier_flat is True
+
+
+def test_frontier_flat_is_false_when_counts_change_across_thresholds():
+    traces, cases = known_run()
+    result = run_sweep(traces, cases)
+    assert result.frontier_flat is False
+
+
+def test_ceiling_binding_is_false_when_no_automated_point_exceeds_the_ceiling():
+    # known_run(): 0.94-0.99 all have UAR 0 with >=1 AUTO, so the default 1% ceiling never
+    # excludes an automated point.
+    traces, cases = known_run()
+    safe = [t for t in traces if t.case_id in ("A", "D")]
+    result = run_sweep(safe, [c for c in cases if c.input.id in ("A", "D")])
+    assert result.ceiling_binding is False
+
+
+def test_ceiling_binding_is_true_when_an_automated_point_exceeds_the_ceiling():
+    traces, cases = known_run()
+    result = run_sweep(traces, cases)  # 0.90-0.93 automate C unsafely, UAR > 1%
+    assert result.ceiling_binding is True
+
+
 def test_frontier_csv_has_a_stable_header_and_blank_for_missing_uar():
     traces, cases = known_run()
     text = frontier_csv(sweep(traces, cases, points=[0.90, 0.99]))

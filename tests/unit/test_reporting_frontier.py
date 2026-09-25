@@ -18,14 +18,14 @@ def pt(threshold, auto=10, unsafe=0, n=100):
     )
 
 
-def result(selected=None, at_point=None, points=None):
+def result(selected=None, at_point=None, points=None, ceiling=0.01):
     points = points or [pt(round(0.50 + i / 100, 2)) for i in range(50)]
     return SweepResult(
         run_id="run_x",
         dataset_id="gen-test",
         provider="test",
         question_set_version="q-test",
-        ceiling=0.01,
+        ceiling=ceiling,
         selected=selected,
         at_point=at_point,
         points=points,
@@ -47,14 +47,26 @@ def test_frontier_rows_merge_notes_on_the_same_threshold():
 
 
 def test_describe_selection_with_and_without_a_point():
+    # The default fixture points are all identical (auto=10, unsafe=0), so the frontier is flat
+    # and the ceiling (unsafe always 0) never binds; both notes are appended (C2).
+    flat_and_slack = (
+        "\nFrontier is flat across all thresholds.\nThe UAR ceiling does not bind at any threshold."
+    )
     assert describe_selection(result(selected=pt(0.97, auto=25))) == (
         "Selected operating point: auto_process >= 0.97 (automation 25.0%, UAR 0/25, "
-        "correct action 100.0%; ceiling UAR <= 1.0%)"
+        "correct action 100.0%; ceiling UAR <= 1.0%)" + flat_and_slack
     )
     assert describe_selection(result()) == (
         "No threshold meets the ceiling (UAR <= 1.0% with at least one AUTO_PROCESS); "
-        "nothing selected."
+        "nothing selected." + flat_and_slack
     )
+
+
+def test_describe_selection_reports_a_changing_frontier_and_a_binding_ceiling():
+    points = [pt(0.90, auto=100, unsafe=5), pt(0.95, auto=50, unsafe=0)]
+    text = describe_selection(result(selected=pt(0.95, auto=50), points=points))
+    assert "Frontier is flat across all thresholds." not in text
+    assert "The UAR ceiling binds: at least one automated threshold's UAR exceeds it." in text
 
 
 def test_render_frontier_table_shows_rows_rule_and_zero_auto():
