@@ -113,14 +113,14 @@ def test_a_submitted_batch_is_attached_to_its_reservation_and_can_be_found():
 
 
 def test_write_ledger_is_atomic_and_survives_crash_mid_write(tmp_path):
-    """Write to temp file, fsync, then atomic replace. No temp file left after success."""
+    """Write to temp file, fsync, then atomic replace. No temp file left after success or failure."""
     path = tmp_path / "results" / "claude-spend.json"
     ledger = ledger_with(("smoke", "sync", 10, "0.60"))
     write_ledger(path, ledger)
 
-    # Verify no temp file is left behind
+    # Verify no temp file is left behind after successful write
     tmp_files = list(tmp_path.glob("results/*.tmp"))
-    assert len(tmp_files) == 0, f"Temp file(s) left behind: {tmp_files}"
+    assert len(tmp_files) == 0, f"Temp file(s) left behind after success: {tmp_files}"
 
     # Verify content round-trips
     assert load_ledger(path) == ledger
@@ -128,12 +128,16 @@ def test_write_ledger_is_atomic_and_survives_crash_mid_write(tmp_path):
     # Simulate a crash during write: replace() fails, old file should be intact
     old_content = path.read_text()
     with patch("os.replace", side_effect=OSError("Simulated crash")):
-        with pytest.raises(IOError):
+        with pytest.raises(OSError, match="Simulated crash"):
             write_ledger(path, SpendLedger())
 
     # Old ledger should still be intact
     assert path.read_text() == old_content
     assert load_ledger(path) == ledger
+
+    # Verify no temp file is left behind after failure
+    tmp_files = list(tmp_path.glob("results/*.tmp"))
+    assert len(tmp_files) == 0, f"Temp file(s) left behind after failure: {tmp_files}"
 
 
 def test_reserve_refuses_duplicate_run_ids():

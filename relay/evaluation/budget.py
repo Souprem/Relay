@@ -65,11 +65,16 @@ def write_ledger(path: Path, ledger: SpendLedger) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     # Write to a temp file first, fsync, then atomically replace the original
     tmp_path = path.with_suffix(path.suffix + ".tmp")
-    tmp_path.write_text(ledger.model_dump_json(indent=2) + "\n", encoding="utf-8")
-    # Ensure the temp file is flushed to disk before replacing
-    with open(tmp_path, "rb") as f:
-        os.fsync(f.fileno())
-    os.replace(tmp_path, path)
+    try:
+        tmp_path.write_text(ledger.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        # Ensure the temp file is flushed to disk before replacing
+        with open(tmp_path, "rb") as f:
+            os.fsync(f.fileno())
+        os.replace(tmp_path, path)
+    except BaseException:
+        # Clean up temp file if any step fails and re-raise the original error
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def cost_per_case(ledger: SpendLedger) -> Decimal | None:
