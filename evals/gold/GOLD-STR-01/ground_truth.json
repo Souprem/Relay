@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA diagnosed 2023; oral methotrexate 2026-01-12 to 2026-06-29 = 168 days, stopped for inadequate response. Member ID set in case.json."
+}

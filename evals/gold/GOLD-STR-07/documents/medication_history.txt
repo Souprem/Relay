@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Northgate Rheumatology Consultants - Medication History - 2026-06-15
+Patient reference SYN-1120.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2025-11-03 - end 2026-05-04 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2025-11-03

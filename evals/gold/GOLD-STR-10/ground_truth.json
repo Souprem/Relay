@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "clinic_note: RA diagnosed 2019; methotrexate 2025-08-04 to 2026-01-26 = 175 days, stopped for inadequate response. pharmacy_fills shows monthly methotrexate fills across the same period."
+}

@@ -1,0 +1,8 @@
+SYNTHETIC RECORD - Example Fieldstone Primary Care - Referral Problem List - 2026-06-16
+Patient reference SYN-8813. 27-year-old man.
+
+- Joint pain and swelling in both hands and wrists for two months, cause not yet determined.
+- Referred to rheumatology for evaluation; no rheumatologic diagnosis has been made at this time.
+- Methotrexate 2026-05-04 to 2026-06-15, started empirically by primary care while awaiting specialist evaluation.
+- Mild asthma, well controlled with albuterol as needed.
+- Plan: rheumatology referral for diagnostic workup; hold further DMARD changes until seen.

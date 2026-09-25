@@ -1,0 +1,13 @@
+SYNTHETIC RECORD - Example Highland Rheumatology - Transfer of Care Letter - 2026-06-25
+Patient reference SYN-6689.
+
+Dear New Treating Physician,
+
+This letter transfers care for a 63-year-old man with an established diagnosis of rheumatoid arthritis, first diagnosed in 2017 and confirmed by longstanding positive serology and characteristic joint involvement.
+
+His prior DMARD history, including whether he has taken methotrexate, is documented at his previous rheumatology practice, and we are awaiting the outside records before summarizing his medication trials here. He is a retired firefighter and mentions his hobby of fishing has become harder because of hand stiffness. He has well-controlled type 2 diabetes.
+
+Please let us know once his history arrives so we can determine next steps, including a possible request for Immunara.
+
+With regards,
+The transferring rheumatologist

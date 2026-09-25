@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Cedar Grove Rheumatology - Follow-up Visit - 2026-07-15
+Patient reference SYN-6674.
+
+Subjective: 29-year-old woman with seropositive rheumatoid arthritis, diagnosed in 2023, reports continued swelling in her hands and feet despite completing methotrexate.
+Objective: CDAI calculated at 28, indicating high disease activity. Synovitis present at bilateral wrists and MTPs.
+Assessment: Rheumatoid arthritis with inadequate response to oral methotrexate 2026-02-09 to 2026-07-06, discontinued for lack of improvement.
+Plan: Initiate Immunara. Continue folic acid. Recheck labs in six weeks.

@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Meridian Telehealth - Virtual Visit Note - 2026-08-28
+Patient reference SYN-3390. This 52-year-old man was seen by video visit for follow-up of rheumatoid arthritis, a diagnosis his rheumatologist made in 2020 based on symmetric small-joint swelling and positive serology.
+
+He started oral methotrexate in January 2026 and continued it through July 2026, when it was stopped because his hands and feet remained swollen and painful despite the medication. He mentions his commute has gotten harder because of stiffness in his feet, and he has recently taken up swimming to help with mobility. He denies any new rashes or fevers. He is otherwise healthy aside from mild seasonal allergies.
+
+Discussed transitioning to Immunara given the inadequate response to methotrexate. He would like to proceed and has no questions at this time.

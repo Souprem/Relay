@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Bayview Outside Clinic - Visit Summary - 2026-06-01
+Patient reference SYN-8842. This 33-year-old woman has rheumatoid arthritis, diagnosed at this clinic in 2022 after a positive rheumatoid factor and six weeks of symmetric joint swelling.
+
+She was started on subcutaneous methotrexate on 2025-09-15 and continued it until 2026-02-16, when she developed painful mouth ulcers that did not resolve with a folic acid adjustment, so the medication was stopped for intolerance. Her joints remain swollen intermittently, and she works as a school administrator, which she says has become harder with the stiffness. She has no known drug allergies. Records are being forwarded to a rheumatology practice closer to her new home for ongoing care and consideration of Immunara.

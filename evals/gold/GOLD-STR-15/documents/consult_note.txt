@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Brookside Rheumatology - New Patient Consultation - 2026-06-05
+Patient reference SYN-5567. This 45-year-old woman transferred her care after moving from out of state. Her prior rheumatologist had established a diagnosis of seropositive rheumatoid arthritis, and records reviewed today confirm elevated rheumatoid factor and anti-CCP antibodies along with a history of symmetric hand and wrist swelling.
+
+She recalls having taken some kind of arthritis medication in the past but cannot say which drug, dose, or dates, and her prior treatment records have not yet arrived from her previous clinic. She works as a hairstylist and reports her hand pain makes fine motor tasks difficult. She has no known drug allergies.
+
+Immunara is being considered once her complete treatment history is available.

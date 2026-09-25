@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Synthetic River Primary Care - Office Visit Note - 2026-06-03
+Patient reference SYN-3345. This 66-year-old man has rheumatoid arthritis, diagnosed by rheumatology in 2019 following years of symmetric hand and wrist pain and positive serologic testing.
+
+He took oral methotrexate from 2025-08-04 through 2026-01-26, when it was stopped because his joint swelling and pain persisted despite the medication. He is a retired postal worker and enjoys woodworking, though he says his grip has weakened over the past year. His pharmacy fill history confirms the course. He has no known allergies to medications.
+
+Given the inadequate response, Immunara is being requested.

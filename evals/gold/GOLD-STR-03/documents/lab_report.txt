@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Foothills Rheumatology - Laboratory Report - 2026-07-30
+Patient reference SYN-7734.
+Rheumatoid factor: positive, 62 IU/mL (reference <14).
+Anti-CCP antibody: positive, 88 U/mL (reference <20).
+ESR: 38 mm/hr (elevated).
+CRP: 2.1 mg/dL (elevated).

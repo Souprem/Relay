@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Millbrook Telehealth Rheumatology - Virtual Visit - 2026-06-12
+Patient reference SYN-7729.
+
+Subjective: 55-year-old man with an established diagnosis of rheumatoid arthritis since 2020 reports ongoing joint pain despite a lengthy course of methotrexate.
+Objective: Symmetric swelling noted at bilateral MCP and wrist joints on video examination and confirmed by recent in-person labs.
+Assessment: Rheumatoid arthritis, active, with intolerance to methotrexate 20 mg weekly taken January 12, 2026 through June 8, 2026, stopped after his blood counts dropped.
+Plan: Proceed with Immunara pending insurance verification. Continue routine monitoring.

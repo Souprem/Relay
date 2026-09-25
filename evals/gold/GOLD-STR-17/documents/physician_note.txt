@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Eastport Rheumatology - Office Visit - 2026-06-15
+Patient reference SYN-3321.
+
+Subjective: 50-year-old woman with an established diagnosis of rheumatoid arthritis, first diagnosed at this practice in 2021, presents requesting a change in therapy because her current regimen is not controlling her symptoms well.
+Objective: Synovitis at bilateral wrists and several MCP joints. Vitals within normal limits.
+Assessment: Rheumatoid arthritis, active.
+Plan: Request Immunara for this patient. Continue current supportive care.

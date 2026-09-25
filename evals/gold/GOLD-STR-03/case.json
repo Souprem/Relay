@@ -1,0 +1,31 @@
+{
+  "id": "GOLD-STR-03",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-08-19",
+  "patient": {
+    "age": 61,
+    "state": "OH"
+  },
+  "medication": {
+    "name": "Immunara",
+    "indication": "rheumatoid arthritis"
+  },
+  "insurance": {
+    "payer": "CivicCare",
+    "plan": "CivicCare Plus",
+    "member_id": "CCP-556012"
+  },
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {
+      "id": "problem_list",
+      "kind": "physician_note",
+      "file": "problem_list.txt"
+    },
+    {
+      "id": "lab_report",
+      "kind": "lab_report",
+      "file": "lab_report.txt"
+    }
+  ]
+}

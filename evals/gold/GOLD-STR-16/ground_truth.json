@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "referral_letter: RA diagnosed 2017 and confirmed by longstanding serology. His DMARD history, including methotrexate, is held at his previous practice and the outside records have not yet arrived, so no treatment history is established here."
+}

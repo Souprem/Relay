@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "clinic_note: RA confirmed six months earlier; methotrexate 2026-04-06 to 2026-05-25 = 49 days, stopped early for nausea, short of the 84-day threshold. insurance.member_id is null and no document shows a member ID."
+}

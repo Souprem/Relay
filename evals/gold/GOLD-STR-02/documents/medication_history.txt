@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Harbor Medical Group - Medication History - 2026-06-28
+Patient reference SYN-2209.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-01-05 - end 2026-05-26 - reason: nausea and elevated liver enzymes
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-05
+LORATADINE 10 MG PO DAILY - status: active

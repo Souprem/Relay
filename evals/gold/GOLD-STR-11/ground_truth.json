@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "problem_list: seropositive RA since 2022; methotrexate 2026-01-20 to 2026-06-15 = 146 days, stopped for inadequate response. insurance.member_id is null and fax_cover confirms no member ID was provided."
+}

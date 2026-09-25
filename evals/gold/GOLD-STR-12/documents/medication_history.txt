@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Millbrook Telehealth Rheumatology - Medication History - 2026-06-12
+Patient reference SYN-7729.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-01-12 - end 2026-06-08 - reason: low blood counts
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-12

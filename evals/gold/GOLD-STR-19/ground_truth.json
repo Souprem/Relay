@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "referral_letter: diagnosis remains a pending differential between rheumatoid arthritis and psoriatic arthritis, with workup ordered, so no diagnosis is established. Methotrexate 2026-01-05 to 2026-05-25 = 140 days was stopped for inadequate response."
+}

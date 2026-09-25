@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA established since 2018; methotrexate 2025-12-01 to 2026-04-20 = 140 days, discontinued for elevated liver enzymes (intolerance). Member ID set in case.json."
+}

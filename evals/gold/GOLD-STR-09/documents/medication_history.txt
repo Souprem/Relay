@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Cedar Grove Rheumatology - Medication History - 2026-07-15
+Patient reference SYN-6674.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-02-09 - end 2026-07-06 - reason: inadequate response (CDAI 28)
+FOLIC ACID 1 MG PO DAILY - status: active
