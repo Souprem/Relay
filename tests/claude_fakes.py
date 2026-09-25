@@ -10,6 +10,7 @@ import json
 import anthropic
 import httpx2
 from anthropic.types import Message
+from anthropic.types.messages import MessageBatch, MessageBatchIndividualResponse
 
 # A plausible reply for evals/smoke/AUTO-01 (methotrexate 2026-01-12 -> 2026-06-01, 140 days).
 AUTO01_ANSWERS: dict = {
@@ -118,3 +119,80 @@ class SleepRecorder:
 
     async def __call__(self, delay: float) -> None:
         self.delays.append(delay)
+
+
+def batch(status: str = "in_progress", *, requests: int = 1, batch_id: str = "msgbatch_test"):
+    return MessageBatch.model_validate(
+        {
+            "id": batch_id,
+            "type": "message_batch",
+            "processing_status": status,
+            "created_at": "2026-09-25T00:00:00Z",
+            "expires_at": "2026-09-26T00:00:00Z",
+            "request_counts": {
+                "processing": requests if status != "ended" else 0,
+                "succeeded": requests if status == "ended" else 0,
+                "errored": 0,
+                "canceled": 0,
+                "expired": 0,
+            },
+        }
+    )
+
+
+def succeeded(custom_id: str, msg: Message | None = None) -> MessageBatchIndividualResponse:
+    return MessageBatchIndividualResponse.model_validate(
+        {
+            "custom_id": custom_id,
+            "result": {"type": "succeeded", "message": (msg or message()).model_dump()},
+        }
+    )
+
+
+def errored(custom_id: str) -> MessageBatchIndividualResponse:
+    return MessageBatchIndividualResponse.model_validate(
+        {
+            "custom_id": custom_id,
+            "result": {
+                "type": "errored",
+                "error": {"type": "error", "error": {"type": "api_error", "message": "overloaded"}},
+            },
+        }
+    )
+
+
+def expired(custom_id: str) -> MessageBatchIndividualResponse:
+    return MessageBatchIndividualResponse.model_validate(
+        {"custom_id": custom_id, "result": {"type": "expired"}}
+    )
+
+
+class FakeBatches:
+    """Stands in for AsyncAnthropic().messages.batches. Each create()/retrieve() returns the next
+    processing status (the last one repeats); results() yields the scripted items in order."""
+
+    def __init__(self, items, *, statuses=("in_progress", "ended"), requests=None):
+        self.items = list(items)
+        self.statuses = list(statuses)
+        self.requests = len(self.items) if requests is None else requests
+        self.created: list[list] = []
+        self.retrieved: list[str] = []
+
+    def _next(self):
+        status = self.statuses.pop(0) if len(self.statuses) > 1 else self.statuses[0]
+        return batch(status, requests=self.requests)
+
+    async def create(self, *, requests):
+        self.created.append(list(requests))
+        return self._next()
+
+    async def retrieve(self, message_batch_id):
+        self.retrieved.append(message_batch_id)
+        return self._next()
+
+    async def results(self, message_batch_id):
+        async def stream():
+            for item in self.items:
+                yield item
+
+        return stream()
