@@ -1,0 +1,141 @@
+{
+  "diagnosis_support": {
+    "decision": "diagnosis_support",
+    "labels": [
+      "yes",
+      "no"
+    ],
+    "counts": [
+      [
+        356,
+        0
+      ],
+      [
+        0,
+        44
+      ]
+    ],
+    "n": 400,
+    "invalid_excluded": 0
+  },
+  "step_therapy": {
+    "decision": "step_therapy",
+    "labels": [
+      "yes",
+      "no"
+    ],
+    "counts": [
+      [
+        132,
+        0
+      ],
+      [
+        6,
+        262
+      ]
+    ],
+    "n": 400,
+    "invalid_excluded": 0
+  },
+  "documentation_complete": {
+    "decision": "documentation_complete",
+    "labels": [
+      "yes",
+      "no"
+    ],
+    "counts": [
+      [
+        291,
+        0
+      ],
+      [
+        19,
+        90
+      ]
+    ],
+    "n": 400,
+    "invalid_excluded": 0
+  },
+  "material_contradiction": {
+    "decision": "material_contradiction",
+    "labels": [
+      "yes",
+      "no"
+    ],
+    "counts": [
+      [
+        38,
+        1
+      ],
+      [
+        1,
+        360
+      ]
+    ],
+    "n": 400,
+    "invalid_excluded": 0
+  },
+  "missing_evidence": {
+    "decision": "missing_evidence",
+    "labels": [
+      "DIAGNOSIS",
+      "TREATMENT_HISTORY",
+      "LAB_RESULT",
+      "DOSAGE",
+      "INSURANCE_INFORMATION",
+      "NONE"
+    ],
+    "counts": [
+      [
+        44,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        29,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        36,
+        0
+      ],
+      [
+        0,
+        64,
+        0,
+        0,
+        0,
+        227
+      ]
+    ],
+    "n": 400,
+    "invalid_excluded": 0
+  }
+}

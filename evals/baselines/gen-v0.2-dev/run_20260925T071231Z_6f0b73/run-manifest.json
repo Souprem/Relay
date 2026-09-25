@@ -1,0 +1,11 @@
+{
+  "run_id": "run_20260925T071231Z_6f0b73",
+  "created_at": "2026-09-25T07:12:48.828894Z",
+  "dataset_id": "gen-v0.2-dev",
+  "dataset_path": "evals/generated/gen-v0.2-dev",
+  "provider": "jev",
+  "policy_version": "v0.1",
+  "case_count": 400,
+  "trace_file": "traces/run_20260925T071231Z_6f0b73.jsonl",
+  "relay_git_sha": "d30071e658b316aa34e24d248fafbc56c48fa3d2"
+}
