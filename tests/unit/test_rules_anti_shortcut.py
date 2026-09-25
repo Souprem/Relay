@@ -120,17 +120,23 @@ def test_the_tell_alone_never_produces_a_contradiction(base):
 
 
 @pytest.mark.parametrize(
-    "base",
+    "base,expected_detected",
     [
-        replace(ENDED, contradiction="history_vs_note"),
-        replace(ONGOING, contradiction="history_vs_note"),
-        DATES_CONFLICT,
+        (replace(ENDED, contradiction="history_vs_note"), 80),
+        (replace(ONGOING, contradiction="history_vs_note"), 96),
+        (DATES_CONFLICT, 128),
     ],
     ids=["history_vs_note-ended", "history_vs_note-ongoing", "dates_conflict"],
 )
-def test_contradictions_do_not_depend_on_how_the_history_line_is_presented(base):
+def test_contradictions_do_not_depend_on_how_the_history_line_is_presented(base, expected_detected):
     # Contradiction scenarios carry day-precision dates (a facts.py invariant; spec R4 counts
     # only day-precision dates as cues), so split and date format vary here, not precision.
+    #
+    # `expected_detected` is the exact, deterministic count out of all 128 (note_seed x split x
+    # history_seed) variants: detection here tracks only the fixed physician-note phrasing drawn
+    # per note_seed (whether it uses a recognized "never" phrasing or falls outside the pattern,
+    # e.g. "never been prescribed"), never the swapped-in history document's split/history_seed
+    # presentation, which is exactly the anti-shortcut property this test is checking.
     assert labels(base).contradiction_present is True
     detected = 0
     for original, variant in variants(base, ("day",)):
@@ -139,7 +145,7 @@ def test_contradictions_do_not_depend_on_how_the_history_line_is_presented(base)
         if p == 1.0:
             detected += 1
             assert rules & {"mtx_never", "mtx_conflicting_starts"}
-    assert detected > 0
+    assert detected == expected_detected
 
 
 def test_generated_cases_with_the_tell_but_no_contradiction_are_never_flagged():
