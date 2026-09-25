@@ -102,6 +102,15 @@ def _case_section(trace: WorkflowTrace, case: CaseInput) -> list[str]:
             where = f"{f['document_id']}:{f['line']}" if f["document_id"] else "structured field"
             out.append(f"- `{f['rule']}` ({where}): {f['match']}")
         out.append("")
+    duration = b.derivations.get("duration")
+    if duration:
+        min_days = duration["min_days"]
+        out += [
+            f"Duration: {duration['start'] or 'unknown'} -> {duration['end'] or 'unknown'} "
+            f"({duration['days'] if duration['days'] is not None else 'unknown'} days, "
+            f"need >= {min_days})",
+            "",
+        ]
     out.append("**Policy gates:**")
     out += [
         f"- {'FIRED' if g.fired else 'passed'} `{g.gate}` — {g.detail}" for g in trace.gate_path

@@ -144,3 +144,38 @@ def test_run_report_lists_the_rules_that_fired():
     assert "**Rules fired:**" in report
     assert "- `member_missing` (structured field): insurance.member_id is None" in report
     assert "- `mtx_start` (physician_note:3): started 2026-01-12" in report
+
+
+def test_run_report_shows_the_rules_step_therapy_duration_next_to_rules_fired():
+    """C3: derivations["duration"] (start, end, days, min_days) is rendered for rules bundles."""
+    case = make_case("T-01")
+    fired = [
+        {
+            "rule": "mtx_start",
+            "document_id": "physician_note",
+            "line": 3,
+            "match": "started 2026-01-12",
+        }
+    ]
+    duration = {"start": "2026-01-12", "end": "2026-06-01", "days": 140, "min_days": 84}
+    bundle = make_bundle("T-01", provider="rules").model_copy(
+        update={"derivations": {"rules": fired, "duration": duration}}
+    )
+    report = render_run_report(
+        run_manifest("rules"), [make_trace(case, bundle)], {"T-01": case.input}
+    )
+    assert "**Rules fired:**" in report
+    fired_index = report.index("**Rules fired:**")
+    duration_index = report.index("Duration:")
+    assert duration_index > fired_index
+    assert "2026-01-12" in report and "2026-06-01" in report
+    assert "140" in report and ">= 84" in report
+
+
+def test_run_report_omits_duration_when_absent():
+    case = make_case("T-01")
+    bundle = make_bundle("T-01", provider="rules").model_copy(update={"derivations": {"rules": []}})
+    report = render_run_report(
+        run_manifest("rules"), [make_trace(case, bundle)], {"T-01": case.input}
+    )
+    assert "Duration:" not in report
