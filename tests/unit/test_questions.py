@@ -99,8 +99,8 @@ NEVER_TOOK = "never took methotrexate"
 
 def test_known_versions_and_default():
     assert QUESTION_SET_VERSIONS == ("q-v0.1", "q-v0.2")
-    # The default stays q-v0.1 until the dev-only adoption rule (spec §6) is applied.
-    assert DEFAULT_QUESTION_SET_VERSION == "q-v0.1"
+    # Adopted by the dev-only rule (spec §6); see evals/baselines/gen-v0.2-dev/adoption.txt.
+    assert DEFAULT_QUESTION_SET_VERSION == "q-v0.2"
 
 
 def test_q_v0_1_hash_is_unchanged_from_before_phase_2b():

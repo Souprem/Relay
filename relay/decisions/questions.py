@@ -21,7 +21,7 @@ from relay.decisions.step_therapy import MONTHS
 Q_V0_1 = "q-v0.1"
 Q_V0_2 = "q-v0.2"
 QUESTION_SET_VERSIONS: tuple[str, ...] = (Q_V0_1, Q_V0_2)
-DEFAULT_QUESTION_SET_VERSION = Q_V0_1
+DEFAULT_QUESTION_SET_VERSION = Q_V0_2
 QUESTION_IDS: tuple[str, ...] = (
     "diagnosis_support",
     "documentation_complete",
