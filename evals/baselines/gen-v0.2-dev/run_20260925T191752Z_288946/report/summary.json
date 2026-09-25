@@ -1,0 +1,4092 @@
+{
+  "identity": {
+    "run_id": "run_20260925T191752Z_288946",
+    "dataset_id": "gen-v0.2-dev",
+    "dataset_hash": "sha256:3eec030bbc12d075e3b723bdde174c645641afd3b02d77f9de2f5dbeac16c2ce",
+    "provider": "claude",
+    "provider_versions": [
+      "claude-opus-5"
+    ],
+    "client_versions": [
+      "anthropic==1.8.0"
+    ],
+    "question_set_versions": [
+      "q-v0.2+claude-prompt-v1"
+    ],
+    "question_set_hashes": [
+      "sha256:d24c74fa140ca4682e6202ea36a2bdc978085216c8b220fe413c4e09005cc9b6"
+    ],
+    "policy_versions": [
+      "v0.1"
+    ],
+    "policy_text_hashes": [
+      "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+    ],
+    "thresholds_versions": [
+      "v0.1"
+    ],
+    "relay_git_shas": [
+      "b08461302f57c5645af4018a9a0114a59472907a"
+    ]
+  },
+  "summary": {
+    "run_id": "run_20260925T191752Z_288946",
+    "dataset_id": "gen-v0.2-dev",
+    "provider": "claude",
+    "provider_versions": [
+      "claude-opus-5"
+    ],
+    "policy_version": "v0.1",
+    "n_cases": 400,
+    "question_set_versions": [
+      "q-v0.2+claude-prompt-v1"
+    ],
+    "correct_actions": 288,
+    "auto_process_count": 0,
+    "request_info_count": 94,
+    "human_review_count": 306,
+    "unsafe_automation_count": 0,
+    "invalid_outputs": 0,
+    "correct_action_rate": 0.72,
+    "automation_rate": 0.0,
+    "request_info_rate": 0.235,
+    "human_escalation_rate": 0.765,
+    "unsafe_automation_rate": null,
+    "per_question_accuracy": {
+      "diagnosis_support": 1.0,
+      "step_therapy": 0.9975,
+      "documentation_complete": 0.9425,
+      "material_contradiction": 1.0,
+      "missing_evidence": 0.9525
+    },
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "latency_low_sample": true,
+    "latency_n": 0,
+    "execution_modes": [
+      "batch"
+    ],
+    "refusals": 0,
+    "cache_read_share": 0.6546851131054546,
+    "total_cost_usd": "4.398674000",
+    "cost_per_case_usd": "0.010996685",
+    "cases": [
+      {
+        "case_id": "GEN-01000000",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020017500"
+      },
+      {
+        "case_id": "GEN-01000001",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007715500"
+      },
+      {
+        "case_id": "GEN-01000002",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008070500"
+      },
+      {
+        "case_id": "GEN-01000003",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008733000"
+      },
+      {
+        "case_id": "GEN-01000004",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021422500"
+      },
+      {
+        "case_id": "GEN-01000005",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020175000"
+      },
+      {
+        "case_id": "GEN-01000006",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007307500"
+      },
+      {
+        "case_id": "GEN-01000007",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007725500"
+      },
+      {
+        "case_id": "GEN-01000008",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020795000"
+      },
+      {
+        "case_id": "GEN-01000009",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008600000"
+      },
+      {
+        "case_id": "GEN-01000010",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010135500"
+      },
+      {
+        "case_id": "GEN-01000011",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020775000"
+      },
+      {
+        "case_id": "GEN-01000012",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008060000"
+      },
+      {
+        "case_id": "GEN-01000013",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007788000"
+      },
+      {
+        "case_id": "GEN-01000014",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008490500"
+      },
+      {
+        "case_id": "GEN-01000015",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021710000"
+      },
+      {
+        "case_id": "GEN-01000016",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007930500"
+      },
+      {
+        "case_id": "GEN-01000017",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007795000"
+      },
+      {
+        "case_id": "GEN-01000018",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022450000"
+      },
+      {
+        "case_id": "GEN-01000019",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008680500"
+      },
+      {
+        "case_id": "GEN-01000020",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008230500"
+      },
+      {
+        "case_id": "GEN-01000021",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007988000"
+      },
+      {
+        "case_id": "GEN-01000022",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020752500"
+      },
+      {
+        "case_id": "GEN-01000023",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008070500"
+      },
+      {
+        "case_id": "GEN-01000024",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020482500"
+      },
+      {
+        "case_id": "GEN-01000025",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020575000"
+      },
+      {
+        "case_id": "GEN-01000026",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009042500"
+      },
+      {
+        "case_id": "GEN-01000027",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008850500"
+      },
+      {
+        "case_id": "GEN-01000028",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021575000"
+      },
+      {
+        "case_id": "GEN-01000029",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020465000"
+      },
+      {
+        "case_id": "GEN-01000030",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009255500"
+      },
+      {
+        "case_id": "GEN-01000031",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007463000"
+      },
+      {
+        "case_id": "GEN-01000032",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.019930000"
+      },
+      {
+        "case_id": "GEN-01000033",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009733000"
+      },
+      {
+        "case_id": "GEN-01000034",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007795000"
+      },
+      {
+        "case_id": "GEN-01000035",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007635500"
+      },
+      {
+        "case_id": "GEN-01000036",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007950500"
+      },
+      {
+        "case_id": "GEN-01000037",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007858000"
+      },
+      {
+        "case_id": "GEN-01000038",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009525000"
+      },
+      {
+        "case_id": "GEN-01000039",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008127500"
+      },
+      {
+        "case_id": "GEN-01000040",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020092500"
+      },
+      {
+        "case_id": "GEN-01000041",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007983000"
+      },
+      {
+        "case_id": "GEN-01000042",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008410500"
+      },
+      {
+        "case_id": "GEN-01000043",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021785000"
+      },
+      {
+        "case_id": "GEN-01000044",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008495500"
+      },
+      {
+        "case_id": "GEN-01000045",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007670500"
+      },
+      {
+        "case_id": "GEN-01000046",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009615500"
+      },
+      {
+        "case_id": "GEN-01000047",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008185000"
+      },
+      {
+        "case_id": "GEN-01000048",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008010500"
+      },
+      {
+        "case_id": "GEN-01000049",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008053000"
+      },
+      {
+        "case_id": "GEN-01000050",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008308000"
+      },
+      {
+        "case_id": "GEN-01000051",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020157500"
+      },
+      {
+        "case_id": "GEN-01000052",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008755500"
+      },
+      {
+        "case_id": "GEN-01000053",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008328000"
+      },
+      {
+        "case_id": "GEN-01000054",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008740000"
+      },
+      {
+        "case_id": "GEN-01000055",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007800500"
+      },
+      {
+        "case_id": "GEN-01000056",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020087500"
+      },
+      {
+        "case_id": "GEN-01000057",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008707500"
+      },
+      {
+        "case_id": "GEN-01000058",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009345500"
+      },
+      {
+        "case_id": "GEN-01000059",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010015500"
+      },
+      {
+        "case_id": "GEN-01000060",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007293000"
+      },
+      {
+        "case_id": "GEN-01000061",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020297500"
+      },
+      {
+        "case_id": "GEN-01000062",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009160500"
+      },
+      {
+        "case_id": "GEN-01000063",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008560500"
+      },
+      {
+        "case_id": "GEN-01000064",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008756000"
+      },
+      {
+        "case_id": "GEN-01000065",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008538000"
+      },
+      {
+        "case_id": "GEN-01000066",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007660500"
+      },
+      {
+        "case_id": "GEN-01000067",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009293000"
+      },
+      {
+        "case_id": "GEN-01000068",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008122500"
+      },
+      {
+        "case_id": "GEN-01000069",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009778000"
+      },
+      {
+        "case_id": "GEN-01000070",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008506000"
+      },
+      {
+        "case_id": "GEN-01000071",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007846000"
+      },
+      {
+        "case_id": "GEN-01000072",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008812500"
+      },
+      {
+        "case_id": "GEN-01000073",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021027500"
+      },
+      {
+        "case_id": "GEN-01000074",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007240500"
+      },
+      {
+        "case_id": "GEN-01000075",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008826000"
+      },
+      {
+        "case_id": "GEN-01000076",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008022500"
+      },
+      {
+        "case_id": "GEN-01000077",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007913000"
+      },
+      {
+        "case_id": "GEN-01000078",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007188000"
+      },
+      {
+        "case_id": "GEN-01000079",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010633000"
+      },
+      {
+        "case_id": "GEN-01000080",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008745000"
+      },
+      {
+        "case_id": "GEN-01000081",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008463000"
+      },
+      {
+        "case_id": "GEN-01000082",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021172500"
+      },
+      {
+        "case_id": "GEN-01000083",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008915500"
+      },
+      {
+        "case_id": "GEN-01000084",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007363000"
+      },
+      {
+        "case_id": "GEN-01000085",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020062500"
+      },
+      {
+        "case_id": "GEN-01000086",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021762500"
+      },
+      {
+        "case_id": "GEN-01000087",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020012500"
+      },
+      {
+        "case_id": "GEN-01000088",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007371000"
+      },
+      {
+        "case_id": "GEN-01000089",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007343000"
+      },
+      {
+        "case_id": "GEN-01000090",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008863000"
+      },
+      {
+        "case_id": "GEN-01000091",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007660500"
+      },
+      {
+        "case_id": "GEN-01000092",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020725000"
+      },
+      {
+        "case_id": "GEN-01000093",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020452500"
+      },
+      {
+        "case_id": "GEN-01000094",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007293000"
+      },
+      {
+        "case_id": "GEN-01000095",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007638000"
+      },
+      {
+        "case_id": "GEN-01000096",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007365500"
+      },
+      {
+        "case_id": "GEN-01000097",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008083000"
+      },
+      {
+        "case_id": "GEN-01000098",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008418000"
+      },
+      {
+        "case_id": "GEN-01000099",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020977500"
+      },
+      {
+        "case_id": "GEN-01000100",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008395500"
+      },
+      {
+        "case_id": "GEN-01000101",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007817500"
+      },
+      {
+        "case_id": "GEN-01000102",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008800500"
+      },
+      {
+        "case_id": "GEN-01000103",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "REQUEST_INFO",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007665500"
+      },
+      {
+        "case_id": "GEN-01000104",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008182500"
+      },
+      {
+        "case_id": "GEN-01000105",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021265000"
+      },
+      {
+        "case_id": "GEN-01000106",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021642500"
+      },
+      {
+        "case_id": "GEN-01000107",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007648000"
+      },
+      {
+        "case_id": "GEN-01000108",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007938000"
+      },
+      {
+        "case_id": "GEN-01000109",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009105000"
+      },
+      {
+        "case_id": "GEN-01000110",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.019910000"
+      },
+      {
+        "case_id": "GEN-01000111",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "REQUEST_INFO",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020782500"
+      },
+      {
+        "case_id": "GEN-01000112",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008085500"
+      },
+      {
+        "case_id": "GEN-01000113",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007830000"
+      },
+      {
+        "case_id": "GEN-01000114",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008290500"
+      },
+      {
+        "case_id": "GEN-01000115",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020170000"
+      },
+      {
+        "case_id": "GEN-01000116",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007383000"
+      },
+      {
+        "case_id": "GEN-01000117",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007715000"
+      },
+      {
+        "case_id": "GEN-01000118",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008475500"
+      },
+      {
+        "case_id": "GEN-01000119",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020820000"
+      },
+      {
+        "case_id": "GEN-01000120",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007580500"
+      },
+      {
+        "case_id": "GEN-01000121",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007283000"
+      },
+      {
+        "case_id": "GEN-01000122",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009730500"
+      },
+      {
+        "case_id": "GEN-01000123",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022367500"
+      },
+      {
+        "case_id": "GEN-01000124",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007563000"
+      },
+      {
+        "case_id": "GEN-01000125",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020642500"
+      },
+      {
+        "case_id": "GEN-01000126",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020457500"
+      },
+      {
+        "case_id": "GEN-01000127",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008320500"
+      },
+      {
+        "case_id": "GEN-01000128",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008095500"
+      },
+      {
+        "case_id": "GEN-01000129",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020122500"
+      },
+      {
+        "case_id": "GEN-01000130",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021655000"
+      },
+      {
+        "case_id": "GEN-01000131",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008478500"
+      },
+      {
+        "case_id": "GEN-01000132",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007838000"
+      },
+      {
+        "case_id": "GEN-01000133",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008455500"
+      },
+      {
+        "case_id": "GEN-01000134",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008618000"
+      },
+      {
+        "case_id": "GEN-01000135",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008035500"
+      },
+      {
+        "case_id": "GEN-01000136",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007325500"
+      },
+      {
+        "case_id": "GEN-01000137",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007360500"
+      },
+      {
+        "case_id": "GEN-01000138",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008855500"
+      },
+      {
+        "case_id": "GEN-01000139",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008815500"
+      },
+      {
+        "case_id": "GEN-01000140",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007353000"
+      },
+      {
+        "case_id": "GEN-01000141",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008745500"
+      },
+      {
+        "case_id": "GEN-01000142",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009840500"
+      },
+      {
+        "case_id": "GEN-01000143",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020160000"
+      },
+      {
+        "case_id": "GEN-01000144",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007357500"
+      },
+      {
+        "case_id": "GEN-01000145",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007693000"
+      },
+      {
+        "case_id": "GEN-01000146",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010560000"
+      },
+      {
+        "case_id": "GEN-01000147",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009430000"
+      },
+      {
+        "case_id": "GEN-01000148",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008525500"
+      },
+      {
+        "case_id": "GEN-01000149",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008433000"
+      },
+      {
+        "case_id": "GEN-01000150",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007943000"
+      },
+      {
+        "case_id": "GEN-01000151",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022695000"
+      },
+      {
+        "case_id": "GEN-01000152",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008487500"
+      },
+      {
+        "case_id": "GEN-01000153",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008683000"
+      },
+      {
+        "case_id": "GEN-01000154",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008292500"
+      },
+      {
+        "case_id": "GEN-01000155",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010070500"
+      },
+      {
+        "case_id": "GEN-01000156",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007368000"
+      },
+      {
+        "case_id": "GEN-01000157",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007618000"
+      },
+      {
+        "case_id": "GEN-01000158",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008715000"
+      },
+      {
+        "case_id": "GEN-01000159",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020740000"
+      },
+      {
+        "case_id": "GEN-01000160",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007348500"
+      },
+      {
+        "case_id": "GEN-01000161",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010515500"
+      },
+      {
+        "case_id": "GEN-01000162",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009238000"
+      },
+      {
+        "case_id": "GEN-01000163",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020077500"
+      },
+      {
+        "case_id": "GEN-01000164",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007360000"
+      },
+      {
+        "case_id": "GEN-01000165",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008085000"
+      },
+      {
+        "case_id": "GEN-01000166",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008900500"
+      },
+      {
+        "case_id": "GEN-01000167",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022402500"
+      },
+      {
+        "case_id": "GEN-01000168",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007378000"
+      },
+      {
+        "case_id": "GEN-01000169",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008290500"
+      },
+      {
+        "case_id": "GEN-01000170",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008165500"
+      },
+      {
+        "case_id": "GEN-01000171",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009640500"
+      },
+      {
+        "case_id": "GEN-01000172",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007353500"
+      },
+      {
+        "case_id": "GEN-01000173",
+        "expected_action": "REQUEST_INFO",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007800000"
+      },
+      {
+        "case_id": "GEN-01000174",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007708000"
+      },
+      {
+        "case_id": "GEN-01000175",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007712500"
+      },
+      {
+        "case_id": "GEN-01000176",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008058000"
+      },
+      {
+        "case_id": "GEN-01000177",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007740500"
+      },
+      {
+        "case_id": "GEN-01000178",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008318000"
+      },
+      {
+        "case_id": "GEN-01000179",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009013000"
+      },
+      {
+        "case_id": "GEN-01000180",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020060000"
+      },
+      {
+        "case_id": "GEN-01000181",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020030000"
+      },
+      {
+        "case_id": "GEN-01000182",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009105500"
+      },
+      {
+        "case_id": "GEN-01000183",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007695500"
+      },
+      {
+        "case_id": "GEN-01000184",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020890000"
+      },
+      {
+        "case_id": "GEN-01000185",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008303500"
+      },
+      {
+        "case_id": "GEN-01000186",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008698000"
+      },
+      {
+        "case_id": "GEN-01000187",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022642500"
+      },
+      {
+        "case_id": "GEN-01000188",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020942500"
+      },
+      {
+        "case_id": "GEN-01000189",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007675500"
+      },
+      {
+        "case_id": "GEN-01000190",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007715500"
+      },
+      {
+        "case_id": "GEN-01000191",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008376000"
+      },
+      {
+        "case_id": "GEN-01000192",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007363500"
+      },
+      {
+        "case_id": "GEN-01000193",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007340500"
+      },
+      {
+        "case_id": "GEN-01000194",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008523000"
+      },
+      {
+        "case_id": "GEN-01000195",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007925500"
+      },
+      {
+        "case_id": "GEN-01000196",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007350000"
+      },
+      {
+        "case_id": "GEN-01000197",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007877500"
+      },
+      {
+        "case_id": "GEN-01000198",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022295000"
+      },
+      {
+        "case_id": "GEN-01000199",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020450000"
+      },
+      {
+        "case_id": "GEN-01000200",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020075000"
+      },
+      {
+        "case_id": "GEN-01000201",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008573500"
+      },
+      {
+        "case_id": "GEN-01000202",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008088000"
+      },
+      {
+        "case_id": "GEN-01000203",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008040500"
+      },
+      {
+        "case_id": "GEN-01000204",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020527500"
+      },
+      {
+        "case_id": "GEN-01000205",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008283000"
+      },
+      {
+        "case_id": "GEN-01000206",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007187500"
+      },
+      {
+        "case_id": "GEN-01000207",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008170500"
+      },
+      {
+        "case_id": "GEN-01000208",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007263000"
+      },
+      {
+        "case_id": "GEN-01000209",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007778000"
+      },
+      {
+        "case_id": "GEN-01000210",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021632500"
+      },
+      {
+        "case_id": "GEN-01000211",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007533500"
+      },
+      {
+        "case_id": "GEN-01000212",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007373500"
+      },
+      {
+        "case_id": "GEN-01000213",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008007500"
+      },
+      {
+        "case_id": "GEN-01000214",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007691000"
+      },
+      {
+        "case_id": "GEN-01000215",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020402500"
+      },
+      {
+        "case_id": "GEN-01000216",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021080000"
+      },
+      {
+        "case_id": "GEN-01000217",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008460500"
+      },
+      {
+        "case_id": "GEN-01000218",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022270000"
+      },
+      {
+        "case_id": "GEN-01000219",
+        "expected_action": "REQUEST_INFO",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020472500"
+      },
+      {
+        "case_id": "GEN-01000220",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008027500"
+      },
+      {
+        "case_id": "GEN-01000221",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008088000"
+      },
+      {
+        "case_id": "GEN-01000222",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007358000"
+      },
+      {
+        "case_id": "GEN-01000223",
+        "expected_action": "REQUEST_INFO",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020752500"
+      },
+      {
+        "case_id": "GEN-01000224",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008038000"
+      },
+      {
+        "case_id": "GEN-01000225",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007762500"
+      },
+      {
+        "case_id": "GEN-01000226",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008427500"
+      },
+      {
+        "case_id": "GEN-01000227",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020240000"
+      },
+      {
+        "case_id": "GEN-01000228",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007378000"
+      },
+      {
+        "case_id": "GEN-01000229",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008425500"
+      },
+      {
+        "case_id": "GEN-01000230",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009078000"
+      },
+      {
+        "case_id": "GEN-01000231",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008188500"
+      },
+      {
+        "case_id": "GEN-01000232",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007363000"
+      },
+      {
+        "case_id": "GEN-01000233",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007671000"
+      },
+      {
+        "case_id": "GEN-01000234",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008878000"
+      },
+      {
+        "case_id": "GEN-01000235",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020382500"
+      },
+      {
+        "case_id": "GEN-01000236",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007378000"
+      },
+      {
+        "case_id": "GEN-01000237",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007740500"
+      },
+      {
+        "case_id": "GEN-01000238",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007195500"
+      },
+      {
+        "case_id": "GEN-01000239",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009128500"
+      },
+      {
+        "case_id": "GEN-01000240",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007340500"
+      },
+      {
+        "case_id": "GEN-01000241",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009405500"
+      },
+      {
+        "case_id": "GEN-01000242",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008942500"
+      },
+      {
+        "case_id": "GEN-01000243",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022515000"
+      },
+      {
+        "case_id": "GEN-01000244",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007368500"
+      },
+      {
+        "case_id": "GEN-01000245",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007895500"
+      },
+      {
+        "case_id": "GEN-01000246",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009445500"
+      },
+      {
+        "case_id": "GEN-01000247",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007353000"
+      },
+      {
+        "case_id": "GEN-01000248",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008355500"
+      },
+      {
+        "case_id": "GEN-01000249",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007873000"
+      },
+      {
+        "case_id": "GEN-01000250",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009298000"
+      },
+      {
+        "case_id": "GEN-01000251",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010325500"
+      },
+      {
+        "case_id": "GEN-01000252",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007375000"
+      },
+      {
+        "case_id": "GEN-01000253",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007638000"
+      },
+      {
+        "case_id": "GEN-01000254",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009592500"
+      },
+      {
+        "case_id": "GEN-01000255",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007935500"
+      },
+      {
+        "case_id": "GEN-01000256",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007278000"
+      },
+      {
+        "case_id": "GEN-01000257",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009800500"
+      },
+      {
+        "case_id": "GEN-01000258",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009720500"
+      },
+      {
+        "case_id": "GEN-01000259",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020355000"
+      },
+      {
+        "case_id": "GEN-01000260",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007390500"
+      },
+      {
+        "case_id": "GEN-01000261",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009168000"
+      },
+      {
+        "case_id": "GEN-01000262",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008772500"
+      },
+      {
+        "case_id": "GEN-01000263",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007758000"
+      },
+      {
+        "case_id": "GEN-01000264",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007957500"
+      },
+      {
+        "case_id": "GEN-01000265",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007960500"
+      },
+      {
+        "case_id": "GEN-01000266",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008585500"
+      },
+      {
+        "case_id": "GEN-01000267",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009161000"
+      },
+      {
+        "case_id": "GEN-01000268",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007997500"
+      },
+      {
+        "case_id": "GEN-01000269",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008017500"
+      },
+      {
+        "case_id": "GEN-01000270",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008410000"
+      },
+      {
+        "case_id": "GEN-01000271",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008150500"
+      },
+      {
+        "case_id": "GEN-01000272",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020067500"
+      },
+      {
+        "case_id": "GEN-01000273",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008980000"
+      },
+      {
+        "case_id": "GEN-01000274",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007950500"
+      },
+      {
+        "case_id": "GEN-01000275",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022320000"
+      },
+      {
+        "case_id": "GEN-01000276",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020070000"
+      },
+      {
+        "case_id": "GEN-01000277",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008590500"
+      },
+      {
+        "case_id": "GEN-01000278",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008382500"
+      },
+      {
+        "case_id": "GEN-01000279",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021862500"
+      },
+      {
+        "case_id": "GEN-01000280",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008175500"
+      },
+      {
+        "case_id": "GEN-01000281",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020615000"
+      },
+      {
+        "case_id": "GEN-01000282",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008868000"
+      },
+      {
+        "case_id": "GEN-01000283",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007740500"
+      },
+      {
+        "case_id": "GEN-01000284",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007383000"
+      },
+      {
+        "case_id": "GEN-01000285",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020150000"
+      },
+      {
+        "case_id": "GEN-01000286",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.019950000"
+      },
+      {
+        "case_id": "GEN-01000287",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020702500"
+      },
+      {
+        "case_id": "GEN-01000288",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020680000"
+      },
+      {
+        "case_id": "GEN-01000289",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008730500"
+      },
+      {
+        "case_id": "GEN-01000290",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008345500"
+      },
+      {
+        "case_id": "GEN-01000291",
+        "expected_action": "REQUEST_INFO",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020397500"
+      },
+      {
+        "case_id": "GEN-01000292",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008583000"
+      },
+      {
+        "case_id": "GEN-01000293",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008815000"
+      },
+      {
+        "case_id": "GEN-01000294",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008530500"
+      },
+      {
+        "case_id": "GEN-01000295",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007778000"
+      },
+      {
+        "case_id": "GEN-01000296",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007370500"
+      },
+      {
+        "case_id": "GEN-01000297",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008970000"
+      },
+      {
+        "case_id": "GEN-01000298",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007663000"
+      },
+      {
+        "case_id": "GEN-01000299",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022272500"
+      },
+      {
+        "case_id": "GEN-01000300",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007321000"
+      },
+      {
+        "case_id": "GEN-01000301",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007365500"
+      },
+      {
+        "case_id": "GEN-01000302",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009187500"
+      },
+      {
+        "case_id": "GEN-01000303",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008770500"
+      },
+      {
+        "case_id": "GEN-01000304",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007383000"
+      },
+      {
+        "case_id": "GEN-01000305",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007982500"
+      },
+      {
+        "case_id": "GEN-01000306",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022270000"
+      },
+      {
+        "case_id": "GEN-01000307",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008358000"
+      },
+      {
+        "case_id": "GEN-01000308",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007353000"
+      },
+      {
+        "case_id": "GEN-01000309",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007200500"
+      },
+      {
+        "case_id": "GEN-01000310",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009753000"
+      },
+      {
+        "case_id": "GEN-01000311",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008873000"
+      },
+      {
+        "case_id": "GEN-01000312",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007393500"
+      },
+      {
+        "case_id": "GEN-01000313",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008020500"
+      },
+      {
+        "case_id": "GEN-01000314",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009025000"
+      },
+      {
+        "case_id": "GEN-01000315",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007653000"
+      },
+      {
+        "case_id": "GEN-01000316",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007360500"
+      },
+      {
+        "case_id": "GEN-01000317",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008765500"
+      },
+      {
+        "case_id": "GEN-01000318",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008547500"
+      },
+      {
+        "case_id": "GEN-01000319",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007862500"
+      },
+      {
+        "case_id": "GEN-01000320",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007586000"
+      },
+      {
+        "case_id": "GEN-01000321",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009190500"
+      },
+      {
+        "case_id": "GEN-01000322",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009775500"
+      },
+      {
+        "case_id": "GEN-01000323",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007573000"
+      },
+      {
+        "case_id": "GEN-01000324",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007250500"
+      },
+      {
+        "case_id": "GEN-01000325",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008740500"
+      },
+      {
+        "case_id": "GEN-01000326",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009995500"
+      },
+      {
+        "case_id": "GEN-01000327",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010043000"
+      },
+      {
+        "case_id": "GEN-01000328",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007433000"
+      },
+      {
+        "case_id": "GEN-01000329",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009208000"
+      },
+      {
+        "case_id": "GEN-01000330",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009342500"
+      },
+      {
+        "case_id": "GEN-01000331",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008095500"
+      },
+      {
+        "case_id": "GEN-01000332",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007385000"
+      },
+      {
+        "case_id": "GEN-01000333",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008262500"
+      },
+      {
+        "case_id": "GEN-01000334",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008595000"
+      },
+      {
+        "case_id": "GEN-01000335",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010090500"
+      },
+      {
+        "case_id": "GEN-01000336",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007953000"
+      },
+      {
+        "case_id": "GEN-01000337",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008555500"
+      },
+      {
+        "case_id": "GEN-01000338",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007818000"
+      },
+      {
+        "case_id": "GEN-01000339",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007650500"
+      },
+      {
+        "case_id": "GEN-01000340",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008145500"
+      },
+      {
+        "case_id": "GEN-01000341",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008700500"
+      },
+      {
+        "case_id": "GEN-01000342",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.010015000"
+      },
+      {
+        "case_id": "GEN-01000343",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020707500"
+      },
+      {
+        "case_id": "GEN-01000344",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008208000"
+      },
+      {
+        "case_id": "GEN-01000345",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007830000"
+      },
+      {
+        "case_id": "GEN-01000346",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009520500"
+      },
+      {
+        "case_id": "GEN-01000347",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020287500"
+      },
+      {
+        "case_id": "GEN-01000348",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007783000"
+      },
+      {
+        "case_id": "GEN-01000349",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007707500"
+      },
+      {
+        "case_id": "GEN-01000350",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007203000"
+      },
+      {
+        "case_id": "GEN-01000351",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021150000"
+      },
+      {
+        "case_id": "GEN-01000352",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007403000"
+      },
+      {
+        "case_id": "GEN-01000353",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008680500"
+      },
+      {
+        "case_id": "GEN-01000354",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007738000"
+      },
+      {
+        "case_id": "GEN-01000355",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009075500"
+      },
+      {
+        "case_id": "GEN-01000356",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008205000"
+      },
+      {
+        "case_id": "GEN-01000357",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007805500"
+      },
+      {
+        "case_id": "GEN-01000358",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008825500"
+      },
+      {
+        "case_id": "GEN-01000359",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009243000"
+      },
+      {
+        "case_id": "GEN-01000360",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008006000"
+      },
+      {
+        "case_id": "GEN-01000361",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008027500"
+      },
+      {
+        "case_id": "GEN-01000362",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007710000"
+      },
+      {
+        "case_id": "GEN-01000363",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020620000"
+      },
+      {
+        "case_id": "GEN-01000364",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008030000"
+      },
+      {
+        "case_id": "GEN-01000365",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007437500"
+      },
+      {
+        "case_id": "GEN-01000366",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021427500"
+      },
+      {
+        "case_id": "GEN-01000367",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021622500"
+      },
+      {
+        "case_id": "GEN-01000368",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007343000"
+      },
+      {
+        "case_id": "GEN-01000369",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020552500"
+      },
+      {
+        "case_id": "GEN-01000370",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007800000"
+      },
+      {
+        "case_id": "GEN-01000371",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008168500"
+      },
+      {
+        "case_id": "GEN-01000372",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008210500"
+      },
+      {
+        "case_id": "GEN-01000373",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007440500"
+      },
+      {
+        "case_id": "GEN-01000374",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007380500"
+      },
+      {
+        "case_id": "GEN-01000375",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008890500"
+      },
+      {
+        "case_id": "GEN-01000376",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007770500"
+      },
+      {
+        "case_id": "GEN-01000377",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007658000"
+      },
+      {
+        "case_id": "GEN-01000378",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021597500"
+      },
+      {
+        "case_id": "GEN-01000379",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020267500"
+      },
+      {
+        "case_id": "GEN-01000380",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009087500"
+      },
+      {
+        "case_id": "GEN-01000381",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007582500"
+      },
+      {
+        "case_id": "GEN-01000382",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007768000"
+      },
+      {
+        "case_id": "GEN-01000383",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007768500"
+      },
+      {
+        "case_id": "GEN-01000384",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007378000"
+      },
+      {
+        "case_id": "GEN-01000385",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007770500"
+      },
+      {
+        "case_id": "GEN-01000386",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007773000"
+      },
+      {
+        "case_id": "GEN-01000387",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.022082500"
+      },
+      {
+        "case_id": "GEN-01000388",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008040000"
+      },
+      {
+        "case_id": "GEN-01000389",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008338000"
+      },
+      {
+        "case_id": "GEN-01000390",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007598000"
+      },
+      {
+        "case_id": "GEN-01000391",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.021717500"
+      },
+      {
+        "case_id": "GEN-01000392",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.019990000"
+      },
+      {
+        "case_id": "GEN-01000393",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008640500"
+      },
+      {
+        "case_id": "GEN-01000394",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.009470500"
+      },
+      {
+        "case_id": "GEN-01000395",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020702500"
+      },
+      {
+        "case_id": "GEN-01000396",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008030500"
+      },
+      {
+        "case_id": "GEN-01000397",
+        "expected_action": "HUMAN_REVIEW",
+        "action": "HUMAN_REVIEW",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.008923000"
+      },
+      {
+        "case_id": "GEN-01000398",
+        "expected_action": "REQUEST_INFO",
+        "action": "REQUEST_INFO",
+        "correct": true,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.007840000"
+      },
+      {
+        "case_id": "GEN-01000399",
+        "expected_action": "AUTO_PROCESS",
+        "action": "HUMAN_REVIEW",
+        "correct": false,
+        "unsafe_automation": false,
+        "invalid_output": false,
+        "latency_ms": null,
+        "estimated_cost_usd": "0.020505000"
+      }
+    ]
+  },
+  "ceiling": 0.01,
+  "selection_rule": "maximum automation rate among thresholds with at least one AUTO_PROCESS and an unsafe automation rate <= the ceiling; ties go to the higher threshold",
+  "selected": {
+    "auto_threshold": 0.55,
+    "n": 400,
+    "auto": 106,
+    "request_info": 94,
+    "human_review": 200,
+    "unsafe": 0,
+    "correct": 394,
+    "automation_rate": 0.265,
+    "uar": 0.0,
+    "human_review_rate": 0.5,
+    "correct_action_rate": 0.985
+  },
+  "at_point": null
+}

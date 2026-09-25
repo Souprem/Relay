@@ -1,0 +1,7 @@
+Phase 2D Claude budget projection (spec L9), made after the smoke run and before any bulk run.
+Measured sync cost per case (live test + smoke): $0.02683; batch = x0.5.
+  gen-v0.2-dev, batch, 400 cases: $5.3664
+  gen-v0.2-holdout, batch, 1000 cases: $13.4160
+  gen-v0.2-holdout latency sample, sync, 100 cases: $2.6832
+Projected total $21.4655; spent so far $0.2952; remaining $59.7048 of $60.
+PROCEED

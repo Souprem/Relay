@@ -351,11 +351,182 @@ Artifacts: smoke
 [`run_20260925T092425Z_0aee97`](evals/baselines/gen-v0.2-holdout/run_20260925T092425Z_0aee97/) (full
 [`report.md`](evals/baselines/gen-v0.2-holdout/run_20260925T092425Z_0aee97/report/report.md)).
 
+**Conventional LLM baseline** (`--provider claude`, `claude-opus-5`,
+[`relay/decisions/claude.py`](relay/decisions/claude.py)). One structured-output request per case
+asks Claude the same 12 questions as Jev, rendered from the same `build_questions()` q-v0.2
+definitions ([`claude_prompt.py`](relay/decisions/claude_prompt.py); question set
+`q-v0.2+claude-prompt-v1`). Each yes/no answer is a self-reported `p_yes`, each date-part or status
+answer is an option plus its probability (the leftover mass counts for no option), and
+`missing_evidence` is a six-label distribution normalized in code. The answers go through the same
+composition code, step-therapy date arithmetic, policy engine and thresholds as Jev, so the
+judgment source is the only thing that differs: Jev's native probabilities against an LLM's
+verbalized confidence. Adaptive thinking is left at the model default, with `effort` `low` and
+`max_tokens` 4096. Dev ran on the Message Batches API at half price; Claude's operating point was
+chosen on dev with the same rule as Jev's, and the prompt, schema and code were frozen before any
+Claude run. Nothing was tuned after seeing results.
+
+**Refusal fallbacks are deliberately disabled.** The claude-api default would add a server-side
+fallback model for refused requests. It is not used here for two reasons: the Batches API rejects
+the `fallbacks` parameter, and a silent switch to another model would change what this baseline
+measures. A refusal (or a reply cut off at `max_tokens`) becomes an invalid bundle, which the
+engine routes to `HUMAN_REVIEW`, and refusals are counted below: zero, across all 560 Claude cases
+run (10 smoke, 400 dev, 150 holdout sample).
+
+**Budget.** All of Phase 2D and 2E's Claude spend is capped at $10 (tightened mid-run from the
+sub-project's original $60 guard by an explicit user decision), tracked in
+[`claude-spend.json`](evals/baselines/claude-spend.json); the pre-bulk-run projection (made after
+the smoke run, under the original $60 guard, before the cap was tightened) is in
+[`claude-projection.txt`](evals/baselines/claude-projection.txt). Under the $10 cap, only dev (400
+cases, the full set) and a deterministic 150-case sample of holdout (`--limit 150 --sample-seed
+7`) were run; the full 1,000-case holdout and a dedicated sync latency sample were not run, so
+latency below comes from the 10-case smoke sync run only (already a low-sample figure). The gold
+set (Phase 2E) is unaffected and keeps its own reserved headroom; see below for the final numbers.
+
+```bash
+uv run relay eval --dataset evals/generated/gen-v0.2-dev --provider claude --mode batch --budget-usd 10
+uv run relay eval --dataset evals/generated/gen-v0.2-holdout --provider claude --mode batch --limit 150 --sample-seed 7 --budget-usd 10
+uv run relay compare --dataset evals/generated/gen-v0.2-holdout --traces <jev-sample>.jsonl --traces <rules-sample>.jsonl --traces <claude-sample>.jsonl.gz --labels jev-q-v0.2,rules-v0.1,claude-opus-5
+```
+
+**Jev vs rules vs Claude on `gen-v0.2-dev`** (n=400, full dev set, policy `v0.1`; each provider's
+`--at` row uses its own dev-selected threshold). Claude's correct-action rate is 288/400 (72.0%)
+at the recorded `auto_process >= 0.95` threshold, against Jev's 330/400 (82.5%) and the rules'
+261/400 (65.2%); at 0.95 Claude never automates (0/400), against Jev 64/400 (16.0%) and rules
+56/400 (14.0%) — none of the three have any unsafe automation at 0.95. Claude's own dev sweep
+selects a much lower operating point, `auto_process >= 0.55` (`T_CLAUDE`): 106/400 (26.5%)
+automation, 0/106 unsafe (one-sided 95% upper bound on the true rate ≈2.79%, small-n), 394/400
+(98.5%) correct action, 94/400 (23.5%) request-info, 200/400 (50.0%) human review. Full compare:
+[`compare-jev-rules-claude.txt`](evals/baselines/gen-v0.2-dev/compare-jev-rules-claude.txt), which
+puts the action-level disagreement at "Action differences jev-q-v0.2 -> claude-opus-5: 96 cases (0
+new unsafe automations)".
+
+The dev batch was not a clean single run: the original submission
+(`msgbatch_01SpuLJxsxtaXJ8W2YPps8Tf`) stalled and was cancelled by the controller after roughly 5.7
+hours with `succeeded=378, canceled=22`; the 378 completed bundles were collected at no extra cost,
+the 22 canceled case ids were re-run as a second, much smaller batch
+(`msgbatch_012TiAgwjfKK8DGZKdvhv5Hm`, $0.274699), and the two runs were combined into one 400-case
+trace by [`scripts/combine_claude_dev.py`](scripts/combine_claude_dev.py) (committed, documented,
+provenance recorded in the combined run's manifest). The combined dev run has 0 invalid outputs and
+0 refusals; nothing about the prompt, schema or thresholds changed between the two batches.
+
+**Claude's step-therapy probability is a structural lower bound under this design.** `step_therapy`
+is composed in code from up to seven of Claude's own sub-answers (three date parts for the
+treatment start, one end-status plus three date parts for the end, then multiplied again by
+`mtx_inadequate_response`; [`relay/decisions/composition.py`](relay/decisions/composition.py),
+[`step_therapy.py`](relay/decisions/step_therapy.py)). Every one of those sub-answers is a single
+stated option plus a probability, with the leftover mass unassigned (2D spec L4), so the composed
+`p_yes` is a product of several same-or-below-1 confidences — even fully accurate per-answer
+confidences well above 0.9 compound down multiplicatively. This is a mechanism shared with Jev's
+composition code, but it bites Claude harder because its self-reported per-answer confidences are
+less peaked than Jev's native probabilities. As a descriptive diagnostic (no retuning): on dev, all
+400/400 of Claude's `step_therapy` values fall below the 0.95 auto-process bar, and 246/400 (61.5%)
+of those would clear it if the date-part and end-status sub-answers had been stated with full
+certainty (i.e. `mtx_inadequate_response`'s own probability alone already reads >= 0.95); on the
+holdout sample the same figures are 150/150 below 0.95, 99/150 (66.0%) attributable to this
+composition effect rather than to low confidence that treatment was inadequate. This depresses both
+Claude's step-therapy calibration (see below) and its automation rate at any fixed threshold.
+
+**Jev vs rules vs Claude on `gen-v0.2-holdout`** (n=150, a deterministic sample —
+`--limit 150 --sample-seed 7` — not the full 1,000-case holdout, because of the $10 API budget
+above; policy `v0.1`; each provider's `--at` row uses its own dev-selected threshold; Jev and rules
+are the same committed full-holdout traces restricted, offline, to this run's 150 case ids via
+[`scripts/filter_traces_by_sample.py`](scripts/filter_traces_by_sample.py) — no new provider
+calls):
+
+| Provider | Run | `auto_process` | Correct action | Automation | Unsafe / auto (UAR) | Request info | Human review | Frontier flat |
+|---|---|---|---|---|---|---|---|---|
+| Jev `q-v0.2` | `run_20260925T212314Z_e49268` | 0.95 (recorded) | 125/150 (83.3%) | 23/150 (15.3%) | 0/23 (0.0%) | 55/150 (36.7%) | 72/150 (48.0%) | no |
+| Jev `q-v0.2` | `run_20260925T212314Z_e49268` | 0.89 (dev-selected, `--at`) | 138/150 (92.0%) | 36/150 (24.0%) | 0/36 (0.0%) | 55/150 (36.7%) | 59/150 (39.3%) | no |
+| Rules `rules-v0.1` | `run_20260925T212314Z_4b67b1` | 0.95 (recorded) | 102/150 (68.0%) | 20/150 (13.3%) | 0/20 (0.0%) | 92/150 (61.3%) | 38/150 (25.3%) | yes |
+| Rules `rules-v0.1` | `run_20260925T212314Z_4b67b1` | 0.99 (dev-selected, `--at`) | 102/150 (68.0%) | 20/150 (13.3%) | 0/20 (0.0%) | 92/150 (61.3%) | 38/150 (25.3%) | yes |
+| Claude `claude-opus-5` | `run_20260925T212034Z_bbee49` | 0.95 (recorded) | 110/150 (73.3%) | 0/150 (0.0%) | n/a | 47/150 (31.3%) | 103/150 (68.7%) | no |
+| Claude `claude-opus-5` | `run_20260925T212034Z_bbee49` | 0.55 (dev-selected, `--at`) | 147/150 (98.0%) | 37/150 (24.7%) | 0/37 (0.0%) | 47/150 (31.3%) | 66/150 (44.0%) | no |
+
+Small-n UAR upper bounds (one-sided 95%, from 1 − 0.05^(1/n) on 0 observed unsafe automations): Jev
+0/36 ≈7.98%, rules 0/20 ≈13.91%, Claude 0/37 ≈7.78% at their own dev-selected thresholds — none of
+these are statistical guarantees at this sample size, only point estimates of 0.0%.
+
+**Calibration on the holdout sample** (Brier / ECE per decision; Claude's confidences are
+self-reported):
+
+| Decision | Jev Brier / ECE | Rules Brier / ECE | Claude Brier / ECE |
+|---|---|---|---|
+| diagnosis_support | 0.002 / 0.032 | 0.017 / 0.033 | 0.002 / 0.041 |
+| step_therapy | 0.019 / 0.035 | 0.122 / 0.097 | 0.027 / 0.101 |
+| documentation_complete | 0.045 / 0.096 | 0.098 / 0.123 | 0.044 / 0.029 |
+| material_contradiction | 0.031 / 0.127 | 0.000 / 0.000 | 0.002 / 0.041 |
+| missing_evidence | 0.169 / 0.102 | 0.172 / 0.123 | 0.083 / 0.137 |
+
+**Multiclass Brier comparability.** Claude's `missing_evidence` answer is always the full six-label
+distribution requested by the schema, normalized in code, so it has 0/150 partial distributions on
+this sample; its other choice answers (the date parts and end-status) are single-answer +
+probability, with the rest counted as unassigned mass, and are not scored as multiclass
+distributions. Jev returns full distributions for every choice question. On this sample Jev has
+4/150 partial `missing_evidence` distributions (mass on no label, which reads as 0 on every label
+in the Brier score) and rules has 59/150 — so Jev's and Claude's `missing_evidence` Brier/ECE numbers
+above are close to comparable (Jev's small partial share does not distort the comparison much), but
+rules' is not (nearly 40% partial). Every other row compares full distributions to full
+distributions, or single yes/no probabilities to single yes/no probabilities, and is directly
+comparable across all three providers.
+
+Claude's Brier is better than Jev's on `material_contradiction` (0.002 vs 0.031) and
+`missing_evidence` (0.083 vs 0.169), about tied on `documentation_complete` (0.044 vs 0.045) and
+`diagnosis_support` (0.002 vs 0.002), and worse on `step_therapy` (0.027 vs 0.019) — consistent with
+the structural composition effect above. Claude's ECE is worse than Jev's on `diagnosis_support`,
+`step_therapy` and `missing_evidence`, and better on `documentation_complete` and
+`material_contradiction`; self-reported verbalized confidence is not uniformly better- or
+worse-calibrated than Jev's native probabilities, it varies by decision.
+
+**Claude runs: latency, cost, refusals, caching** (latency from the 10-case smoke sync run only —
+no dedicated sync latency sample was run under the $10 cap, so this is already a low-sample figure;
+batch has no latency at all; cost at list prices as of 2026-09-25, batch at half price):
+
+| Claude run | Mode | n | Latency p50 / p95 | Cost per case | Cost per 1k cases | Refusals | Invalid | Prompt cache reads |
+|---|---|---|---|---|---|---|---|---|
+| smoke (`run_20260925T131052Z_f328de`) | sync | 10 | 5169 / 6781 ms | $0.02547 | $25.47 | 0 | 0 | 50.7% |
+| dev (`run_20260925T191752Z_288946`) | batch | 400 | unavailable (batch) | $0.01100 | $11.00 | 0 | 0 | 65.5% |
+| holdout sample (150, seed 7) (`run_20260925T212034Z_bbee49`) | batch | 150 | unavailable (batch) | $0.01637 | $16.37 | 0 | 0 | 29.6% |
+
+Total Claude spend (ledger): $7.1500 across 8 entries (two are $0 bookkeeping entries from
+recovering the interrupted dev batch — one settles the original, superseded reservation to zero,
+one settles a stray $0 reservation left by a killed re-attach; neither reflects real spend);
+unsettled reservations: none. Remaining headroom under the $10 cap after this task: $2.8500,
+against an estimated gold-set (Phase 2E, 100 cases) reserve of roughly $1.36 (100 × the measured
+dev batch cost/case of $0.01091 × a 1.25 safety margin).
+
+Claude's sync latency (smoke, n=10, low-sample) is far higher than Jev's: 5169/6781 ms p50/p95
+against Jev's 163/198 ms on the holdout sample — Jev runs locally with no network round trip, so
+this is an expected, large gap, not a surprise. Claude's cost per 1,000 cases ($11.00 on dev,
+$16.37 on the holdout sample, both batch/half-price) is far higher than Jev's ($0.1119 per 1,000
+cases, from the holdout sample's $0.0001119 per case) — Jev has no per-call API cost. The batch cost
+projection under-estimated the holdout sample's actual cost: $2.0124 projected (from the
+dev-and-smoke-derived sync-cost-per-case × 0.5 batch multiplier) against $2.456215 actually spent,
+about 22% higher, mostly explained by the holdout sample's lower observed prompt-cache-read share
+(29.6%) than dev's (65.5%) — a lower cache hit rate raises the realized per-token cost above the
+projection's flat multiplier, and batch prompt caching is best-effort. All three providers have 0
+unsafe automations at their own dev-selected thresholds on this sample (Jev 0/36, rules 0/20,
+Claude 0/37); Claude had 0 refusals and 0 invalid outputs across every run. Quoting the holdout
+sample compare file: "Action differences jev-q-v0.2 -> claude-opus-5: 33 cases (0 new unsafe
+automations)".
+
+The prompt-cache figure is what was observed (`usage.cache_read_input_tokens`), not assumed; cache
+hits inside a batch are best-effort. Claude's run is one draw from a nondeterministic model, and
+its probabilities are verbalized estimates rather than a model-native distribution.
+
+Artifacts: smoke [`run_20260925T131052Z_f328de`](evals/baselines/smoke-v0.1/run_20260925T131052Z_f328de/),
+dev [`run_20260925T191752Z_288946`](evals/baselines/gen-v0.2-dev/run_20260925T191752Z_288946/) (with
+[`compare-jev-rules-claude.txt`](evals/baselines/gen-v0.2-dev/compare-jev-rules-claude.txt)),
+holdout sample (150, seed 7)
+[`run_20260925T212034Z_bbee49`](evals/baselines/gen-v0.2-holdout/run_20260925T212034Z_bbee49/) (full
+[`report.md`](evals/baselines/gen-v0.2-holdout/run_20260925T212034Z_bbee49/report/report.md), and
+[`compare-jev-rules-claude.txt`](evals/baselines/gen-v0.2-holdout/compare-jev-rules-claude.txt)). The
+full 1,000-case holdout and a dedicated sync latency sample were not run (see Budget above).
+
 ## Limitations
 
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
-  document variety. No gold set yet (Phase 2E); the rules-only baseline is above.
+  document variety. No gold set yet (Phase 2E); the rules-only and Claude baselines are above.
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
   being guessed. The generator doesn't produce them.
@@ -378,6 +549,15 @@ Artifacts: smoke
   a "line" is a whole paragraph because the generator joins sentences with a single space rather
   than a newline; and an ISO-shaped date embedded in a hyphenated ID (e.g. a claim number) can be
   matched as a real date.
+- The Claude baseline is one run per dataset of a nondeterministic model (adaptive thinking at
+  effort `low`), and its probabilities are self-reported, so a re-run would give somewhat different
+  numbers. Like the other providers it has only seen gen-v0.2's templated text; the Phase 2E gold
+  set will be its first test on hand-written documents. Its holdout evidence is a 150-case
+  deterministic sample (`--limit 150 --sample-seed 7`), not the full 1,000-case set, because of a
+  $10 API budget cap set mid-project; the dev evidence (400 cases) is complete. `step_therapy`'s
+  multiplicative composition (see Baselines above) is a structural property of the shared
+  composition code, not something specific to gen-v0.2, so it will also depress Claude's automation
+  rate on the gold set.
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs

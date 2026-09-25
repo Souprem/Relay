@@ -1,0 +1,14 @@
+{
+  "run_id": "run_20260925T212034Z_bbee49",
+  "created_at": "2026-09-25T21:20:35.194349Z",
+  "dataset_id": "gen-v0.2-holdout",
+  "dataset_path": "evals/generated/gen-v0.2-holdout",
+  "provider": "claude",
+  "policy_version": "v0.1",
+  "question_set_version": "q-v0.2+claude-prompt-v1",
+  "case_count": 150,
+  "trace_file": "traces/run_20260925T212034Z_bbee49.jsonl",
+  "relay_git_sha": "b08461302f57c5645af4018a9a0114a59472907a",
+  "sample_limit": 150,
+  "sample_seed": 7
+}
