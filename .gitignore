@@ -14,9 +14,9 @@ dist/
 build/
 
 # Relay run artifacts (reference baselines live in evals/baselines/)
-traces/
-reports/
-results/
+/traces/
+/reports/
+/results/
 
 # OS / editor
 .DS_Store

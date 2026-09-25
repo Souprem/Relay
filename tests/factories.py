@@ -1,6 +1,6 @@
 """Shared builders for tests. Every value here is synthetic."""
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from relay.cases.models import (
@@ -13,7 +13,12 @@ from relay.cases.models import (
     Patient,
     PriorAuthCase,
 )
+from relay.cases.policies import load_policy
 from relay.decisions.base import Decision, DecisionBundle, DecisionId
+from relay.traces.models import WorkflowTrace
+from relay.workflow.engine import determine_action
+from relay.workflow.outcomes import WorkflowAction
+from relay.workflow.thresholds import THRESHOLDS_V0_1
 
 
 def make_case_input(
@@ -95,4 +100,36 @@ def make_bundle(
         input_tokens=100,
         estimated_cost_usd=cost,
         error=error,
+    )
+
+
+def make_trace(
+    case: PriorAuthCase,
+    bundle: DecisionBundle | None = None,
+    *,
+    action: WorkflowAction | None = None,
+    run_id: str = "run_test",
+) -> WorkflowTrace:
+    bundle = bundle or make_bundle(case.input.id)
+    policy = load_policy(case.input.policy_id)
+    outcome = determine_action(case.input, bundle, policy, THRESHOLDS_V0_1)
+    return WorkflowTrace(
+        trace_id=f"tr_{case.input.id}",
+        run_id=run_id,
+        timestamp=datetime(2026, 9, 24, tzinfo=UTC),
+        case_id=case.input.id,
+        case_content_hash=case.input.content_hash(),
+        dataset_id=case.input.dataset_id,
+        provider=bundle.provider,
+        provider_version=bundle.provider_version,
+        question_set_version=bundle.question_set_version,
+        question_set_hash=bundle.question_set_hash,
+        policy_id=policy.id,
+        policy_version=policy.version,
+        thresholds=THRESHOLDS_V0_1,
+        decisions=bundle,
+        action=action or outcome.action,
+        decision_reasons=outcome.reasons,
+        gate_path=outcome.gate_path,
+        relay_git_sha="abc123",
     )
