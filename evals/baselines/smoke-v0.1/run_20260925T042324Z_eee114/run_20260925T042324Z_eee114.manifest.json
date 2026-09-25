@@ -1,0 +1,11 @@
+{
+  "run_id": "run_20260925T042324Z_eee114",
+  "created_at": "2026-09-25T04:23:24.925621Z",
+  "dataset_id": "smoke-v0.1",
+  "dataset_path": "evals/smoke",
+  "provider": "jev",
+  "policy_version": "v0.1",
+  "case_count": 10,
+  "trace_file": "traces/run_20260925T042324Z_eee114.jsonl",
+  "relay_git_sha": "4247b04a6d404e91589687e3e5c2ddc344fe582f-dirty"
+}
