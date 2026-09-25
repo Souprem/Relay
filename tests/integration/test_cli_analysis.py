@@ -146,6 +146,8 @@ def test_report_writes_the_bundle_with_the_manifest_hash(gt_run, tmp_path, monke
     assert "## Calibration" in report and "## Automation/safety frontier" in report
     assert "40/40 (100.0%)" in report
     assert "Selected operating point: auto_process >= 0.99" in result.output
+    # C5: the --at row must actually reach report.md, not just the CLI's own summary line.
+    assert "| 0.95 |" in report and "--at" in report
 
 
 def test_report_reads_gzipped_traces(gt_run, tmp_path):
