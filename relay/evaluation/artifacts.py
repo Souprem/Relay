@@ -47,7 +47,7 @@ def calibration_csv(calibration: RunCalibration) -> str:
 
 
 def _json(payload: Any) -> str:
-    return json.dumps(payload, indent=2) + "\n"
+    return json.dumps(payload, separators=(",", ":")) + "\n"
 
 
 def write_eval_bundle(
@@ -65,14 +65,15 @@ def write_eval_bundle(
         "summary.json": _json(
             {
                 "identity": identity.model_dump(mode="json"),
-                "summary": summary.model_dump(mode="json"),
+                # Per-case list omitted here (results.json is the source of truth for it).
+                "summary": summary.model_dump(mode="json", exclude={"cases"}),
                 "ceiling": sweep.ceiling,
                 "selection_rule": sweep.selection_rule,
                 "selected": None if sweep.selected is None else sweep.selected.model_dump(),
                 "at_point": None if sweep.at_point is None else sweep.at_point.model_dump(),
             }
         ),
-        "calibration.json": calibration.model_dump_json(indent=2) + "\n",
+        "calibration.json": calibration.model_dump_json() + "\n",
         "calibration.csv": calibration_csv(calibration),
         "frontier.csv": frontier_csv(sweep.points),
         "confusion.json": _json({k: m.model_dump(mode="json") for k, m in confusion.items()}),

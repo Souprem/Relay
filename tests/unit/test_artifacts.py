@@ -149,6 +149,7 @@ def test_write_eval_bundle_writes_all_files(tmp_path):
         "at_point",
     }
     assert summary["summary"]["n_cases"] == 3
+    assert "cases" not in summary["summary"]  # the per-case list lives only in results.json
     assert summary["identity"]["dataset_hash"] == "sha256:dataset"
     calibration = json.loads((out / "calibration.json").read_text())
     assert list(calibration["decisions"]) == [

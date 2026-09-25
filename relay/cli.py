@@ -813,7 +813,7 @@ def eval_command(
         raise _fail(str(error)) from error
     results_dir.mkdir(parents=True, exist_ok=True)
     results_path = results_dir / f"{summary.run_id}.json"
-    results_path.write_text(summary.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    results_path.write_text(summary.model_dump_json() + "\n", encoding="utf-8")
     typer.echo("")
     typer.echo(render_eval_summary(summary))
     typer.echo(f"\nResults: {results_path}")
@@ -839,7 +839,7 @@ def sweep_command(
     out.mkdir(parents=True, exist_ok=True)
     json_path = out / f"{result.run_id}.sweep.json"
     csv_path = out / f"{result.run_id}.frontier.csv"
-    json_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    json_path.write_text(result.model_dump_json() + "\n", encoding="utf-8")
     csv_path.write_text(frontier_csv(result.points), encoding="utf-8", newline="\n")
     typer.echo(render_frontier_table(result))
     typer.echo(f"\nSweep: {json_path}\nFrontier CSV: {csv_path}")
