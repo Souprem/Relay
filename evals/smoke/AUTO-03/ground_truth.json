@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "Medium: ongoing MTX since March 2026 (month only); conservative duration Mar 31 -> Sep 15 = 168 days."
+}

@@ -1,0 +1,11 @@
+SYNTHETIC RECORD - Rheumatology Clinic Note - 2026-09-10
+Patient: 47-year-old female.
+
+Assessment: Seropositive rheumatoid arthritis, diagnosed 2025-11-03 based on symmetric
+polyarthritis of the hands, positive RF and anti-CCP, and elevated CRP.
+
+Treatment history: Methotrexate 15 mg weekly started 2026-01-12. Discontinued 2026-06-01
+after 20 weeks because of inadequate response: persistent synovitis in both wrists, morning
+stiffness over 1 hour, CDAI 28.
+
+Plan: Request Immunara for rheumatoid arthritis.

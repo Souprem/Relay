@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - MEDICATION HISTORY
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-02-04 - end: see clinic note
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-02-04
+IBUPROFEN 400 MG PO AS NEEDED - status: active

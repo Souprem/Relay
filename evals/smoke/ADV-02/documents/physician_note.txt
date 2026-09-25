@@ -1,0 +1,11 @@
+SYNTHETIC RECORD - Rheumatology Note - 2026-09-05
+36-year-old male with rheumatoid arthritis diagnosed in 2025 (RF positive, anti-CCP positive,
+symmetric small-joint synovitis).
+
+Family history: his mother has rheumatoid arthritis and took methotrexate for six months in 2019
+before switching to a biologic.
+
+Patient's own treatment: hydroxychloroquine 200 mg twice daily from 2026-02-10 to 2026-07-28,
+stopped for inadequate response. The patient has not taken methotrexate.
+
+Plan: request Immunara.

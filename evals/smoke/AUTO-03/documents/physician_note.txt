@@ -1,0 +1,9 @@
+SYNTHETIC RECORD - Rheumatology Note - 2026-09-08
+38-year-old female with established rheumatoid arthritis, diagnosed in 2024 by rheumatology
+(RF positive, anti-CCP positive).
+
+She has been taking methotrexate 25 mg subcutaneously weekly since March 2026 and continues it
+today. Despite good adherence she has ongoing active synovitis of the MCP joints and a DAS28 of
+5.4, which we consider an inadequate response to methotrexate.
+
+Plan: add Immunara; continue methotrexate for now.

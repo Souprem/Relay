@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "Material contradiction: med history shows MTX Jan-Jul 2026; note says never tried. Step therapy cannot be established."
+}

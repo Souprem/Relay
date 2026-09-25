@@ -1,0 +1,13 @@
+{
+  "id": "RI-03",
+  "dataset_id": "smoke-v0.1",
+  "as_of_date": "2026-09-15",
+  "patient": {"age": 50, "state": "IL"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "Northstar", "plan": "Northstar Choice", "member_id": null},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "fax_cover", "kind": "fax_cover", "file": "fax_cover.txt"},
+    {"id": "physician_note", "kind": "physician_note", "file": "physician_note.txt"}
+  ]
+}

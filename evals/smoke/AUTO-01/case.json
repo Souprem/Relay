@@ -1,0 +1,12 @@
+{
+  "id": "AUTO-01",
+  "dataset_id": "smoke-v0.1",
+  "as_of_date": "2026-09-15",
+  "patient": {"age": 47, "state": "MA"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "ExampleHealth", "plan": "ExampleHealth Gold", "member_id": "EXH-448213"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "physician_note", "kind": "physician_note", "file": "physician_note.txt"}
+  ]
+}
