@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Sequoia Rheumatology - Follow-up Visit - 2026-06-24
+Patient reference SYN-6005.
+
+Subjective: 50-year-old man with seropositive rheumatoid arthritis, diagnosed in 2018, reports his hands and feet remain swollen despite treatment, and he has had to modify his work schedule because of morning stiffness lasting nearly two hours.
+Objective: Synovitis at bilateral wrists, MCPs, and MTPs. Weight stable. No rash.
+Assessment: Rheumatoid arthritis with persistent disease activity despite oral methotrexate 15 mg weekly, started in March 2026 and stopped on 2026-06-20 for inadequate response.
+Plan: Start Immunara. Continue routine monitoring.

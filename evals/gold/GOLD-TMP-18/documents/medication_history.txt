@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Lonestar Rheumatology - Medication History - 2026-06-05
+Patient reference SYN-6018.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2025-10-06 - end 2025-11-03 - reason: travel
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-01-12 - end 2026-05-04 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-12

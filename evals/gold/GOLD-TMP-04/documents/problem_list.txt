@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Redwood Rheumatology - Problem List Update - 2026-06-26
+Patient reference SYN-6004. 46-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed 2022, followed at this practice since.
+- Methotrexate 17.5 mg weekly from 2026-04-06 to 2026-06-22, discontinued for inadequate response; synovitis persisted at both wrists.
+- Mild iron-deficiency anemia, on supplementation.
+- Plan: proceed with Immunara given inadequate response to methotrexate.

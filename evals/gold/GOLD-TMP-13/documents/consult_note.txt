@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Copper Basin Rheumatology - Follow-up Visit - 2026-08-14
+Patient reference SYN-6013.
+
+Subjective: 41-year-old woman with seropositive rheumatoid arthritis, diagnosed in 2020, reports she stopped her methotrexate recently because of persistent nausea and vomiting after each dose.
+Objective: Mild synovitis at bilateral wrists. No oral ulcers. Vitals stable.
+Assessment: Rheumatoid arthritis; oral methotrexate 15 mg weekly, started two months before this visit, was stopped on 2026-08-07 because of nausea, an intolerance.
+Plan: Start Immunara. Monitor for recurrent gastrointestinal symptoms.

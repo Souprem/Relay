@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter: seropositive RA since 2019; methotrexate January 15, 2026 to April 16, 2026 = 91 days (D7), stopped for nausea (intolerance). lab_report supports the diagnosis with positive serology."
+}

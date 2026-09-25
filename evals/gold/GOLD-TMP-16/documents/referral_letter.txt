@@ -1,0 +1,12 @@
+SYNTHETIC RECORD - Example Cascadia Rheumatology - October 12, 2026
+
+Dear Colleague,
+
+Patient reference SYN-6016. This 47-year-old woman has been under our care for rheumatoid arthritis since 2022 and has cycled through several disease-modifying regimens over that time as her disease activity has waxed and waned.
+
+Among these, she was treated with oral methotrexate, which she started on March 3 and stopped on August 28, discontinued because her synovitis remained active despite the trial. She has since been maintained on other therapies with variable effect and continues to report morning stiffness in both hands.
+
+Given her sustained disease activity, we are requesting Immunara.
+
+Sincerely,
+The treating rheumatologist

@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Lonestar Rheumatology - Laboratory Report - 2026-04-28
+Patient reference SYN-6018.
+Rheumatoid factor: positive, 58 IU/mL (reference <14).
+Anti-CCP antibody: positive, 76 U/mL (reference <20).
+CRP: 1.8 mg/dL (elevated).

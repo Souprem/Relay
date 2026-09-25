@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Willowbrook Rheumatology - Problem List - 2026-06-05
+Patient reference SYN-6007. 44-year-old man.
+
+- Seropositive rheumatoid arthritis, diagnosed 2021.
+- Methotrexate 15 mg weekly from late March 2026 to June 2026, discontinued for nausea and mouth ulcers.
+- Seasonal allergic rhinitis, managed as needed.
+- Plan: proceed with Immunara given intolerance to methotrexate.

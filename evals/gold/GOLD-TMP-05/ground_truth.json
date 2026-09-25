@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "progress_note: seropositive RA since 2018; methotrexate started March 2026 (D2: counted from 2026-03-31) to 2026-06-20 = 81 days (D7), under twelve weeks despite the exact stop date, stopped for inadequate response."
+}

@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Fairview Rheumatology - Medication History - 2026-05-28
+Patient reference SYN-6002.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-03-02 - end 2026-05-24 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-03-02
+LISINOPRIL 10 MG PO DAILY - status: active

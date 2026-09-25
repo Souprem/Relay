@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note, dated on as_of_date (2026-09-28): seropositive RA since 2024; methotrexate ongoing since 2026-07-20, still active today (D5) = 70 days (D7), under twelve weeks, inadequate response."
+}

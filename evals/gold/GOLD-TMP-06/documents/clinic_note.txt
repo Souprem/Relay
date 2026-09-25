@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Bayshore Family Medicine - Visit Note - 2026-06-08
+Patient reference SYN-6006. This 33-year-old woman was diagnosed with seropositive rheumatoid arthritis in 2023 and has continued to have active synovitis of both hands despite treatment. She works as a hairstylist and reports that the repetitive hand motions required for her job have become increasingly painful.
+
+She took oral methotrexate 20 mg weekly starting in February 2026 and stopped it in early June 2026 because her joint swelling had not improved. She denies fevers or weight loss and otherwise feels well.
+
+Given the inadequate response to methotrexate, Immunara is now being requested for her.

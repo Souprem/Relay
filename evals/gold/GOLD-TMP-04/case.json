@@ -1,0 +1,13 @@
+{
+  "id": "GOLD-TMP-04",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-06-29",
+  "patient": {"age": 46, "state": "IL"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "Northstar", "plan": "Northstar Choice", "member_id": "NSC-449213"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "problem_list", "kind": "physician_note", "file": "problem_list.txt"},
+    {"id": "medication_history", "kind": "medication_history", "file": "medication_history.txt"}
+  ]
+}

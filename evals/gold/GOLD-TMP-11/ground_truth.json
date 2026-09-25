@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note states dates as MM/DD/YYYY: methotrexate 04/01/2026 to 06/05/2026 = 65 days (D1, D7), under twelve weeks, stopped for inadequate response."
+}

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note and medication_history agree: methotrexate 2025-10-06 to 2025-11-03 = 28 days, stopped for travel, restarted 2026-01-12 to 2026-05-04 = 112 days (D8), stopped for inadequate response; the second segment alone exceeds twelve weeks."
+}

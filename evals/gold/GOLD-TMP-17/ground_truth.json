@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note and medication_history agree: methotrexate 2026-01-05 to 2026-02-23 = 49 days, held for infection, then 2026-03-23 to 2026-05-18 = 56 days (D8, two segments), stopped for inadequate response; neither segment reaches twelve weeks."
+}

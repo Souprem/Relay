@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "consult_note, dated on as_of_date (2026-08-14): methotrexate started two months before this visit (D4: June 2026, D2: 2026-06-30) and stopped 2026-08-07 = 38 days (D7), under twelve weeks, stopped for nausea (intolerance)."
+}

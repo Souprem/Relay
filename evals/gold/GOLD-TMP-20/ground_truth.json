@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter: methotrexate taken for fourteen weeks with the last dose 2026-05-20 (D4: start 2026-02-11) = 98 days (D7), stopped for nausea and low white blood cell counts (intolerance)."
+}
