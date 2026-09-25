@@ -15,7 +15,7 @@ from relay.workflow.engine import bundle_problem
 from relay.workflow.outcomes import WorkflowAction
 
 LOW_SAMPLE_N = 30
-_YES_NO_TRUTH = {
+YES_NO_TRUTH = {
     DecisionId.DIAGNOSIS_SUPPORT: "diagnosis_supported",
     DecisionId.STEP_THERAPY: "step_therapy_satisfied",
     DecisionId.DOCUMENTATION_COMPLETE: "documentation_complete",
@@ -78,10 +78,22 @@ def _decision_correct(decision: Decision, truth: GroundTruth) -> bool:
     if decision.question_id == DecisionId.MISSING_EVIDENCE:
         return decision.answer == truth.missing_evidence.value
     assert decision.p_yes is not None
-    return (decision.p_yes >= 0.5) == getattr(truth, _YES_NO_TRUTH[decision.question_id])
+    return (decision.p_yes >= 0.5) == truth_flag(truth, decision.question_id)
 
 
-def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -> EvalSummary:
+def truth_flag(truth: GroundTruth, question_id: DecisionId) -> bool:
+    """The ground-truth answer to a yes/no decision."""
+    return getattr(truth, YES_NO_TRUTH[question_id])
+
+
+def paired_cases(
+    traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]
+) -> list[tuple[WorkflowTrace, PriorAuthCase]]:
+    """Match one run's traces to dataset cases, in trace order.
+
+    Raises EvalError unless the traces come from one run, have no duplicate case ids, refer only
+    to known cases whose content hash is unchanged, and cover every case in the dataset.
+    """
     if not traces:
         raise EvalError("no traces to score")
     run_ids = {t.run_id for t in traces}
@@ -92,14 +104,24 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
     if duplicates:
         raise EvalError(f"duplicate case ids in traces: {duplicates}")
     by_id = {c.input.id: c for c in cases}
-    scored: list[ScoredCase] = []
-    hits: dict[DecisionId, list[bool]] = {q: [] for q in DecisionId}
+    pairs: list[tuple[WorkflowTrace, PriorAuthCase]] = []
     for trace in traces:
         case = by_id.get(trace.case_id)
         if case is None:
             raise EvalError(f"trace for unknown case {trace.case_id}")
         if case.input.content_hash() != trace.case_content_hash:
             raise EvalError(f"{trace.case_id}: case content hash changed since the run")
+        pairs.append((trace, case))
+    missing = sorted(set(by_id) - set(trace_case_ids))
+    if missing:
+        raise EvalError(f"traces do not cover every case in the dataset, missing: {missing}")
+    return pairs
+
+
+def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -> EvalSummary:
+    scored: list[ScoredCase] = []
+    hits: dict[DecisionId, list[bool]] = {q: [] for q in DecisionId}
+    for trace, case in paired_cases(traces, cases):
         expected = expected_action(case, load_policy(trace.policy_id), trace.thresholds)
         invalid = bundle_problem(trace.decisions) is not None
         scored.append(
@@ -120,10 +142,6 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
         if not invalid:
             for decision in trace.decisions.decisions:
                 hits[decision.question_id].append(_decision_correct(decision, case.ground_truth))
-
-    missing = sorted(set(by_id) - set(trace_case_ids))
-    if missing:
-        raise EvalError(f"traces do not cover every case in the dataset, missing: {missing}")
 
     n = len(scored)
     autos = sum(c.action == WorkflowAction.AUTO_PROCESS for c in scored)
