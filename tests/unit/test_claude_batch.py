@@ -12,9 +12,11 @@ from tests.claude_fakes import (
     FakeBatches,
     SleepRecorder,
     answers,
+    connection_error,
     errored,
     expired,
     message,
+    status_error,
     succeeded,
 )
 from tests.factories import make_case, make_case_input
@@ -127,3 +129,46 @@ async def test_run_dataset_traces_batch_results_like_sync_results(tmp_path):
     assert {t.provider for t in traces} == {"claude"}
     assert {t.question_set_version for t in traces} == {"q-v0.2+claude-prompt-v1"}
     assert all(t.decisions.latency_ms is None for t in traces)
+
+
+async def test_batch_creation_can_use_a_separate_client_than_polling(tmp_path=None):
+    """C2: the caller (the CLI) wires create() to a max_retries=0 client so a submission that
+    might have reached the server is never silently retried; retrieve()/results() stay on the
+    normal client. Verify the provider actually calls create() on the client it was given for
+    that purpose, not the polling one."""
+    create_batches = FakeBatches([succeeded("A")], statuses=("ended",))
+    poll_batches = FakeBatches([succeeded("A")], statuses=("ended",))
+    batch_provider, _ = provider(poll_batches, create_batches=create_batches)
+    await batch_provider.prepare([A])
+    assert len(create_batches.created) == 1
+    assert poll_batches.created == []
+
+
+async def test_prepare_uses_the_polling_client_by_default_when_none_is_given():
+    batches = FakeBatches([succeeded("A")], statuses=("ended",))
+    batch_provider, _ = provider(batches)
+    await batch_provider.prepare([A])
+    assert len(batches.created) == 1
+
+
+@pytest.mark.parametrize("error", [connection_error(), status_error(500)])
+async def test_poll_loop_tolerates_transient_retrieve_errors_and_keeps_polling(error):
+    """C5: a dropped connection or a 5xx while polling a multi-hour batch must not lose the run;
+    the loop just tries again on the next interval."""
+    batches = FakeBatches([succeeded("A")], statuses=("in_progress", error, "ended"), requests=1)
+    batch_provider, sleep = provider(batches)
+    await batch_provider.prepare([A])
+    assert (await batch_provider.decide(A)).error is None
+    assert batches.retrieved == ["msgbatch_test", "msgbatch_test"]
+    assert sleep.delays == [POLL_INTERVAL_S, POLL_INTERVAL_S]
+
+
+async def test_poll_loop_does_not_tolerate_a_4xx_on_retrieve():
+    """A 4xx (e.g. the batch id being wrong) is not transient; it must still raise rather than
+    poll forever."""
+    batches = FakeBatches(
+        [succeeded("A")], statuses=("in_progress", status_error(400), "ended"), requests=1
+    )
+    batch_provider, _ = provider(batches)
+    with pytest.raises(Exception, match="HTTP 400"):
+        await batch_provider.prepare([A])

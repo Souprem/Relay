@@ -42,6 +42,9 @@ class FakeAsyncClient:
     def __init__(self, **kwargs):
         self.messages = FakeMessages(message(), batches=FakeBatches([]))
 
+    def with_options(self, **kwargs):
+        return self
+
     async def __aenter__(self):
         return self
 

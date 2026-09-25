@@ -96,6 +96,13 @@ def connection_error() -> anthropic.APIConnectionError:
     return anthropic.APIConnectionError(request=_REQUEST)
 
 
+def response_validation_error() -> anthropic.APIResponseValidationError:
+    """A reply the SDK itself could not parse into its expected shape: not a status error or a
+    connection error, but still an anthropic.APIError (C7)."""
+    response = httpx2.Response(200, request=_REQUEST)
+    return anthropic.APIResponseValidationError(response=response, body=None)
+
+
 class FakeMessages:
     """Stands in for AsyncAnthropic().messages. create() replays scripted outcomes (a Message or
     an exception to raise) in order; the last one repeats."""
@@ -180,6 +187,8 @@ class FakeBatches:
 
     def _next(self):
         status = self.statuses.pop(0) if len(self.statuses) > 1 else self.statuses[0]
+        if isinstance(status, BaseException):
+            raise status
         return batch(status, requests=self.requests)
 
     async def create(self, *, requests):

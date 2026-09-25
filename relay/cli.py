@@ -11,6 +11,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
+import anthropic
 import typer
 from anthropic import AsyncAnthropic
 from dotenv import load_dotenv
@@ -301,10 +302,21 @@ def _load_ledger(claude: ClaudeRun) -> SpendLedger:
 def _claude_budget_check(claude: ClaudeRun, cases: list[PriorAuthCase]) -> Decimal:
     """The projected cost of this run; exits 2 with the numbers if it would break the budget.
 
-    Re-attaching to a batch already recorded in the ledger projects nothing new.
+    Re-attaching to a batch still "reserved" in the ledger projects nothing new: nothing further
+    will be billed beyond what was already reserved for it. Re-attaching to a batch that is
+    already "settled" is refused outright (C4) rather than silently projecting $0 for it: without
+    this check, a repeated --batch-id re-attach after the real cost was already collected would
+    read the batch's results again and add a second settled entry for the same money, with no
+    budget check ever having looked at that real cost.
     """
     ledger = _load_ledger(claude)
-    known = claude.batch_id is not None and find_batch(ledger, claude.batch_id) is not None
+    found = find_batch(ledger, claude.batch_id) if claude.batch_id is not None else None
+    if found is not None and found.status == "settled":
+        raise _fail(
+            f"Message Batch {claude.batch_id} is already settled in the ledger (run "
+            f"{found.run_id}, ${found.cost_usd:.4f}); nothing to re-attach."
+        )
+    known = found is not None
     projected = Decimal("0") if known else project_cost(ledger, len(cases), claude.mode)
     try:
         check_budget(ledger, projected, claude.budget_usd)
@@ -339,19 +351,42 @@ def _record_batch(claude: ClaudeRun, run_id: str, batch_id: str) -> None:
     )
 
 
-def _partial_traces(store: TraceStore) -> list[WorkflowTrace]:
+def _partial_traces(store: TraceStore) -> list[WorkflowTrace] | None:
     """Traces already durably written to disk before a run died partway through. Read from the
-    file rather than the in-memory list, which is empty until run_dataset returns."""
+    file rather than the in-memory list, which is empty until run_dataset returns.
+
+    Parses line-by-line (C6) rather than handing the whole file to read_traces: a crash mid-append
+    can leave a torn last line (a partial write, no trailing newline), and that alone must not
+    discard the complete lines written before it. Only a bad *last* line is treated as a torn
+    write and dropped; a bad line anywhere else means the file is corrupt in some way this
+    function doesn't understand, and returns None rather than guessing which lines are real. The
+    caller must treat None as "unknown, don't settle" rather than "zero cases completed".
+    """
     if not store.path.exists():
         return []
     try:
-        return read_traces(store.path)
-    except (ValueError, KeyError, OSError):
-        return []
+        text = store.path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    lines = [line for line in text.splitlines() if line.strip()]
+    traces: list[WorkflowTrace] = []
+    for i, line in enumerate(lines):
+        try:
+            traces.append(WorkflowTrace.model_validate_json(line))
+        except (ValueError, KeyError):
+            if i != len(lines) - 1:
+                return None
+            break  # a torn last line: drop it, keep everything before it
+    return traces
 
 
 def _settle_interrupted(
-    claude: ClaudeRun, run_id: str, store: TraceStore, batch_id: str | None
+    claude: ClaudeRun,
+    run_id: str,
+    store: TraceStore,
+    batch_id: str | None,
+    *,
+    ambiguous_submission: bool = False,
 ) -> None:
     """Account for a run that died mid-flight, without ever under- or over-counting real spend.
 
@@ -361,6 +396,11 @@ def _settle_interrupted(
     re-attach reads the real results and settles the real cost. A sync run has no such hidden
     spend: it is settled at the sum of whatever cases were actually completed and written to disk
     before it died (0 if none were).
+
+    ambiguous_submission (C2) is for a batch create() call that failed with a connection error, a
+    timeout, or a 5xx: unlike a clean pre-create failure or a 4xx, the request might have reached
+    the server anyway, so there is no batch id to attach, but the reservation still must not
+    settle at 0 on a guess. It stays "reserved" until an operator checks by hand.
     """
     if batch_id is not None:
         write_ledger(claude.ledger, attach_batch(_load_ledger(claude), run_id, batch_id))
@@ -372,7 +412,26 @@ def _settle_interrupted(
             err=True,
         )
         return
-    _settle(claude, run_id, _partial_traces(store), None)
+    if ambiguous_submission:
+        typer.echo(
+            f"error: Claude run {run_id}'s Message Batch submission failed with a connection "
+            "error, timeout, or server error; it may or may not have reached Anthropic's "
+            "servers. Its reservation stays counted against the budget until this is resolved "
+            "by hand: check `batches list` in the Anthropic console for a batch submitted "
+            "around this run's start time, then re-attach with --mode batch --batch-id <id> if "
+            "you find one.",
+            err=True,
+        )
+        return
+    traces = _partial_traces(store)
+    if traces is None:
+        typer.echo(
+            f"error: Claude run {run_id}'s trace file could not be parsed; its reservation "
+            "stays counted against the budget until this is resolved by hand.",
+            err=True,
+        )
+        return
+    _settle(claude, run_id, traces, None)
 
 
 def _settle(
@@ -392,6 +451,21 @@ def _settle(
         f"Claude spend: this run ${actual:.4f}; total ${ledger.spent_usd:.4f} of the "
         f"${claude.budget_usd:.2f} budget ({claude.ledger})"
     )
+
+
+def _is_ambiguous_submission_error(error: BaseException) -> bool:
+    """Whether a batch create() failure (C2) might have reached Anthropic's servers anyway.
+
+    A dropped connection or a timeout means the client never saw a response, and a 5xx means the
+    server may have processed the request before failing to reply cleanly; either way the batch
+    may already exist and be billing. A 4xx (a bad request, rejected outright) or anything else is
+    definite: nothing was submitted.
+    """
+    if isinstance(error, anthropic.APIConnectionError):
+        return True
+    if isinstance(error, anthropic.APIStatusError):
+        return error.status_code >= 500
+    return False
 
 
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
@@ -432,6 +506,12 @@ async def _build_provider(
                 question_set=questions,
                 batch_id=claude.batch_id,
                 on_submitted=on_submitted,
+                # max_retries=0 for submission only (C2): a create() that fails with a dropped
+                # connection, a timeout, or a 5xx might have reached the server anyway, and an
+                # automatic SDK retry could then submit (and bill) a second batch. Polling and
+                # reading results stay on the normal-retry client (client.messages.batches),
+                # since those are idempotent reads.
+                create_batches=client.with_options(max_retries=0).messages.batches,
             )
         return ClaudeProvider(client.messages, question_set=questions)
     raise ValueError(f"no factory for provider {provider_name!r}")
@@ -475,12 +555,18 @@ async def _execute(
                 concurrency=concurrency,
                 git_sha=git_sha,
             )
-    except BaseException:
+    except BaseException as error:
         # Account even for a failed run (API error, batch submission failure, Ctrl-C, ...) so its
         # reservation never leaks: see _settle_interrupted for how a submitted batch differs from
         # a sync run that died partway through.
         if claude is not None:
-            _settle_interrupted(claude, run_id, store, getattr(provider, "batch_id", None))
+            batch_id = getattr(provider, "batch_id", None)
+            ambiguous = (
+                claude.mode == "batch"
+                and batch_id is None
+                and _is_ambiguous_submission_error(error)
+            )
+            _settle_interrupted(claude, run_id, store, batch_id, ambiguous_submission=ambiguous)
         if store.path.exists() and store.path.stat().st_size == 0:
             store.path.unlink()
         raise

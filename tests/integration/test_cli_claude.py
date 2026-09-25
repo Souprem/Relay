@@ -10,11 +10,18 @@ from typer.testing import CliRunner
 import relay.cli as cli_module
 from relay.cases.loader import load_dataset
 from relay.cli import app
-from relay.evaluation.budget import SpendLedger, load_ledger, reserve, write_ledger
+from relay.evaluation.budget import SpendLedger, load_ledger, reserve, settle, write_ledger
 from relay.reporting import CLAUDE_NOTE
-from relay.traces.store import read_traces
-from tests.claude_fakes import FakeBatches, FakeMessages, message, succeeded
-from tests.factories import make_bundle
+from relay.traces.store import TraceStore, read_traces
+from tests.claude_fakes import (
+    FakeBatches,
+    FakeMessages,
+    connection_error,
+    message,
+    status_error,
+    succeeded,
+)
+from tests.factories import make_bundle, make_trace
 
 REPO = Path(__file__).resolve().parents[2]
 SMOKE = REPO / "evals" / "smoke"
@@ -29,6 +36,11 @@ class FakeAnthropic:
 
     def __init__(self, **kwargs):
         self.messages = FakeMessages(message(), batches=FakeAnthropic.batches)
+
+    def with_options(self, **kwargs):
+        # The CLI asks for a max_retries=0 client for batch submission (C2); the fake has no
+        # retry behavior to vary, so the same instance (and the same shared FakeBatches) serves.
+        return self
 
     async def __aenter__(self):
         return self
@@ -202,6 +214,115 @@ def test_a_batch_submission_failure_still_settles_the_reservation(tmp_path, fake
     [entry] = load_ledger(tmp_path / "spend.json").entries
     assert entry.status == "settled"
     assert entry.cost_usd == Decimal("0")
+
+
+def test_a_batch_submission_4xx_still_settles_the_reservation_at_zero(tmp_path, fake_claude):
+    """C2: a 4xx from batches.create() is a definite failure -- the API rejected the request
+    outright, so nothing was ever submitted or billed, unlike the ambiguous cases below."""
+
+    async def reject(*, requests):
+        raise status_error(400)
+
+    fake_claude.batches.create = reject
+    result = claude_eval(tmp_path, "--mode", "batch")
+    assert result.exit_code != 0
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert entry.status == "settled"
+    assert entry.cost_usd == Decimal("0")
+
+
+@pytest.mark.parametrize("error", [connection_error(), status_error(500)])
+def test_an_ambiguous_batch_submission_failure_keeps_the_reservation_reserved(
+    tmp_path, fake_claude, error
+):
+    """C2: a connection error, timeout, or 5xx from batches.create() might have reached
+    Anthropic's servers anyway. Settling at 0 could hide a batch that is already billing, so the
+    reservation must stay reserved (there is no batch id to attach) with guidance to check by
+    hand, rather than assuming nothing happened."""
+
+    async def maybe_submitted(*, requests):
+        raise error
+
+    fake_claude.batches.create = maybe_submitted
+    result = claude_eval(tmp_path, "--mode", "batch")
+    assert result.exit_code != 0
+    assert list((tmp_path / "traces").glob("*.jsonl")) == []
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert entry.status == "reserved"
+    assert entry.cost_usd == Decimal("1.25")  # untouched projected cost
+    assert "may or may not have reached" in result.output
+    assert "batches list" in result.output
+
+
+def test_reattaching_to_an_already_settled_batch_is_refused(tmp_path, fake_claude):
+    """C4: re-attaching to a batch id that is already fully settled must not silently project $0
+    and re-process it -- that would add a second settled entry for the same money, with the
+    budget check never having looked at that real cost at all."""
+    ledger = reserve(
+        SpendLedger(),
+        run_id="run_done",
+        dataset_id="smoke-v0.1",
+        mode="batch",
+        cases=10,
+        projected=Decimal("1.25"),
+    )
+    ledger = settle(ledger, "run_done", Decimal("0.10950"), batch_id="msgbatch_test")
+    write_ledger(tmp_path / "spend.json", ledger)
+    result = claude_eval(tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test")
+    assert result.exit_code == 2
+    assert "already settled" in result.output
+    assert fake_claude.batches.created == []
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert (entry.status, entry.cost_usd) == ("settled", Decimal("0.10950"))
+
+
+def test_partial_traces_drops_only_a_torn_last_line(tmp_path):
+    """C6: a crash mid-append can leave a torn last line (a partial write, no trailing newline).
+    That alone must not discard the complete lines written before it."""
+    cases = load_dataset(SMOKE)[:2]
+    store = TraceStore.create(tmp_path, "run_torn")
+    for case in cases:
+        store.append(make_trace(case, make_bundle(case.input.id, provider="claude")))
+    with store.path.open("a", encoding="utf-8") as handle:
+        handle.write('{"trace_id": "tr_torn", "run_id": "run_torn", "case_id":')  # cut short
+    traces = cli_module._partial_traces(store)
+    assert traces is not None
+    assert [t.case_id for t in traces] == [c.input.id for c in cases]
+
+
+def test_partial_traces_is_none_when_a_non_last_line_is_corrupt(tmp_path):
+    """A bad line that isn't the last one means something worse than a torn write happened; the
+    caller must not guess which lines are trustworthy."""
+    store = TraceStore.create(tmp_path, "run_corrupt")
+    case = load_dataset(SMOKE)[0]
+    good_line = make_trace(case, make_bundle(case.input.id, provider="claude")).model_dump_json()
+    store.path.write_text("not json at all\n" + good_line + "\n", encoding="utf-8")
+    assert cli_module._partial_traces(store) is None
+
+
+def test_settle_interrupted_keeps_the_reservation_reserved_when_the_trace_file_is_corrupt(
+    tmp_path, capsys
+):
+    """C6: settling a corrupt trace file at 0 (or at whatever partial traces happen to parse)
+    could under-count real, already-incurred sync spend. Unknown must not be treated as zero."""
+    claude = cli_module.ClaudeRun(
+        mode="sync", budget_usd=Decimal("60"), ledger=tmp_path / "spend.json"
+    )
+    ledger = reserve(
+        SpendLedger(),
+        run_id="run_corrupt",
+        dataset_id="smoke-v0.1",
+        mode="sync",
+        cases=10,
+        projected=Decimal("2.5"),
+    )
+    write_ledger(claude.ledger, ledger)
+    store = TraceStore.create(tmp_path / "traces", "run_corrupt")
+    store.path.write_text("not json at all\nnor is this\n", encoding="utf-8")
+    cli_module._settle_interrupted(claude, "run_corrupt", store, None)
+    [entry] = load_ledger(claude.ledger).entries
+    assert (entry.status, entry.cost_usd) == ("reserved", Decimal("2.5"))
+    assert "could not be parsed" in capsys.readouterr().err
 
 
 async def test_a_mid_run_sync_failure_settles_the_cases_actually_completed(tmp_path, monkeypatch):

@@ -11,6 +11,7 @@ import re
 from collections.abc import AsyncIterable, Awaitable, Callable, Sequence
 from typing import Protocol
 
+import anthropic
 from anthropic.types.messages import MessageBatch, MessageBatchIndividualResponse
 from anthropic.types.messages.batch_create_params import Request
 
@@ -64,9 +65,17 @@ class ClaudeBatchProvider:
         poll_interval_s: float = POLL_INTERVAL_S,
         batch_id: str | None = None,
         on_submitted: Callable[[str], None] | None = None,
+        create_batches: BatchesClient | None = None,
     ) -> None:
         claude_question_set_version(question_set)
         self._batches = batches
+        # A separate client for create() only (C2): the caller wires this to max_retries=0, so a
+        # dropped connection or a timeout on submission is never silently retried by the SDK. If
+        # the first attempt actually reached the server, an automatic retry would submit (and
+        # bill) a second batch; surfacing the ambiguity instead lets the operator check
+        # `batches list` rather than risk a silent double submission. retrieve()/results() stay on
+        # the normal-retry client: they are idempotent reads, safe to retry.
+        self._create_batches = batches if create_batches is None else create_batches
         self._question_set = question_set
         self._policy_loader = policy_loader
         self._sleep = sleep
@@ -96,7 +105,11 @@ class ClaudeBatchProvider:
     async def prepare(self, cases: Sequence[CaseInput]) -> None:
         requests = self.requests(cases)
         if self.batch_id is None:
-            batch = await self._batches.create(requests=requests)
+            # No max_retries here (see __init__): a create() failure that might have reached the
+            # server (connection error, timeout, 5xx) must not be silently retried by the SDK, so
+            # it propagates as-is for the caller to treat as ambiguous rather than "not
+            # submitted" (C2).
+            batch = await self._create_batches.create(requests=requests)
             self.batch_id = batch.id
             if self._on_submitted is not None:
                 self._on_submitted(batch.id)
@@ -109,7 +122,7 @@ class ClaudeBatchProvider:
             )
         while batch.processing_status != "ended":
             await self._sleep(self._poll_interval_s)
-            batch = await self._batches.retrieve(batch.id)
+            batch = await self._poll(batch.id, batch)
         by_id = {case.id: case for case in cases}
         bundles: dict[str, DecisionBundle] = {}
         async for item in await self._batches.results(batch.id):
@@ -122,6 +135,22 @@ class ClaudeBatchProvider:
                 raise BatchError(f"batch {batch.id} has two results for case {item.custom_id!r}")
             bundles[item.custom_id] = self._bundle(item, case)
         self._bundles = bundles
+
+    async def _poll(self, batch_id: str, last: MessageBatch) -> MessageBatch:
+        """One retrieve() during polling, tolerating transient failures (C5).
+
+        A batch can take hours; a dropped connection or a 5xx on one poll is not a reason to lose
+        the whole run (and its already-submitted, already-billing batch). Anything else (a 4xx,
+        e.g. the batch id being wrong) is not transient and still raises.
+        """
+        try:
+            return await self._batches.retrieve(batch_id)
+        except anthropic.APIConnectionError:
+            return last
+        except anthropic.APIStatusError as error:
+            if error.status_code < 500:
+                raise
+            return last
 
     def _bundle(self, item: MessageBatchIndividualResponse, case: CaseInput) -> DecisionBundle:
         policy = self._policy_loader(case.policy_id)
