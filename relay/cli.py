@@ -1,4 +1,4 @@
-"""relay run / relay eval."""
+"""relay run / relay eval / relay generate."""
 
 import asyncio
 import os
@@ -19,6 +19,8 @@ from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
 from relay.evaluation.metrics import EvalError, score_run
 from relay.evaluation.runner import RunConfigError, run_dataset, validate_run_config
+from relay.generation.generator import generate_dataset, verify_dataset
+from relay.generation.manifest import MANIFEST_DIR, read_manifest, write_manifest
 from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
@@ -210,3 +212,57 @@ def eval_command(
     typer.echo("")
     typer.echo(render_eval_summary(summary))
     typer.echo(f"\nResults: {results_path}")
+
+
+@app.command()
+def generate(
+    out: Annotated[
+        Path | None, typer.Option(help="Directory the case folders are written to (or checked).")
+    ] = None,
+    count: Annotated[int | None, typer.Option(min=1, help="Number of cases to generate.")] = None,
+    seed: Annotated[int | None, typer.Option(min=0, help="Dataset seed.")] = None,
+    dataset_id: Annotated[
+        str | None, typer.Option(help="dataset_id written into every case.")
+    ] = None,
+    verify: Annotated[
+        Path | None,
+        typer.Option(exists=True, dir_okay=False, help="Manifest to verify instead of generating."),
+    ] = None,
+    manifests_dir: Annotated[
+        Path, typer.Option(help="Where the dataset manifest is written.")
+    ] = MANIFEST_DIR,
+) -> None:
+    """Generate a seeded synthetic dataset, or verify one against its manifest."""
+    if verify is not None:
+        if count is not None or seed is not None or dataset_id is not None:
+            raise _fail("--verify cannot be combined with --count, --seed or --dataset-id")
+        try:
+            manifest = read_manifest(verify)
+        except ValueError as error:
+            raise _fail(f"{verify}: {error}") from error
+        problems = verify_dataset(manifest, out)
+        if problems:
+            for problem in problems:
+                typer.echo(f"MISMATCH: {problem}", err=True)
+            raise typer.Exit(code=2)
+        checked = str(out) if out is not None and out.exists() else "not checked"
+        typer.echo(
+            f"OK: {manifest.dataset_id} regenerates to {manifest.dataset_hash} "
+            f"(files on disk: {checked})"
+        )
+        return
+    if out is None or count is None or seed is None or dataset_id is None:
+        raise _fail("generating requires --out, --count, --seed and --dataset-id")
+    try:
+        manifest = generate_dataset(count, seed, dataset_id, out)
+    except (FileExistsError, ValueError) as error:
+        raise _fail(str(error)) from error
+    manifest_path = manifests_dir / f"{dataset_id}.json"
+    write_manifest(manifest, manifest_path)
+    typer.echo(f"Generated {manifest.count} cases in {out}")
+    typer.echo(f"Manifest: {manifest_path}")
+    typer.echo(f"Dataset hash: {manifest.dataset_hash}")
+    typer.echo(
+        "Expected actions: "
+        + ", ".join(f"{k} {v}" for k, v in manifest.expected_action_counts.items())
+    )
