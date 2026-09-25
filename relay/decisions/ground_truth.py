@@ -37,7 +37,7 @@ def bundle_from_truth(case_id: str, truth: GroundTruth) -> DecisionBundle:
         provider_version="groundtruth-v1",
         question_set_version="groundtruth",
         question_set_hash="n/a",
-        latency_ms=0,
+        latency_ms=None,
         input_tokens=0,
         estimated_cost_usd=Decimal("0"),
     )

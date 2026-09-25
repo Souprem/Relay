@@ -34,6 +34,21 @@ def _money(value: Decimal | None) -> str:
     return "unavailable" if value is None else f"${value:.7f}"
 
 
+def _latency_count(s: EvalSummary) -> int:
+    """Cases with a recorded latency (every case, for results written before latency_n)."""
+    return s.n_cases if s.latency_n is None else s.latency_n
+
+
+def _latency_unavailable(s: EvalSummary) -> str:
+    return "unavailable (batch)" if "batch" in s.execution_modes else "unavailable"
+
+
+def _latency_partial(s: EvalSummary) -> str:
+    if _latency_count(s) < s.n_cases:
+        return f" (measured on {_latency_count(s)} of {s.n_cases} cases)"
+    return ""
+
+
 def render_run_table(traces: Sequence[WorkflowTrace]) -> str:
     header = (
         f"{'CASE':<10}{'ACTION':<14}{'DIAG':>6}{'STEP':>6}{'DOCS':>6}{'CONTRA':>8}  "
@@ -67,7 +82,8 @@ def _case_section(trace: WorkflowTrace, case: CaseInput) -> list[str]:
     out += [f"- {reason}" for reason in trace.decision_reasons]
     out += [
         "",
-        f"Provider `{b.provider}` · model `{b.provider_version}` · latency {b.latency_ms} ms · "
+        f"Provider `{b.provider}` · model `{b.provider_version}` · latency "
+        f"{'unavailable' if b.latency_ms is None else f'{b.latency_ms} ms'} · "
         f"cost {_money(b.estimated_cost_usd)}",
         "",
     ]
@@ -179,11 +195,11 @@ def render_eval_summary(s: EvalSummary, *, include_cases: bool = True) -> str:
     else:
         uar = "n/a (no AUTO_PROCESS actions)"
     if s.latency_p50_ms is None or s.latency_p95_ms is None:
-        latency = "unavailable"
+        latency = _latency_unavailable(s)
     else:
-        latency = f"{s.latency_p50_ms} ms / {s.latency_p95_ms} ms"
+        latency = f"{s.latency_p50_ms} ms / {s.latency_p95_ms} ms" + _latency_partial(s)
         if s.latency_low_sample:
-            latency += f"  [low-sample: n={s.n_cases} < 30]"
+            latency += f"  [low-sample: n={_latency_count(s)} < 30]"
     if s.total_cost_usd is None or s.cost_per_case_usd is None:
         cost = "unavailable"
     else:
@@ -447,11 +463,11 @@ def render_frontier_markdown(result: SweepResult) -> list[str]:
 
 def _latency_cost_markdown(s: EvalSummary) -> list[str]:
     if s.latency_p50_ms is None or s.latency_p95_ms is None:
-        latency = "unavailable"
+        latency = _latency_unavailable(s)
     else:
-        latency = f"p50 {s.latency_p50_ms} ms · p95 {s.latency_p95_ms} ms"
+        latency = f"p50 {s.latency_p50_ms} ms · p95 {s.latency_p95_ms} ms" + _latency_partial(s)
         if s.latency_low_sample:
-            latency += f" (low sample: n={s.n_cases})"
+            latency += f" (low sample: n={_latency_count(s)})"
     if s.total_cost_usd is None or s.cost_per_case_usd is None:
         cost = "unavailable"
     else:
@@ -495,6 +511,12 @@ def _point_text(point: FrontierPoint | None) -> str:
     )
 
 
+def _latency_cell(s: EvalSummary) -> str:
+    if s.latency_p50_ms is None or s.latency_p95_ms is None:
+        return _latency_unavailable(s)
+    return f"{s.latency_p50_ms} / {s.latency_p95_ms} ms" + _latency_partial(s)
+
+
 def _comparison_rows(c: Comparison) -> list[list[str]]:
     rows = [
         ["Run"] + [r.identity.run_id for r in c.runs],
@@ -517,6 +539,8 @@ def _comparison_rows(c: Comparison) -> list[list[str]]:
         ["Human escalation rate"]
         + [_rate(r.summary.human_review_count, r.summary.n_cases) for r in c.runs],
         ["Invalid outputs"] + [str(r.summary.invalid_outputs) for r in c.runs],
+        ["Latency p50 / p95"] + [_latency_cell(r.summary) for r in c.runs],
+        ["Cost per case"] + [_money(r.summary.cost_per_case_usd) for r in c.runs],
     ]
     for decision in c.runs[0].calibration.decisions:
         rows.append(

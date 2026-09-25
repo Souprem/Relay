@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from relay.cases.models import GroundTruth, PriorAuthCase
 from relay.cases.policies import load_policy
-from relay.decisions.base import Decision, DecisionId
+from relay.decisions.base import Decision, DecisionBundle, DecisionId
 from relay.evaluation.labels import expected_action
 from relay.traces.models import WorkflowTrace
 from relay.workflow.engine import bundle_problem
@@ -34,7 +34,7 @@ class ScoredCase(BaseModel):
     correct: bool
     unsafe_automation: bool
     invalid_output: bool
-    latency_ms: int
+    latency_ms: int | None
     estimated_cost_usd: Decimal | None
 
 
@@ -61,6 +61,10 @@ class EvalSummary(BaseModel):
     latency_p50_ms: int | None
     latency_p95_ms: int | None
     latency_low_sample: bool
+    # Cases with a recorded latency (None in results.json files written before Phase 2D).
+    latency_n: int | None = None
+    # derivations["execution"]["mode"] values seen in the run, e.g. ["batch"]; [] if none.
+    execution_modes: list[str] = Field(default_factory=list)
     total_cost_usd: Decimal | None
     cost_per_case_usd: Decimal | None
     cases: list[ScoredCase]
@@ -106,6 +110,14 @@ def run_identity(
         thresholds_versions=_present(t.thresholds.version for t in traces),
         relay_git_shas=_present(t.relay_git_sha for t in traces),
     )
+
+
+def execution_mode(bundle: DecisionBundle) -> str | None:
+    """How the provider ran this case ("sync" or "batch"), if it recorded it."""
+    execution = bundle.derivations.get("execution")
+    if isinstance(execution, dict) and isinstance(execution.get("mode"), str):
+        return execution["mode"]
+    return None
 
 
 def percentile(values: Sequence[int], pct: float) -> int | None:
@@ -194,7 +206,7 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
     correct = sum(c.correct for c in scored)
     costs = [c.estimated_cost_usd for c in scored]
     total_cost = None if any(c is None for c in costs) else sum(costs, Decimal("0"))
-    latencies = [c.latency_ms for c in scored]
+    latencies = [c.latency_ms for c in scored if c.latency_ms is not None]
     return EvalSummary(
         run_id=traces[0].run_id,
         dataset_id=traces[0].dataset_id,
@@ -217,7 +229,9 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
         per_question_accuracy={q.value: (sum(h) / len(h) if h else None) for q, h in hits.items()},
         latency_p50_ms=percentile(latencies, 50),
         latency_p95_ms=percentile(latencies, 95),
-        latency_low_sample=n < LOW_SAMPLE_N,
+        latency_low_sample=len(latencies) < LOW_SAMPLE_N,
+        latency_n=len(latencies),
+        execution_modes=_present(execution_mode(t.decisions) for t in traces),
         total_cost_usd=total_cost,
         cost_per_case_usd=None if total_cost is None else total_cost / n,
         cases=sorted(scored, key=lambda c: c.case_id),

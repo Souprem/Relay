@@ -92,7 +92,7 @@ class DecisionBundle(BaseModel):
     provider_version: str
     question_set_version: str
     question_set_hash: str
-    latency_ms: int
+    latency_ms: int | None = None  # None when not measured (batch runs, label fixtures)
     input_tokens: int | None = None
     estimated_cost_usd: Decimal | None = None
     error: str | None = None

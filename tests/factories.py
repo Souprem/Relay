@@ -73,9 +73,10 @@ def make_bundle(
     missing: str = "NONE",
     missing_p: float = 0.9,
     error: str | None = None,
-    latency_ms: int = 100,
+    latency_ms: int | None = 100,
     cost: Decimal | None = Decimal("0.00001"),
     provider: str = "test",
+    derivations: dict | None = None,
 ) -> DecisionBundle:
     decisions = (
         []
@@ -93,6 +94,7 @@ def make_bundle(
     return DecisionBundle(
         case_id=case_id,
         decisions=decisions,
+        derivations=derivations or {},
         provider=provider,
         provider_version="test-v1",
         question_set_version="q-test",
