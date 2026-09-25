@@ -1,4 +1,4 @@
 SYNTHETIC RECORD - Example Sundance Rheumatology - Follow-up Visit - 2026-09-08
 Patient reference SYN-6690. At this practice, her seropositive rheumatoid arthritis has been followed since it was recognized in 2018; today's visit, for a 50-year-old woman, addresses ongoing hand and wrist symptoms.
 
-She was treated with oral methotrexate 20 mg weekly from 2025-12-01 through 2026-04-25, when it was discontinued because her synovitis persisted despite dose escalation, an inadequate response. Her hand and wrist swelling remains active on exam today. She works as a paralegal and reports prolonged keyboard use has become difficult. Immunara is recommended given her sustained disease activity.
+She was treated with oral methotrexate 20 mg weekly from 2025-12-01 through 2026-04-25, when it was discontinued because her synovitis persisted despite dose escalation, an inadequate response. Her hand and wrist swelling remains active on exam today. She works as a paralegal and reports prolonged keyboard use has become difficult. Her sustained disease activity supports a switch to Immunara.
