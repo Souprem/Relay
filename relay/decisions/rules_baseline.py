@@ -37,10 +37,10 @@ PATTERNS: dict[str, str] = {
     "relative": (
         r"\b(mother|father|sister|brother|aunt|uncle|grandmother|grandfather|family history)\b"
     ),
-    "member_id_missing": r"member id.*(not provided|not on file|missing)",
+    "member_id_missing": r"member id[^.;\n]*?(not provided|not on file|missing)",
     "ra": r"rheumatoid arthritis",
-    "dx_keyword": r"(diagnos|established|seropositive|seronegative)",
-    "dx_negator": r"(pending|suspected|not yet established|differential|rule out|workup)",
+    "dx_keyword": r"\b(diagnos\w*|established|seropositive|seronegative)\b",
+    "dx_negator": r"(pending|suspected|not yet established|differential|rule out|workup|undiagnosed)",
     "mtx_never": r"(never (tried|taken|took|received)|has not (taken|tried|received)|not taken)",
     "date_role": (
         r"\b(?:(?P<start>start|started|began|initiated|since|from)"
@@ -149,7 +149,7 @@ def dx_negated(lines: Sequence[Line], established: Sequence[Fired]) -> list[Fire
     established_docs = {f.document_id for f in established}
     fired: list[Fired] = []
     for line in lines:
-        if line.kind != "physician_note" or not line.search("dx_negator"):
+        if line.kind != "physician_note" or not line.is_patient or not line.search("dx_negator"):
             continue
         if line.search("ra") or line.document_id not in established_docs:
             fired.append(_fire("dx_negated", line))

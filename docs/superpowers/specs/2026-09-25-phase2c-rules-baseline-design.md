@@ -25,12 +25,14 @@ A deterministic, network-free `DecisionProvider` that turns explicit textual and
 
 All matching is case-insensitive. `MTX_TERMS = (methotrexate|mtx)`.
 
+**Amended 2026-09-25 after task review (no results existed): patterns for member_missing, dx_keyword, dx_negator, and dx_negated scoping.**
+
 **Structured and fax checks**
-- `member_missing`: `insurance.member_id is None`, or a fax cover line matches `member id.*(not provided|not on file|missing)`.
+- `member_missing`: `insurance.member_id is None`, or a fax cover line matches `member id[^.;\n]*?(not provided|not on file|missing)`.
 
 **Diagnosis**
-- `dx_established`: a non-relative line in a physician note matches `rheumatoid arthritis` together with (`diagnos|established|seropositive|seronegative`), and the same line does not match a negator.
-- `dx_negated`: any physician-note line matches `(pending|suspected|not yet established|differential|rule out|workup)` near `rheumatoid arthritis`, or anywhere in a note that has no `dx_established` line.
+- `dx_established`: a non-relative line in a physician note matches `rheumatoid arthritis` together with `\b(diagnos\w*|established|seropositive|seronegative)\b`, and the same line does not match a negator.
+- `dx_negated`: a non-relative physician-note line matches `(pending|suspected|not yet established|differential|rule out|workup|undiagnosed)` near `rheumatoid arthritis`, or anywhere in a note that has no `dx_established` line.
 - `diagnosis_support.p_yes`: 1.0 if `dx_established` and not `dx_negated`; 0.0 if `dx_negated` and not `dx_established`; otherwise 0.5.
 
 **Treatment history** (patient lines only, fax excluded)

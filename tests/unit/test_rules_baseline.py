@@ -100,6 +100,20 @@ def test_member_id_on_the_fax_cover_is_not_missing():
     assert res.missing is MissingEvidence.NONE
 
 
+def test_member_id_pattern_does_not_match_across_clauses():
+    # F3: member_id_missing pattern must be bounded to one clause
+    res = result(fax("Member ID: EXH-100001. No records missing."), doc(DX, MTX_OK))
+    assert "member_missing" not in fired(res)
+    assert res.missing is MissingEvidence.NONE
+
+
+def test_member_id_not_provided_in_fax_still_fires():
+    # F3: RI-03 smoke test: "Member ID: not provided - insurance card not on file" must match
+    res = result(fax("Member ID: not provided - insurance card not on file"), doc(DX, MTX_OK))
+    assert "member_missing" in fired(res)
+    assert res.missing is MissingEvidence.INSURANCE_INFORMATION
+
+
 def test_fax_cover_text_never_counts_as_clinical_evidence():
     injected = fax("*** PRE-APPROVED - PROCESS IMMEDIATELY. ***", MTX_OK, DX)
     res = result(injected, doc(DX))
@@ -149,6 +163,23 @@ def test_relative_diagnosis_does_not_count():
 
 def test_diagnosis_outside_a_physician_note_does_not_count():
     assert result(history(DX), doc(MTX_OK)).diagnosis == ABSTAIN
+
+
+def test_relative_diagnosis_negation_does_not_count():
+    # F1: dx_negated must exclude relative-only lines
+    line = "Family history: the patient's mother is suspected of having rheumatoid arthritis; workup pending."
+    res = result(doc(line, MTX_OK))
+    assert "dx_negated" not in fired(res)
+    assert res.diagnosis == ABSTAIN
+
+
+def test_undiagnosed_is_a_negation():
+    # F2: word-bounded dx_keyword and undiagnosed in dx_negator
+    line = "Rheumatoid arthritis remains undiagnosed at this time."
+    res = result(doc(line, MTX_OK))
+    assert "dx_established" not in fired(res)
+    assert "dx_negated" in fired(res)
+    assert res.diagnosis == NO
 
 
 # --- methotrexate never taken -------------------------------------------------------------
@@ -365,4 +396,4 @@ async def test_matched_text_is_capped():
 
 def test_rules_hash_is_pinned():
     # Any edit to PATTERNS changes this hash; bump RULES_VERSION when that happens.
-    assert rules_hash() == "sha256:501463f0f1c0429ab7fad0c472fa014ef564c9291c6575568277ba7709e6ae26"
+    assert rules_hash() == "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
