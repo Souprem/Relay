@@ -6,6 +6,7 @@ import pytest
 
 from relay.evaluation.budget import (
     PRIOR_COST_PER_CASE_USD,
+    PROJECTION_SAFETY_MARGIN,
     BudgetExceeded,
     SpendLedger,
     attach_batch,
@@ -50,18 +51,49 @@ def test_projection_uses_the_pessimistic_prior_before_any_sync_run():
     assert project_cost(SpendLedger(), 400, "batch") == Decimal("50.000")
 
 
-def test_projection_uses_the_measured_sync_cost_per_case_and_halves_batch():
+def test_projection_uses_the_max_per_case_of_its_own_mode_with_the_safety_margin():
+    """C1: batch projects from real batch evidence (not sync x 0.5), sync from real sync
+    evidence; each mode's own settled runs, not the other's."""
     ledger = ledger_with(("smoke", "sync", 10, "0.60"), ("dev", "batch", 400, "9.00"))
-    assert cost_per_case(ledger) == Decimal("0.06")  # batch runs do not count
-    assert project_cost(ledger, 1000, "batch") == Decimal("30.00")
-    assert project_cost(ledger, 100, "sync") == Decimal("6.00")
+    assert cost_per_case(ledger, "sync") == Decimal("0.06")
+    assert cost_per_case(ledger, "batch") == Decimal("0.0225")  # 9.00 / 400, not the sync figure
+    assert (
+        project_cost(ledger, 1000, "batch") == Decimal("0.0225") * PROJECTION_SAFETY_MARGIN * 1000
+    )
+    assert project_cost(ledger, 100, "sync") == Decimal("0.06") * PROJECTION_SAFETY_MARGIN * 100
+
+
+def test_projection_uses_the_maximum_not_the_mean_across_runs():
+    """C1: real per-case cost varied $0.0103-$0.0164 across batch runs; a mean would
+    under-estimate the next run, so the worst run observed so far sets the projection."""
+    ledger = ledger_with(
+        ("dev-1", "batch", 400, "4.00"),  # $0.01/case
+        ("holdout", "batch", 150, "2.4"),  # $0.016/case, the max
+    )
+    assert cost_per_case(ledger, "batch") == Decimal("2.4") / 150
+    assert (
+        project_cost(ledger, 100, "batch")
+        == (Decimal("2.4") / 150) * PROJECTION_SAFETY_MARGIN * 100
+    )
+
+
+def test_zero_cost_settled_entries_are_excluded_as_bookkeeping_cruft():
+    """A superseded/re-attached/canceled batch settles at $0 (its cost moved to another entry);
+    it must not be treated as evidence that a run costs $0/case."""
+    ledger = ledger_with(("canceled", "batch", 400, "0"), ("real", "batch", 378, "4.00"))
+    assert cost_per_case(ledger, "batch") == Decimal("4.00") / 378
+    ledger_only_zero = ledger_with(("canceled", "batch", 400, "0"))
+    assert cost_per_case(ledger_only_zero, "batch") is None
+    assert project_cost(ledger_only_zero, 100, "batch") == PRIOR_COST_PER_CASE_USD * 100 * Decimal(
+        "0.5"
+    )
 
 
 def test_reservations_do_not_count_as_measured_cost_per_case():
     ledger = reserve(
         SpendLedger(), run_id="r", dataset_id="d", mode="sync", cases=10, projected=Decimal("5")
     )
-    assert cost_per_case(ledger) is None
+    assert cost_per_case(ledger, "sync") is None
     assert ledger.spent_usd == Decimal("5")
 
 
@@ -96,8 +128,22 @@ def test_the_ledger_round_trips_through_json(tmp_path):
     path = tmp_path / "results" / "claude-spend.json"
     ledger = ledger_with(("smoke", "sync", 10, "0.60"))
     write_ledger(path, ledger)
-    assert '"spent_usd": "0.60"' in path.read_text()
+    assert '"spent_usd": "0.600000"' in path.read_text()
     assert load_ledger(path) == ledger
+
+
+def test_write_ledger_rounds_cost_usd_to_6_decimal_places(tmp_path):
+    """C8: the pricing arithmetic can produce far more than 6 decimal places (e.g. the cache
+    write multiplier alone adds two); the persisted ledger should not carry that false
+    precision."""
+    path = tmp_path / "spend.json"
+    ledger = reserve(
+        SpendLedger(), run_id="r", dataset_id="d", mode="sync", cases=1, projected=Decimal("0")
+    )
+    ledger = settle(ledger, "r", Decimal("0.0123456789"))
+    write_ledger(path, ledger)
+    [entry] = load_ledger(path).entries
+    assert entry.cost_usd == Decimal("0.012346")  # rounded, not truncated
 
 
 def test_a_submitted_batch_is_attached_to_its_reservation_and_can_be_found():

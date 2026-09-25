@@ -61,11 +61,21 @@ covering the documents, decisions, step-therapy derivation, gates, and action. `
 writes `results/<run_id>.json`.
 
 `--provider claude` costs real money, so every Claude run passes a budget guard first. The CLI
-projects the run's cost from the measured mean cost per case of earlier sync runs (×0.5 in batch
-mode; a pessimistic $0.25 per case before any sync run) and exits 2 if the ledger's spend plus the
-projection exceeds `--budget-usd` (default 60). The ledger is `results/claude-spend.json`
-(`--ledger`). A batch run prints its batch id when it submits; if the run is interrupted,
-re-attach with `--mode batch --batch-id <id>` rather than paying for a second batch.
+projects the run's cost from the **maximum** measured cost per case among the ledger's own settled
+runs of the same mode (sync or batch — batch is no longer derived from sync × 0.5), times a 1.25
+safety margin, times the case count; entries settled at $0 (superseded/re-attached/canceled
+bookkeeping) don't count as evidence. A max with a margin is used instead of a mean because
+real per-case cost varies noticeably between runs, and a mean can under-estimate. Before any such
+entry exists for a mode, a pessimistic prior is used instead: the full input price for every input
+token (no cache-read discount) plus the output price, at that mode's price (half for batch). The
+guard exits 2 if the ledger's spend plus the projection exceeds `--budget-usd` (default 10). The
+ledger is `results/claude-spend.json` (`--ledger`) — pass an **absolute path** if you'll invoke
+`relay` from more than one working directory, since a relative one resolves against the current
+directory each time and a mismatch means the budget guard silently starts from an empty ledger. A
+batch run prints its batch id when it submits; if the run is interrupted, re-attach with `--mode
+batch --batch-id <id>` rather than paying for a second batch. Re-attaching to a batch id that is
+already fully settled in the ledger is refused (nothing left to collect); re-attaching to one still
+"reserved" reads its results and settles the real cost.
 
 ## Reference smoke run
 

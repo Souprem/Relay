@@ -5,14 +5,21 @@ evals/baselines/claude-spend.json) lists every Claude run and its cost. Before a
 reserves the projected cost, so a run that dies midway still counts against the budget. When the
 run finishes, the reservation is settled at the run's actual estimated cost.
 
-Projection: the measured mean cost per case of the settled sync runs (the first is the smoke run)
-x case count, x 0.5 in batch mode. Before any sync run is settled, a deliberately pessimistic
-prior per case is used instead.
+Projection: the MAXIMUM measured cost per case among the settled runs of the same mode (sync or
+batch), times a safety margin (PROJECTION_SAFETY_MARGIN), times the case count. The maximum is
+used rather than the mean because real per-case cost varies a lot between runs, and some entries'
+`cases` count includes cases that were never actually billed (a batch canceled or superseded
+before finishing still counts its full planned size, not the smaller number actually charged),
+which makes a mean an under-estimate. Settled entries with cost_usd == 0 are excluded: those are
+bookkeeping cruft (a superseded, re-attached, or canceled reservation that was zeroed out when a
+later run collected the real cost), not evidence of a cheap run. Before any such entry exists for
+a mode, a deliberately pessimistic prior is used instead: the full input price for every input
+token (no cache-read discount) plus the output price, at that mode's price (half for batch).
 """
 
 import os
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_EVEN, Decimal
 from pathlib import Path
 from typing import Literal
 
@@ -20,9 +27,14 @@ from pydantic import BaseModel, Field, computed_field
 
 from relay.decisions.claude import BATCH_DISCOUNT, Mode
 
-DEFAULT_BUDGET_USD = Decimal("60")
+DEFAULT_BUDGET_USD = Decimal("10")
 DEFAULT_LEDGER = Path("results/claude-spend.json")
 PRIOR_COST_PER_CASE_USD = Decimal("0.25")
+# Applied to the max observed per-case cost before projecting a new run (C1): real data showed
+# per-case cost varying between runs (e.g. $0.0103 to $0.0164), so a flat max is still not enough
+# margin on its own.
+PROJECTION_SAFETY_MARGIN = Decimal("1.25")
+LEDGER_COST_DECIMAL_PLACES = Decimal("0.000001")
 
 
 class SpendEntry(BaseModel):
@@ -61,7 +73,27 @@ def load_ledger(path: Path) -> SpendLedger:
     return SpendLedger.model_validate_json(path.read_text(encoding="utf-8"))
 
 
+def _round_costs(ledger: SpendLedger) -> SpendLedger:
+    """Round every entry's cost_usd to 6 decimal places (C8): the pricing arithmetic in
+    relay.decisions.claude can produce far more decimal places than a dollar amount ever needs
+    (e.g. the cache-write multiplier alone adds two more), and that false precision has no
+    business being persisted."""
+    return SpendLedger(
+        entries=[
+            e.model_copy(
+                update={
+                    "cost_usd": e.cost_usd.quantize(
+                        LEDGER_COST_DECIMAL_PLACES, rounding=ROUND_HALF_EVEN
+                    )
+                }
+            )
+            for e in ledger.entries
+        ]
+    )
+
+
 def write_ledger(path: Path, ledger: SpendLedger) -> None:
+    ledger = _round_costs(ledger)
     path.parent.mkdir(parents=True, exist_ok=True)
     # Write to a temp file first, fsync, then atomically replace the original
     tmp_path = path.with_suffix(path.suffix + ".tmp")
@@ -77,17 +109,29 @@ def write_ledger(path: Path, ledger: SpendLedger) -> None:
         raise
 
 
-def cost_per_case(ledger: SpendLedger) -> Decimal | None:
-    """Mean measured cost per case over settled sync runs, or None if there are none."""
-    sync = [e for e in ledger.entries if e.status == "settled" and e.mode == "sync" and e.cases]
-    if not sync:
+def cost_per_case(ledger: SpendLedger, mode: Mode) -> Decimal | None:
+    """Maximum measured cost per case over settled runs of `mode`, or None if there are none.
+
+    Entries with cost_usd == 0 are excluded (see the module docstring): they are bookkeeping
+    cruft, not evidence that a run was cheap. The maximum, not the mean, is used because per-case
+    cost varies a lot between runs and a mean would under-estimate.
+    """
+    billed = [
+        e
+        for e in ledger.entries
+        if e.status == "settled" and e.mode == mode and e.cases and e.cost_usd > 0
+    ]
+    if not billed:
         return None
-    return sum((e.cost_usd for e in sync), Decimal("0")) / sum(e.cases for e in sync)
+    return max(e.cost_usd / e.cases for e in billed)
 
 
 def project_cost(ledger: SpendLedger, n_cases: int, mode: Mode) -> Decimal:
-    per_case = cost_per_case(ledger)
-    cost = (PRIOR_COST_PER_CASE_USD if per_case is None else per_case) * n_cases
+    """Projected cost of running `n_cases` more cases in `mode`. See the module docstring."""
+    per_case = cost_per_case(ledger, mode)
+    if per_case is not None:
+        return per_case * PROJECTION_SAFETY_MARGIN * n_cases
+    cost = PRIOR_COST_PER_CASE_USD * n_cases
     return cost * BATCH_DISCOUNT if mode == "batch" else cost
 
 
