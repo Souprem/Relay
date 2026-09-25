@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: diagnosis per the referring rheumatologist; methotrexate 2025-11-10 to 2026-04-27 = 168 days, stopped for inadequate response. The enclosed referral_letter states seropositive rheumatoid arthritis established April 2, 2024."
+}

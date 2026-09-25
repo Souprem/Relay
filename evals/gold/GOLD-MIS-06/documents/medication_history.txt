@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Lakeshore Rheumatology - Medication History - 2026-07-28
+Patient reference SYN-6650.
+METHOTREXATE 15 MG PO WEEKLY - start 2026-01-08 - status:
+LISINOPRIL 10 MG PO DAILY - status: active

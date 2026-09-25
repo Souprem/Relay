@@ -1,0 +1,13 @@
+{
+  "id": "GOLD-MIS-06",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-08-01",
+  "patient": {"age": 47, "state": "NC"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "ExampleHealth", "plan": "ExampleHealth Gold", "member_id": "EXH-668842"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "problem_list", "kind": "physician_note", "file": "problem_list.txt"},
+    {"id": "medication_history", "kind": "medication_history", "file": "medication_history.txt"}
+  ]
+}

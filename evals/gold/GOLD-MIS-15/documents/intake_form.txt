@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Cascade Rheumatology - New Patient Intake Form - 2026-08-15
+Patient reference SYN-6602.
+Prior DMARD use: Yes
+Drug name(s): (left blank by patient)
+Approximate dates taken: (left blank by patient)
+Reason for stopping, if known: (left blank by patient)

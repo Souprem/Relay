@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Willowbrook Rheumatology - Problem List - 2026-06-18
+Patient reference SYN-7765. 36-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed in 2023 and actively managed at this practice.
+- Methotrexate 20 mg weekly from 2026-01-10 to 2026-05-05, discontinued for inadequate response.
+- Iron deficiency anemia, on oral supplementation.
+- Plan: proceed toward Immunara given ongoing synovitis.

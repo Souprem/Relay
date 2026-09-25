@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "physician_note: seropositive rheumatoid arthritis established; methotrexate January 6, 2026 to June 1, 2026 = 146 days, stopped for inadequate response; medication_history agrees. No member ID appears anywhere and insurance.member_id is null."
+}

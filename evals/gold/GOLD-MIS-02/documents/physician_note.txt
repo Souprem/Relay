@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Union Square Family Health - Urgent Care Referral Visit - 2026-06-29
+Patient reference SYN-8865.
+
+Subjective: A 45-year-old man reports pain migrating between his wrists, knees and ankles since around March 10, 2026, with no clear trigger. He denies any prior arthritis diagnosis and cannot recall taking any arthritis-specific medication.
+Objective: Mild swelling noted at the right wrist and left knee today; no swelling elsewhere. Vitals unremarkable.
+Assessment: Polyarthralgia of undetermined cause. No diagnosis of rheumatoid arthritis or any other specific arthritis has been made at this visit.
+Plan: Refer to rheumatology for further workup, including baseline labs. Discussed activity modification in the meantime.

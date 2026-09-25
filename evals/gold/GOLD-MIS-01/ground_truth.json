@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "physician_note: probable rheumatoid arthritis pending rheumatology confirmation; no DMARD has been started. The diagnosis is not yet established."
+}

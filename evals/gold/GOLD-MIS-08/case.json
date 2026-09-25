@@ -1,0 +1,13 @@
+{
+  "id": "GOLD-MIS-08",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-07-15",
+  "patient": {"age": 40, "state": "CO"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "CivicCare", "plan": "CivicCare Plus", "member_id": "CCP-991827"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "referral_letter", "kind": "physician_note", "file": "referral_letter.txt"},
+    {"id": "fax_cover", "kind": "fax_cover", "file": "fax_cover.txt"}
+  ]
+}

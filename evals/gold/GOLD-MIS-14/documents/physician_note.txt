@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Bridgeport Family Practice - Office Visit - 2026-06-08
+Patient reference SYN-1180. 27-year-old man with seropositive rheumatoid arthritis, diagnosed in 2024, presenting for medication review.
+
+He started oral methotrexate 15 mg weekly on 2026-03-02, but developed persistent nausea within weeks and the medication was stopped on 2026-04-13 for this intolerance. He has not tried any other DMARD since. He did not bring his insurance card today and could not provide his member number from memory. He is otherwise healthy and works as a delivery driver.

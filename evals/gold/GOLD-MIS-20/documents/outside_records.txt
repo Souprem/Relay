@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Outside Rheumatology Partners - Medication History - 2026-05-20
+Patient reference SYN-3350.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-03-02 - end 2026-05-04 - reason: nausea
+FOLIC ACID 1 MG PO DAILY - status: discontinued

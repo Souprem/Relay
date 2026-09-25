@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "referral_letter: seropositive rheumatoid arthritis established, referring to an enclosed medication history for the methotrexate course. fax_cover: pages 3-4 of 4, the medication history, were not received. No medication history document is included, so the course is undocumented."
+}
