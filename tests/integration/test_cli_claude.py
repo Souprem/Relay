@@ -1,5 +1,6 @@
 """relay run/eval --provider claude with fake Anthropic clients (no network, no real key)."""
 
+import asyncio
 import json
 from decimal import Decimal
 from pathlib import Path
@@ -10,7 +11,14 @@ from typer.testing import CliRunner
 import relay.cli as cli_module
 from relay.cases.loader import load_dataset
 from relay.cli import app
-from relay.evaluation.budget import SpendLedger, load_ledger, reserve, settle, write_ledger
+from relay.evaluation.budget import (
+    SpendLedger,
+    attach_batch,
+    load_ledger,
+    reserve,
+    settle,
+    write_ledger,
+)
 from relay.reporting import CLAUDE_NOTE
 from relay.traces.store import TraceStore, read_traces
 from tests.claude_fakes import (
@@ -276,6 +284,211 @@ def test_reattaching_to_an_already_settled_batch_is_refused(tmp_path, fake_claud
     assert (entry.status, entry.cost_usd) == ("settled", Decimal("0.10950"))
 
 
+def test_reattaching_to_an_already_settled_batch_cites_the_entry_that_holds_the_cost(
+    tmp_path, fake_claude
+):
+    """M1: after a normal re-attach, find_batch's *first* match for a batch id is the superseded
+    $0 bookkeeping entry, not the one that actually holds the real cost. The refusal message must
+    name the entry with the money, not the $0 one, so an operator isn't sent looking at the wrong
+    run."""
+    ledger = reserve(
+        SpendLedger(),
+        run_id="run_orig",
+        dataset_id="smoke-v0.1",
+        mode="batch",
+        cases=10,
+        projected=Decimal("1.25"),
+    )
+    ledger = attach_batch(ledger, "run_orig", "msgbatch_test")
+    ledger = reserve(
+        ledger,
+        run_id="run_resume",
+        dataset_id="smoke-v0.1",
+        mode="batch",
+        cases=10,
+        projected=Decimal("0"),
+    )
+    ledger = settle(ledger, "run_orig", Decimal("0"), batch_id="msgbatch_test")
+    ledger = settle(ledger, "run_resume", Decimal("0.10950"), batch_id="msgbatch_test")
+    write_ledger(tmp_path / "spend.json", ledger)
+    result = claude_eval(tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test")
+    assert result.exit_code == 2
+    assert "run_resume" in result.output
+    assert "$0.1095" in result.output
+    assert "run_orig" not in result.output
+
+
+def test_a_known_reattach_skips_the_budget_cap_even_when_already_over_budget(tmp_path, fake_claude):
+    """I1/C4: re-attaching to a batch that is already known to the ledger (still reserved) must
+    never be blocked by the cap. Collecting its results spends nothing new, no matter how the
+    ledger's other spend compares to --budget-usd."""
+    ledger = reserve(
+        SpendLedger(),
+        run_id="run_orig",
+        dataset_id="smoke-v0.1",
+        mode="batch",
+        cases=10,
+        projected=Decimal("1.25"),
+    )
+    ledger = attach_batch(ledger, "run_orig", "msgbatch_test")
+    write_ledger(tmp_path / "spend.json", ledger)
+    # spent_usd (1.25) already exceeds this budget; a normal budget check would refuse.
+    result = claude_eval(
+        tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test", "--budget-usd", "1"
+    )
+    assert result.exit_code == 0, result.output
+    assert "projected $0.0000" in result.output
+    [orig, resumed] = load_ledger(tmp_path / "spend.json").entries
+    assert (orig.status, orig.cost_usd) == ("settled", Decimal("0"))
+    assert (resumed.status, resumed.cost_usd) == ("settled", Decimal("0.10950"))
+
+
+def test_an_unknown_batch_id_binds_to_the_matching_orphan_without_stacking_a_reservation(
+    tmp_path, fake_claude
+):
+    """I1/C4: an operator-supplied --batch-id that the CLI never recorded (found by hand via
+    `batches list` after an ambiguous create() failure) must bind to the leftover orphaned
+    reservation rather than stacking a brand-new projected reservation on top of it."""
+    ledger = reserve(
+        SpendLedger(),
+        run_id="run_orphan",
+        dataset_id="smoke-v0.1",
+        mode="batch",
+        cases=10,
+        projected=Decimal("1.25"),
+    )
+    write_ledger(tmp_path / "spend.json", ledger)
+    result = claude_eval(tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test")
+    assert result.exit_code == 0, result.output
+    assert "warning" not in result.output
+    assert fake_claude.batches.created == []
+    entries = load_ledger(tmp_path / "spend.json").entries
+    assert len(entries) == 2  # the orphan (zeroed) plus this run (settled at the real cost)
+    orphan = next(e for e in entries if e.run_id == "run_orphan")
+    assert (orphan.status, orphan.cost_usd, orphan.batch_id) == (
+        "settled",
+        Decimal("0"),
+        "msgbatch_test",
+    )
+    other = next(e for e in entries if e.run_id != "run_orphan")
+    assert (other.status, other.cost_usd, other.batch_id) == (
+        "settled",
+        Decimal("0.10950"),
+        "msgbatch_test",
+    )
+
+
+def test_an_unknown_batch_id_with_no_orphan_match_reserves_fresh_and_skips_the_cap(
+    tmp_path, fake_claude
+):
+    """I1/C4: with no matching orphan to bind to, the CLI falls back to a fresh bookkeeping
+    reservation (printing a warning) rather than guessing -- but the cap still isn't checked,
+    since re-attaching never calls create() and so never spends anything beyond what the batch
+    already cost server-side."""
+    result = claude_eval(
+        tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test", "--budget-usd", "0"
+    )
+    assert result.exit_code == 0, result.output
+    assert "warning" in result.output and "msgbatch_test" in result.output
+    assert fake_claude.batches.created == []
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert (entry.status, entry.batch_id) == ("settled", "msgbatch_test")
+
+
+def test_an_interrupted_reattach_before_the_provider_exists_keeps_the_reservation_reserved(
+    tmp_path, fake_claude, monkeypatch
+):
+    """CRITICAL regression (C1-new): a --batch-id re-attach that dies before the provider object
+    even exists (e.g. a crash inside _build_provider, before AsyncAnthropic's context manager
+    finishes) must not zero the batch's real, still-uncollected reservation. Previously
+    getattr(provider, "batch_id", None) resolved to None whenever `provider` was never assigned,
+    so the interrupted-run handler wrongly took the "nothing was submitted, settle at 0" branch --
+    permanently erasing a real reservation, after which the new settled-batch refusal (C4) then
+    blocked any further recovery."""
+    ledger = reserve(
+        SpendLedger(),
+        run_id="run_orig",
+        dataset_id="smoke-v0.1",
+        mode="batch",
+        cases=10,
+        projected=Decimal("1.25"),
+    )
+    ledger = attach_batch(ledger, "run_orig", "msgbatch_test")
+    write_ledger(tmp_path / "spend.json", ledger)
+
+    real_build_provider = cli_module._build_provider
+    calls = {"n": 0}
+
+    async def flaky_build_provider(*args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise RuntimeError("simulated crash before the provider is assigned")
+        return await real_build_provider(*args, **kwargs)
+
+    monkeypatch.setattr(cli_module, "_build_provider", flaky_build_provider)
+
+    result = claude_eval(tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test")
+    assert result.exit_code != 0
+    # This run's own (known, $0) reservation may also be left "reserved" -- that's harmless. What
+    # matters is that the *original* reservation, holding the batch's real projected cost, is
+    # untouched rather than zeroed out.
+    orig = next(e for e in load_ledger(tmp_path / "spend.json").entries if e.run_id == "run_orig")
+    assert (orig.status, orig.cost_usd, orig.batch_id) == (
+        "reserved",
+        Decimal("1.25"),
+        "msgbatch_test",
+    )
+
+    result2 = claude_eval(tmp_path, "--mode", "batch", "--batch-id", "msgbatch_test")
+    assert result2.exit_code == 0, result2.output
+    entries = load_ledger(tmp_path / "spend.json").entries
+    settled_with_cost = [
+        e
+        for e in entries
+        if e.batch_id == "msgbatch_test" and e.status == "settled" and e.cost_usd > 0
+    ]
+    assert len(settled_with_cost) == 1
+
+
+async def test_a_cancelled_batch_submission_keeps_the_reservation_reserved(tmp_path, monkeypatch):
+    """I2: Ctrl-C or task cancellation while batches.create() is in flight must be treated the
+    same as a connection error or a 5xx -- the request may have reached the server anyway -- not
+    as a definite "nothing was submitted" failure that settles at 0."""
+    cases = load_dataset(SMOKE)
+    claude = cli_module.ClaudeRun(
+        mode="batch", budget_usd=Decimal("60"), ledger=tmp_path / "spend.json"
+    )
+
+    class CancelledDuringSubmission:
+        name = "claude"
+        batch_id = None
+
+        async def prepare(self, cases):
+            raise asyncio.CancelledError()
+
+    async def fake_build_provider(*args, **kwargs):
+        return CancelledDuringSubmission()
+
+    monkeypatch.setattr(cli_module, "_build_provider", fake_build_provider)
+    with pytest.raises(asyncio.CancelledError):
+        await cli_module._execute(
+            cases,
+            cli_module.ProviderName.claude,
+            "v0.1",
+            1,
+            tmp_path / "traces",
+            tmp_path / "dataset",
+            "q-v0.2",
+            None,
+            claude,
+            Decimal("1.25"),
+        )
+
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert entry.status == "reserved"
+    assert entry.cost_usd == Decimal("1.25")
+
+
 def test_partial_traces_drops_only_a_torn_last_line(tmp_path):
     """C6: a crash mid-append can leave a torn last line (a partial write, no trailing newline).
     That alone must not discard the complete lines written before it."""
@@ -285,6 +498,23 @@ def test_partial_traces_drops_only_a_torn_last_line(tmp_path):
         store.append(make_trace(case, make_bundle(case.input.id, provider="claude")))
     with store.path.open("a", encoding="utf-8") as handle:
         handle.write('{"trace_id": "tr_torn", "run_id": "run_torn", "case_id":')  # cut short
+    traces = cli_module._partial_traces(store)
+    assert traces is not None
+    assert [t.case_id for t in traces] == [c.input.id for c in cases]
+
+
+def test_partial_traces_drops_a_last_line_torn_mid_multibyte_character(tmp_path):
+    """M2: a write cut short in the middle of a multi-byte UTF-8 character (trace text can
+    contain non-ASCII, e.g. an em dash) must not raise UnicodeDecodeError out of _partial_traces
+    -- it's still just a torn last line, and the complete lines before it must still be
+    recovered."""
+    cases = load_dataset(SMOKE)[:2]
+    store = TraceStore.create(tmp_path, "run_torn_utf8")
+    for case in cases:
+        store.append(make_trace(case, make_bundle(case.input.id, provider="claude")))
+    em_dash = "—".encode()  # 3 bytes; write only the first 2 to cut through the character
+    with store.path.open("ab") as handle:
+        handle.write(b'{"trace_id": "tr_torn", "note": "cut mid-dash ' + em_dash[:2])
     traces = cli_module._partial_traces(store)
     assert traces is not None
     assert [t.case_id for t in traces] == [c.input.id for c in cases]

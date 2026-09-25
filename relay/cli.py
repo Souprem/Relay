@@ -33,6 +33,7 @@ from relay.evaluation.budget import (
     DEFAULT_BUDGET_USD,
     DEFAULT_LEDGER,
     BudgetExceeded,
+    SpendEntry,
     SpendLedger,
     attach_batch,
     check_budget,
@@ -299,29 +300,95 @@ def _load_ledger(claude: ClaudeRun) -> SpendLedger:
         raise _fail(f"{claude.ledger}: {error}") from error
 
 
+def _find_settled_batch_cost_entry(ledger: SpendLedger, batch_id: str) -> SpendEntry | None:
+    """Among every entry that ever carried this batch id, the one that actually holds its real,
+    non-zero cost (M1). find_batch returns the *first* match, which after a normal re-attach is
+    the superseded $0 entry (its cost moved to a later run's entry) -- not the one worth citing
+    when refusing a repeat re-attach.
+    """
+    candidates = [
+        e
+        for e in ledger.entries
+        if e.batch_id == batch_id and e.status == "settled" and e.cost_usd > 0
+    ]
+    return candidates[-1] if candidates else None
+
+
+def _find_orphan_reservation(ledger: SpendLedger, dataset_id: str, cases: int) -> SpendEntry | None:
+    """The leftover reservation from an ambiguous create() failure (C2/I2): a still-"reserved"
+    batch entry with no batch id yet, for this run's dataset and case count.
+
+    Returned only when there is exactly one candidate. With zero or more than one, binding
+    automatically would be guessing which run's money a newly-discovered batch id actually
+    belongs to, so the caller falls back to a fresh (but still budget-check-free) reservation
+    instead.
+    """
+    candidates = [
+        e
+        for e in ledger.entries
+        if e.status == "reserved"
+        and e.mode == "batch"
+        and e.batch_id is None
+        and e.dataset_id == dataset_id
+        and e.cases == cases
+    ]
+    return candidates[0] if len(candidates) == 1 else None
+
+
 def _claude_budget_check(claude: ClaudeRun, cases: list[PriorAuthCase]) -> Decimal:
     """The projected cost of this run; exits 2 with the numbers if it would break the budget.
 
-    Re-attaching to a batch still "reserved" in the ledger projects nothing new: nothing further
-    will be billed beyond what was already reserved for it. Re-attaching to a batch that is
-    already "settled" is refused outright (C4) rather than silently projecting $0 for it: without
-    this check, a repeated --batch-id re-attach after the real cost was already collected would
-    read the batch's results again and add a second settled entry for the same money, with no
-    budget check ever having looked at that real cost.
+    A --batch-id re-attach never re-checks the cap (C4/I1): re-attaching only ever calls
+    retrieve()/results(), never create() (see ClaudeBatchProvider.prepare), so it can never spend
+    more than what is already being billed server-side, no matter what the ledger's current spend
+    or the budget happens to be. Three cases:
+      - The batch id is already in the ledger and still "reserved": nothing further will be
+        billed by collecting its results.
+      - The batch id is already in the ledger and "settled": refused outright, rather than
+        silently projecting $0 and re-processing it into a second settled entry for the same
+        money (this is what C4 originally reported: the budget check was skipped, but nothing
+        stopped a repeat re-attach from quietly duplicating a real, already-checked cost).
+      - The batch id is unknown to the ledger (the operator found it by hand via `batches list`
+        after an ambiguous create() failure, per C2): it is bound to the matching orphaned
+        reservation left by that failure, if exactly one exists, so nothing new is reserved. If
+        none (or more than one) matches, a fresh bookkeeping reservation is made and a warning is
+        printed, but the cap still isn't checked.
     """
     ledger = _load_ledger(claude)
-    found = find_batch(ledger, claude.batch_id) if claude.batch_id is not None else None
-    if found is not None and found.status == "settled":
-        raise _fail(
-            f"Message Batch {claude.batch_id} is already settled in the ledger (run "
-            f"{found.run_id}, ${found.cost_usd:.4f}); nothing to re-attach."
-        )
-    known = found is not None
-    projected = Decimal("0") if known else project_cost(ledger, len(cases), claude.mode)
-    try:
-        check_budget(ledger, projected, claude.budget_usd)
-    except BudgetExceeded as error:
-        raise _fail(str(error)) from error
+    if claude.batch_id is None:
+        projected = project_cost(ledger, len(cases), claude.mode)
+        try:
+            check_budget(ledger, projected, claude.budget_usd)
+        except BudgetExceeded as error:
+            raise _fail(str(error)) from error
+    else:
+        found = find_batch(ledger, claude.batch_id)
+        if found is not None and found.status == "settled":
+            carrier = _find_settled_batch_cost_entry(ledger, claude.batch_id) or found
+            raise _fail(
+                f"Message Batch {claude.batch_id} is already settled in the ledger (run "
+                f"{carrier.run_id}, ${carrier.cost_usd:.4f}); nothing to re-attach. Re-evaluate "
+                "its trace file with `relay eval --traces <file>` if you need to re-score it."
+            )
+        if found is not None:
+            projected = Decimal("0")
+        else:
+            dataset_id = cases[0].input.dataset_id
+            orphan = _find_orphan_reservation(ledger, dataset_id, len(cases))
+            if orphan is not None:
+                write_ledger(claude.ledger, attach_batch(ledger, orphan.run_id, claude.batch_id))
+                projected = Decimal("0")
+            else:
+                projected = project_cost(ledger, len(cases), claude.mode)
+                typer.echo(
+                    f"warning: Message Batch {claude.batch_id} is not in the ledger, and no "
+                    "single orphaned reservation (a reserved batch entry with no batch id, "
+                    f"dataset {dataset_id!r}, {len(cases)} cases) was found to attach it to. "
+                    f"Reserving ${projected:.4f} for bookkeeping, but not checking the "
+                    f"${claude.budget_usd:.2f} budget cap: re-attaching only collects results, "
+                    "it never spends anything new.",
+                    err=True,
+                )
     typer.echo(
         f"Claude budget: spent ${ledger.spent_usd:.4f}, projected ${projected:.4f} for "
         f"{len(cases)} cases ({claude.mode}), budget ${claude.budget_usd:.2f}"
@@ -361,11 +428,17 @@ def _partial_traces(store: TraceStore) -> list[WorkflowTrace] | None:
     write and dropped; a bad line anywhere else means the file is corrupt in some way this
     function doesn't understand, and returns None rather than guessing which lines are real. The
     caller must treat None as "unknown, don't settle" rather than "zero cases completed".
+
+    Reads with errors="replace" (M2): a write cut short mid multi-byte UTF-8 character (trace text
+    can contain non-ASCII, e.g. an em dash) would otherwise raise UnicodeDecodeError while reading
+    the *whole* file, before line-by-line recovery ever gets a chance to run. Replacing the
+    undecodable tail with U+FFFD keeps every complete line decodable; the torn line then simply
+    fails JSON parsing and is dropped by the same "bad last line" path as any other torn write.
     """
     if not store.path.exists():
         return []
     try:
-        text = store.path.read_text(encoding="utf-8")
+        text = store.path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return None
     lines = [line for line in text.splitlines() if line.strip()]
@@ -431,17 +504,30 @@ def _settle_interrupted(
             err=True,
         )
         return
-    _settle(claude, run_id, traces, None)
+    _settle(claude, run_id, traces, None, collected=False)
 
 
 def _settle(
-    claude: ClaudeRun, run_id: str, traces: list[WorkflowTrace], batch_id: str | None
+    claude: ClaudeRun,
+    run_id: str,
+    traces: list[WorkflowTrace],
+    batch_id: str | None,
+    *,
+    collected: bool,
 ) -> None:
-    """Settle this run at its actual estimated cost. A re-attached batch's earlier reservation
-    is settled at 0, because its cost now belongs to this run."""
+    """Settle this run at its actual estimated cost.
+
+    `collected` must be True only when this run actually read a batch's results (the normal
+    success path in _execute): only then is it safe to zero out an earlier reservation for the
+    same batch id, because that batch's cost has genuinely moved to this run's entry. A settle
+    reached from a failure/interrupted path must never zero another entry's real, still-uncollected
+    reservation on a guess -- that was the C1-new bug, where an interrupted re-attach (no traces,
+    but claude.batch_id still set) zeroed the original batch's reservation before its results were
+    ever collected.
+    """
     actual = sum((t.decisions.estimated_cost_usd or Decimal("0") for t in traces), Decimal("0"))
     ledger = _load_ledger(claude)
-    if claude.batch_id is not None:
+    if collected and claude.batch_id is not None:
         earlier = find_batch(ledger, claude.batch_id)
         if earlier is not None and earlier.run_id != run_id and earlier.status == "reserved":
             ledger = settle(ledger, earlier.run_id, Decimal("0"), batch_id=claude.batch_id)
@@ -454,17 +540,21 @@ def _settle(
 
 
 def _is_ambiguous_submission_error(error: BaseException) -> bool:
-    """Whether a batch create() failure (C2) might have reached Anthropic's servers anyway.
+    """Whether a batch create() failure (C2/I2) might have reached Anthropic's servers anyway.
 
     A dropped connection or a timeout means the client never saw a response, and a 5xx means the
     server may have processed the request before failing to reply cleanly; either way the batch
-    may already exist and be billing. A 4xx (a bad request, rejected outright) or anything else is
-    definite: nothing was submitted.
+    may already exist and be billing. Ctrl-C or task cancellation while the create() call is in
+    flight is the same story: uploading a large batch can take seconds, and an interrupt part way
+    through leaves exactly the same doubt about whether the request landed (I2). A 4xx (a bad
+    request, rejected outright) or anything else is definite: nothing was submitted.
     """
     if isinstance(error, anthropic.APIConnectionError):
         return True
     if isinstance(error, anthropic.APIStatusError):
         return error.status_code >= 500
+    if isinstance(error, (KeyboardInterrupt, asyncio.CancelledError)):
+        return True
     return False
 
 
@@ -560,7 +650,13 @@ async def _execute(
         # reservation never leaks: see _settle_interrupted for how a submitted batch differs from
         # a sync run that died partway through.
         if claude is not None:
-            batch_id = getattr(provider, "batch_id", None)
+            # `or claude.batch_id` (C1-new): if the failure happened before `provider` was even
+            # assigned (e.g. the crash is inside _build_provider itself, before
+            # ClaudeBatchProvider's constructor runs), getattr(provider, ...) is None even for a
+            # --batch-id re-attach. Falling back to the CLI's own --batch-id makes sure a dying
+            # re-attach is still recognized as "a known batch, stays reserved" rather than "nothing
+            # was submitted, settle at 0" -- which would zero out a real, still-uncollected batch.
+            batch_id = getattr(provider, "batch_id", None) or claude.batch_id
             ambiguous = (
                 claude.mode == "batch"
                 and batch_id is None
@@ -571,7 +667,8 @@ async def _execute(
             store.path.unlink()
         raise
     if claude is not None:
-        _settle(claude, run_id, traces, getattr(provider, "batch_id", None))
+        batch_id = getattr(provider, "batch_id", None) or claude.batch_id
+        _settle(claude, run_id, traces, batch_id, collected=True)
     manifest = RunManifest(
         run_id=run_id,
         created_at=datetime.now(UTC),

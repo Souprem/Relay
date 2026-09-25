@@ -137,15 +137,18 @@ class ClaudeBatchProvider:
         self._bundles = bundles
 
     async def _poll(self, batch_id: str, last: MessageBatch) -> MessageBatch:
-        """One retrieve() during polling, tolerating transient failures (C5).
+        """One retrieve() during polling, tolerating transient failures (C5, M3).
 
-        A batch can take hours; a dropped connection or a 5xx on one poll is not a reason to lose
-        the whole run (and its already-submitted, already-billing batch). Anything else (a 4xx,
-        e.g. the batch id being wrong) is not transient and still raises.
+        A batch can take hours; a dropped connection, a rate limit, or a 5xx on one poll is not a
+        reason to lose the whole run (and its already-submitted, already-billing batch) -- the
+        next poll, POLL_INTERVAL_S later, is itself a natural backoff for a 429. Anything else (a
+        4xx, e.g. the batch id being wrong) is not transient and still raises.
         """
         try:
             return await self._batches.retrieve(batch_id)
         except anthropic.APIConnectionError:
+            return last
+        except anthropic.RateLimitError:
             return last
         except anthropic.APIStatusError as error:
             if error.status_code < 500:

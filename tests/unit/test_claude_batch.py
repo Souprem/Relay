@@ -151,10 +151,11 @@ async def test_prepare_uses_the_polling_client_by_default_when_none_is_given():
     assert len(batches.created) == 1
 
 
-@pytest.mark.parametrize("error", [connection_error(), status_error(500)])
+@pytest.mark.parametrize("error", [connection_error(), status_error(500), status_error(429)])
 async def test_poll_loop_tolerates_transient_retrieve_errors_and_keeps_polling(error):
-    """C5: a dropped connection or a 5xx while polling a multi-hour batch must not lose the run;
-    the loop just tries again on the next interval."""
+    """C5/M3: a dropped connection, a 5xx, or a 429 while polling a multi-hour batch must not
+    lose the run; the loop just tries again on the next interval (which is itself a natural
+    backoff for a rate limit)."""
     batches = FakeBatches([succeeded("A")], statuses=("in_progress", error, "ended"), requests=1)
     batch_provider, sleep = provider(batches)
     await batch_provider.prepare([A])
