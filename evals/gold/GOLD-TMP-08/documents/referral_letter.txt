@@ -2,11 +2,11 @@ SYNTHETIC RECORD - Example Lakeshore Rheumatology - September 7, 2026
 
 Dear Pharmacy Benefits Reviewer,
 
-Patient reference SYN-6008. This 58-year-old woman has seropositive rheumatoid arthritis, diagnosed in 2017, and continues to have active synovitis at both wrists and several MCP joints at today's visit.
+Patient reference SYN-6008. I am requesting authorization for Immunara on behalf of this 58-year-old woman, who continues to have active synovitis at both wrists and several MCP joints at today's visit despite treatment. Her seropositive rheumatoid arthritis was diagnosed in 2017 and has been managed at this practice since.
 
 She has been taking oral methotrexate 20 mg weekly continuously since 2026-06-15 and remains on it today, but her disease activity has not improved despite this ongoing trial. She reports increasing difficulty opening jars and buttoning clothing.
 
-We are requesting approval of Immunara given her inadequate response to methotrexate.
+Please approve Immunara at this time given her inadequate response to methotrexate.
 
 Sincerely,
-The treating rheumatologist
+The prescribing rheumatologist

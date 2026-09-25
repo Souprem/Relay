@@ -1,7 +1,7 @@
 SYNTHETIC RECORD - Example Fieldstone Rheumatology - Follow-up Visit - 2026-06-05
 Patient reference SYN-6017.
 
-Subjective: 60-year-old man with seropositive rheumatoid arthritis, diagnosed in 2016, reports his joint swelling has not improved despite two separate courses of methotrexate this year.
+Subjective: This 60-year-old man reports his joint swelling has not improved despite two separate courses of methotrexate this year; he has a seropositive rheumatoid arthritis diagnosis from 2016.
 Objective: Synovitis at bilateral wrists and MCPs. No signs of active infection today.
 Assessment: Rheumatoid arthritis, active despite oral methotrexate 15 mg weekly from 2026-01-05 to 2026-02-23, held at that time for a respiratory infection, then resumed from 2026-03-23 to 2026-05-18, when it was stopped for inadequate response.
-Plan: Start Immunara. Continue folic acid.
+Plan: Proceed with Immunara. Continue folic acid.

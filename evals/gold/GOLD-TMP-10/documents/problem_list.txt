@@ -1,5 +1,5 @@
 SYNTHETIC RECORD - Example Pinehurst Rheumatology - Problem List - 06/12/2026
-Patient reference SYN-6010. Dates in this list follow the MM/DD/YYYY convention.
+Patient reference SYN-6010. 65-year-old woman. Dates in this list follow the MM/DD/YYYY convention.
 
 - Seropositive rheumatoid arthritis, diagnosed 2015.
 - Methotrexate 20 mg weekly from 03/09/2026 to 06/08/2026, discontinued for inadequate response.

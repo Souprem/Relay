@@ -1,6 +1,6 @@
 SYNTHETIC RECORD - Example Blue Ridge Rheumatology - Office Visit - 2026-06-02
-Patient reference SYN-6014. This 36-year-old man has seropositive rheumatoid arthritis, diagnosed in 2022, and returns today because his hand and wrist swelling has continued despite treatment.
+Patient reference SYN-6014. This 36-year-old man returns today because his hand and wrist swelling has continued despite treatment. He was diagnosed with seropositive rheumatoid arthritis in 2022 and has been managed at this practice since.
 
 He began oral methotrexate 20 mg weekly on 2026-02-03 and stopped it in late May after his synovitis failed to improve, an inadequate response. He works construction and reports that gripping tools has become progressively harder. He has no known drug allergies and takes no other regular medications.
 
-Immunara is recommended given his inadequate response to methotrexate.
+Given his inadequate response to methotrexate, we recommend transitioning him to Immunara.

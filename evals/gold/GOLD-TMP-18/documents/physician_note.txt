@@ -1,5 +1,5 @@
 SYNTHETIC RECORD - Example Lonestar Rheumatology - Office Visit - 2026-06-08
-Patient reference SYN-6018. This 34-year-old woman has seropositive rheumatoid arthritis, diagnosed in 2021, and returns today after completing a second course of methotrexate.
+Patient reference SYN-6018. This 34-year-old woman returns today after completing a second course of methotrexate for her seropositive rheumatoid arthritis, first diagnosed in 2021.
 
 She first took oral methotrexate 15 mg weekly from 2025-10-06 to 2025-11-03, stopping after only four weeks because of an extended overseas work trip that made weekly lab monitoring impractical. She restarted methotrexate on 2026-01-12 and continued it through 2026-05-04, when it was stopped because her synovitis had not improved despite the longer trial. She reports mild fatigue but otherwise feels well and has no other significant medical history.
 

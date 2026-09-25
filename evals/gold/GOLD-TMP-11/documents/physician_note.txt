@@ -1,5 +1,5 @@
 SYNTHETIC RECORD - Example Northgate Family Medicine - Office Visit - 06/10/2026
-Patient reference SYN-6011. All dates in this note are written MM/DD/YYYY. This 48-year-old man has seropositive rheumatoid arthritis, diagnosed in 2019, and returns today with ongoing swelling in his hands and feet.
+Patient reference SYN-6011. All dates in this note are written MM/DD/YYYY. This 48-year-old man returns today with ongoing swelling in his hands and feet; his seropositive rheumatoid arthritis was diagnosed in 2019 and he has been followed here since.
 
 He took oral methotrexate 15 mg weekly from 04/01/2026 to 06/05/2026, which was discontinued because his joint symptoms had not improved. He mentions his knees have also become stiffer over the past month, and he has started using a cane occasionally for longer walks.
 
