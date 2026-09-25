@@ -80,6 +80,9 @@ def test_run_uses_the_requested_question_set(tmp_path, fake_jev, version):
     options = {q["missing_evidence"].criteria["TREATMENT_HISTORY"] for q in fake_jev.sent}
     assert len(options) == 1
     assert ("never took methotrexate" in options.pop()) is (version == "q-v0.2")
+    [manifest_file] = (tmp_path / "traces").glob("*.manifest.json")
+    manifest = json.loads(manifest_file.read_text())
+    assert manifest["question_set_version"] == version  # C4: filled by the CLI run path
 
 
 def test_run_defaults_to_the_default_question_set(tmp_path, fake_jev):

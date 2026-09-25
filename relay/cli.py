@@ -160,6 +160,7 @@ async def _execute(
         dataset_path=str(dataset),
         provider=provider_name.value,
         policy_version=policy,
+        question_set_version=traces[0].question_set_version if traces else None,
         case_count=len(traces),
         trace_file=str(store.path),
         relay_git_sha=git_sha,

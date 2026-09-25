@@ -4,7 +4,7 @@ import math
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from relay.cases.models import GroundTruth, PriorAuthCase
 from relay.cases.policies import load_policy
@@ -45,6 +45,7 @@ class EvalSummary(BaseModel):
     provider_versions: list[str]
     policy_version: str
     n_cases: int
+    question_set_versions: list[str] = Field(default_factory=list)
     correct_actions: int
     auto_process_count: int
     request_info_count: int
@@ -201,6 +202,7 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
         provider_versions=sorted({t.provider_version for t in traces}),
         policy_version=traces[0].policy_version,
         n_cases=n,
+        question_set_versions=sorted({t.question_set_version for t in traces}),
         correct_actions=correct,
         auto_process_count=autos,
         request_info_count=infos,

@@ -71,6 +71,30 @@ def test_manifest_is_written_once(tmp_path):
         store.write_manifest(manifest())
 
 
+def test_run_manifest_question_set_version_defaults_to_none():
+    """C4: optional so a pre-C4 manifest (no such key) still validates."""
+    assert manifest().question_set_version is None
+
+
+def test_committed_manifests_without_question_set_version_still_load():
+    for path in (
+        REPO
+        / "evals"
+        / "baselines"
+        / "smoke-v0.1"
+        / "run_20260925T042324Z_eee114"
+        / "run_20260925T042324Z_eee114.manifest.json",
+        REPO
+        / "evals"
+        / "baselines"
+        / "gen-v0.2-dev"
+        / "run_20260925T071157Z_d6b218"
+        / "run-manifest.json",
+    ):
+        assert "question_set_version" not in path.read_text()
+        assert RunManifest.model_validate_json(path.read_text()).question_set_version is None
+
+
 def test_current_git_sha_in_repo():
     sha = current_git_sha()
     assert sha is None or re.fullmatch(r"[0-9a-f]{40}(-dirty)?", sha)
