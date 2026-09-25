@@ -1,7 +1,7 @@
 SYNTHETIC RECORD - Example Cobalt Rheumatology - Follow-up Visit - 2026-08-01
 Patient reference SYN-8801.
 
-Subjective: 42-year-old man with seropositive rheumatoid arthritis, diagnosed in 2022, reports his joint swelling never fully resolved on methotrexate.
+Subjective: 42-year-old man returns saying his joint swelling never fully resolved while on methotrexate.
 Objective: Synovitis persists at bilateral wrists. Vitals stable.
-Assessment: Seropositive rheumatoid arthritis with inadequate response to methotrexate. Per pharmacy records, his course began at the time of his first fill and continued until it was discontinued in June 2026 for this inadequate response.
+Assessment: Seropositive rheumatoid arthritis, a diagnosis carried since 2022, with inadequate response to methotrexate. Per pharmacy records, his course began at the time of his first fill and continued until it was discontinued in June 2026 for this inadequate response.
 Plan: Discontinue methotrexate. Start Immunara. Continue routine monitoring.

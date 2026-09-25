@@ -1,7 +1,7 @@
 SYNTHETIC RECORD - Example Cascade Rheumatology - Problem List - 2026-08-15
 Patient reference SYN-6602. 44-year-old woman.
 
-- Seropositive rheumatoid arthritis, diagnosed in 2021, active follow-up at this practice.
+- Rheumatoid arthritis (seropositive), documented by serology in 2021 at this practice; disease remains clinically active.
 - Prior DMARD history per the intake form completed at her first visit.
 - Seasonal allergies, managed as needed.
 - Plan: evaluate for Immunara given persistent disease activity.

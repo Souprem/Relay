@@ -1,7 +1,7 @@
 SYNTHETIC RECORD - Example Lakeshore Rheumatology - Problem List - 2026-07-28
 Patient reference SYN-6650. 47-year-old man.
 
-- Seropositive rheumatoid arthritis, diagnosed on March 14, 2020, and followed at this practice since.
+- Seropositive RA, established March 14, 2020 at this practice; longstanding and clinically stable.
 - Hypertension, controlled on lisinopril.
 - Mild plantar fasciitis, managed conservatively.
 - Plan: review pharmacy-reported medication history and discuss candidacy for Immunara at next visit.
