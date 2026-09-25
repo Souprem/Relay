@@ -114,3 +114,31 @@ def test_groundtruth_eval_on_a_generated_dataset_is_perfect(tmp_path):
     assert results["correct_action_rate"] == 1.0
     assert results["auto_process_count"] > 0
     assert results["unsafe_automation_rate"] == 0.0
+
+
+def test_verify_exits_2_with_malformed_manifest_count_zero(tmp_path):
+    generate(tmp_path)
+    # Overwrite manifest with invalid count (0)
+    manifest_path = tmp_path / "manifests" / "gen-test.json"
+    manifest_data = json.loads(manifest_path.read_text())
+    manifest_data["count"] = 0
+    manifest_path.write_text(json.dumps(manifest_data))
+    result = verify(tmp_path)
+    assert result.exit_code == 2
+    assert "error:" in result.output
+
+
+def test_verify_exits_2_with_invalid_json_manifest(tmp_path):
+    (tmp_path / "manifests").mkdir(parents=True, exist_ok=True)
+    manifest_path = tmp_path / "manifests" / "bad.json"
+    manifest_path.write_text("{ invalid json")
+    result = invoke(
+        tmp_path,
+        "generate",
+        "--verify",
+        str(manifest_path),
+        "--out",
+        str(tmp_path / "output"),
+    )
+    assert result.exit_code == 2
+    assert "error:" in result.output

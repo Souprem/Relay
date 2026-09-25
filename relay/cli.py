@@ -238,9 +238,9 @@ def generate(
             raise _fail("--verify cannot be combined with --count, --seed or --dataset-id")
         try:
             manifest = read_manifest(verify)
-        except ValueError as error:
+            problems = verify_dataset(manifest, out)
+        except (ValueError, OSError) as error:
             raise _fail(f"{verify}: {error}") from error
-        problems = verify_dataset(manifest, out)
         if problems:
             for problem in problems:
                 typer.echo(f"MISMATCH: {problem}", err=True)
