@@ -4,6 +4,7 @@ from decimal import Decimal
 from relay.evaluation.metrics import score_run
 from relay.reporting import (
     DISCLAIMER,
+    RULES_NOTE,
     render_eval_summary,
     render_run_report,
     render_run_table,
@@ -115,3 +116,31 @@ def test_run_report_marks_missing_identity_fields():
     report = render_run_report(run_manifest(), traces, {c.input.id: c.input for c in cases})
     assert "- Policy text hash: `unknown`" in report
     assert "- Client: `n/a`" in report
+
+
+def test_run_report_lists_the_rules_that_fired():
+    case = make_case("T-01")
+    fired = [
+        {
+            "rule": "member_missing",
+            "document_id": None,
+            "line": None,
+            "match": "insurance.member_id is None",
+        },
+        {
+            "rule": "mtx_start",
+            "document_id": "physician_note",
+            "line": 3,
+            "match": "started 2026-01-12",
+        },
+    ]
+    bundle = make_bundle("T-01", provider="rules").model_copy(
+        update={"derivations": {"rules": fired}}
+    )
+    report = render_run_report(
+        run_manifest("rules"), [make_trace(case, bundle)], {"T-01": case.input}
+    )
+    assert RULES_NOTE in report
+    assert "**Rules fired:**" in report
+    assert "- `member_missing` (structured field): insurance.member_id is None" in report
+    assert "- `mtx_start` (physician_note:3): started 2026-01-12" in report

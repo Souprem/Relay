@@ -18,6 +18,7 @@ from relay.decisions.base import DecisionProvider
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
 from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_1, Q_V0_2
+from relay.decisions.rules_baseline import RulesBaselineProvider
 from relay.evaluation.artifacts import write_eval_bundle
 from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
@@ -30,6 +31,7 @@ from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest,
 from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
+    RULES_NOTE,
     describe_selection,
     render_comparison,
     render_eval_summary,
@@ -50,6 +52,7 @@ app = typer.Typer(
 class ProviderName(StrEnum):
     jev = "jev"
     groundtruth = "groundtruth"
+    rules = "rules"
 
 
 class QuestionSet(StrEnum):
@@ -67,9 +70,26 @@ Concurrency = Annotated[int, typer.Option(min=1, help="Cases decided at once.")]
 TracesDir = Annotated[Path, typer.Option(help="Where trace files are written.")]
 ReportsDir = Annotated[Path, typer.Option(help="Where Markdown reports are written.")]
 Questions = Annotated[
-    QuestionSet, typer.Option(help="Jev question set (ignored by the groundtruth provider).")
+    QuestionSet | None,
+    typer.Option(
+        help=f"Jev question set (default {DEFAULT_QUESTION_SET_VERSION}). Only valid with "
+        "--provider jev."
+    ),
 ]
 DEFAULT_QUESTIONS = QuestionSet(DEFAULT_QUESTION_SET_VERSION)
+
+# The environment variable each provider needs, or None if it needs no key. One entry per provider.
+PROVIDER_KEYS: dict[ProviderName, str | None] = {
+    ProviderName.jev: "TYPESAFE_API_KEY",
+    ProviderName.groundtruth: None,
+    ProviderName.rules: None,
+}
+# Providers that accept --questions; the others reject an explicit --questions.
+QUESTION_SET_PROVIDERS: frozenset[ProviderName] = frozenset({ProviderName.jev})
+PROVIDER_NOTES: dict[ProviderName, str] = {
+    ProviderName.groundtruth: GROUNDTRUTH_NOTE,
+    ProviderName.rules: RULES_NOTE,
+}
 
 TraceFile = Annotated[
     Path, typer.Option(exists=True, dir_okay=False, help="Trace file (.jsonl or .jsonl.gz).")
@@ -111,13 +131,49 @@ def _read_trace_file(path: Path) -> list[WorkflowTrace]:
         raise _fail(f"{path}: {error}") from error
 
 
+def _resolve_questions(provider: ProviderName, questions: QuestionSet | None) -> QuestionSet | None:
+    """The question set to run with: the default for jev, None for providers without one.
+
+    An explicit --questions for a provider that has no question set is a usage error, not a
+    silently ignored flag.
+    """
+    if provider not in QUESTION_SET_PROVIDERS:
+        if questions is not None:
+            raise _fail(
+                f"--questions applies only to --provider jev; the {provider.value} provider "
+                "has no question set"
+            )
+        return None
+    return questions if questions is not None else DEFAULT_QUESTIONS
+
+
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
     try:
         validate_run_config(cases, policy)
     except RunConfigError as error:
         raise _fail(str(error)) from error
-    if provider is ProviderName.jev and not os.environ.get("TYPESAFE_API_KEY"):
-        raise _fail("TYPESAFE_API_KEY is not set (add it to .env or the environment)")
+    key = PROVIDER_KEYS[provider]
+    if key is not None and not os.environ.get(key):
+        raise _fail(f"{key} is not set (add it to .env or the environment)")
+
+
+async def _build_provider(
+    provider_name: ProviderName,
+    cases: list[PriorAuthCase],
+    questions: QuestionSet | None,
+    stack: AsyncExitStack,
+) -> DecisionProvider:
+    """One explicit factory per provider. An unhandled name is a bug, never a silent Jev run."""
+    if provider_name is ProviderName.jev:
+        if questions is None:
+            raise ValueError("the jev provider needs a question set")
+        client = await stack.enter_async_context(AsyncTypeSafeClient(timeout=30.0))
+        return JevProvider(client, question_set_version=questions.value)
+    if provider_name is ProviderName.groundtruth:
+        return GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
+    if provider_name is ProviderName.rules:
+        return RulesBaselineProvider()
+    raise ValueError(f"no factory for provider {provider_name!r}")
 
 
 async def _execute(
@@ -127,19 +183,14 @@ async def _execute(
     concurrency: int,
     traces_dir: Path,
     dataset: Path,
-    questions: QuestionSet,
+    questions: QuestionSet | None,
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
     git_sha = current_git_sha()
     try:
         async with AsyncExitStack() as stack:
-            provider: DecisionProvider
-            if provider_name is ProviderName.groundtruth:
-                provider = GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
-            else:
-                client = await stack.enter_async_context(AsyncTypeSafeClient(timeout=30.0))
-                provider = JevProvider(client, question_set_version=questions.value)
+            provider = await _build_provider(provider_name, cases, questions, stack)
             traces = await run_dataset(
                 cases,
                 provider,
@@ -177,13 +228,14 @@ def _run_and_report(
     traces_dir: Path,
     reports_dir: Path,
     dataset: Path,
-    questions: QuestionSet,
+    questions: QuestionSet | None,
 ) -> list[WorkflowTrace]:
+    resolved = _resolve_questions(provider, questions)
     _preflight(cases, provider, policy)
-    if provider is ProviderName.groundtruth:
-        typer.echo(f"NOTE: {GROUNDTRUTH_NOTE}")
+    if provider in PROVIDER_NOTES:
+        typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
     manifest, traces = asyncio.run(
-        _execute(cases, provider, policy, concurrency, traces_dir, dataset, questions)
+        _execute(cases, provider, policy, concurrency, traces_dir, dataset, resolved)
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -204,7 +256,7 @@ def run(
     concurrency: Concurrency = 4,
     traces_dir: TracesDir = Path("traces"),
     reports_dir: ReportsDir = Path("reports"),
-    questions: Questions = DEFAULT_QUESTIONS,
+    questions: Questions = None,
 ) -> None:
     """Decide every case in DATASET; write traces and a Markdown report."""
     cases = _load_cases(dataset)
@@ -232,7 +284,7 @@ def eval_command(
     results_dir: Annotated[Path, typer.Option(help="Where results JSON is written.")] = Path(
         "results"
     ),
-    questions: Questions = DEFAULT_QUESTIONS,
+    questions: Questions = None,
 ) -> None:
     """Run (or re-score) DATASET and print action-level and decision-level metrics."""
     cases = _load_cases(dataset)

@@ -18,6 +18,10 @@ DISCLAIMER = (
     "It is not for clinical use or real authorization decisions."
 )
 GROUNDTRUTH_NOTE = "groundtruth provider: pipeline validation, not a model result."
+RULES_NOTE = (
+    "rules provider: deterministic pattern-matching baseline; probabilities are 0, 0.5 or 1 "
+    "and are not calibrated."
+)
 _LABEL_WIDTH = 26
 
 
@@ -91,6 +95,13 @@ def _case_section(trace: WorkflowTrace, case: CaseInput) -> list[str]:
             text = ", ".join(f"{_range(c)} ({c['probability']:.2f})" for c in top)
             out.append(f"- {label} date candidates: {text or 'none resolved'}")
         out.append("")
+    fired = b.derivations.get("rules")
+    if fired:
+        out.append("**Rules fired:**")
+        for f in fired:
+            where = f"{f['document_id']}:{f['line']}" if f["document_id"] else "structured field"
+            out.append(f"- `{f['rule']}` ({where}): {f['match']}")
+        out.append("")
     out.append("**Policy gates:**")
     out += [
         f"- {'FIRED' if g.fired else 'passed'} `{g.gate}` — {g.detail}" for g in trace.gate_path
@@ -127,6 +138,8 @@ def render_run_report(
     ]
     if manifest.provider == "groundtruth":
         lines += [f"**{GROUNDTRUTH_NOTE}** Decisions come from labels, not a model.", ""]
+    if manifest.provider == "rules":
+        lines += [f"**{RULES_NOTE}**", ""]
     lines += ["| Case | Action | First reason |", "|---|---|---|"]
     for t in traces:
         first = t.decision_reasons[0] if t.decision_reasons else ""
