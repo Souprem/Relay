@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "physician_note: rheumatoid arthritis diagnosed 2019; methotrexate 2025-10-13 to 2026-03-30 = 168 days, stopped for inadequate response. fax_cover says a copy of the insurance card is attached, but no insurance_card document is included, and insurance.member_id is null."
+}

@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Redcliff Rheumatology - Follow-up Visit - 2026-08-20
+Patient reference SYN-7789. This 33-year-old man was diagnosed with seropositive rheumatoid arthritis at this practice in 2022 after persistent hand and foot swelling with positive serology.
+
+He took oral methotrexate from March 2026 to August 2026, and his synovitis has remained active throughout, an inadequate response despite dose escalation. He works as a landscaper and reports his grip strength has declined, making it harder to use hand tools. He has no other significant medical history.
+
+Immunara is recommended given his sustained disease activity.

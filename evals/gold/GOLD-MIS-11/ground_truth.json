@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "problem_list: seropositive rheumatoid arthritis established; methotrexate 2026-01-10 to 2026-05-05 = 115 days, stopped for inadequate response. insurance_card shows payer, plan and group number but the member ID field is blank, and insurance.member_id is null."
+}

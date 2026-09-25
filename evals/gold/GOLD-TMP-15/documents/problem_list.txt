@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Northshore Rheumatology - Problem List Update - 2026-09-10
+Patient reference SYN-6015. 28-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed 2023.
+- Methotrexate 15 mg weekly, started this February and stopped in July, discontinued for nausea and mouth sores.
+- Mild asthma, well controlled with albuterol as needed.
+- Plan: pursue Immunara; methotrexate not tolerated.

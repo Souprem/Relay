@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Willowbrook Family Medicine - Office Visit - 2026-04-10
+Patient reference SYN-7724. This 29-year-old woman returns to discuss her rheumatoid arthritis and ongoing hand and foot swelling.
+
+She has not previously taken methotrexate; oral methotrexate 15 mg weekly is being started today given the extent of her joint involvement. She will follow up with rheumatology to monitor for a response and to discuss Immunara if the trial does not control her disease. She works as a hair stylist and describes difficulty holding scissors for long periods.

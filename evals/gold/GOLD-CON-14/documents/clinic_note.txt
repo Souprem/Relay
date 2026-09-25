@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Countyline Rheumatology - Office Visit - 2026-06-20
+Patient reference SYN-5567. This 27-year-old man with seropositive rheumatoid arthritis was seen for a medication trial review.
+
+He took oral methotrexate for only three weeks in January 2026 before it was stopped because of significant nausea that he could not tolerate. He has not restarted any DMARD since. His joint swelling remains present at the wrists and knuckles bilaterally.
+
+He is interested in discussing Immunara given the brief and poorly tolerated methotrexate trial.

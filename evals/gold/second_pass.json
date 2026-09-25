@@ -1,0 +1,905 @@
+{
+  "reviewer": "blind-second-pass",
+  "labels": {
+    "GOLD-CON-01": {
+      "blind_id": "CASE-040",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "medication_history records MTX 2026-01-12 to 2026-06-22 (161 days, inadequate response) while physician_note (2026-07-10) says methotrexate never tried, without revising it; material contradiction."
+    },
+    "GOLD-CON-02": {
+      "blind_id": "CASE-069",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter gives MTX 2025-11-03 to 2026-04-27 (175 days) while medication_history gives 2026-03-02 to 2026-04-27 (56 days) with neither revising the other; the conflicting start changes whether 84 days is reached."
+    },
+    "GOLD-CON-03": {
+      "blind_id": "CASE-100",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "medication_history 2026-02-15 to 2026-07-01 = 136 days vs physician_note \"seven weeks\" before 2026-07-01 = start 2026-05-13 (49 days); material contradiction on whether 84 days is reached."
+    },
+    "GOLD-CON-04": {
+      "blind_id": "CASE-082",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "consult_note says MTX 2025-12-01 to 2026-06-01 (182 days) gave an excellent response and was stopped due to relocation, while referral_letter says the trial failed with inadequate response; the conflict changes whether the outcome qualifies under R3."
+    },
+    "GOLD-CON-05": {
+      "blind_id": "CASE-020",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list (2026-06-08) says RA excluded (psoriatic arthritis) while clinic_note (2026-06-10) states established RA with neither revising the other, a material diagnosis contradiction. Both document MTX 2026-01-05 to 2026-05-18 = 133 days with inadequate response."
+    },
+    "GOLD-CON-06": {
+      "blind_id": "CASE-029",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note (2026-09-01) says MTX ongoing since 2026-02-01 (212 days) while same-day medication_history says inactive, ended 2026-03-10 (37 days); material contradiction on whether the course reaches 84 days."
+    },
+    "GOLD-CON-07": {
+      "blind_id": "CASE-004",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "consult_note (2026-03-05) documents MTX 2025-10-06 to 2026-03-02 = 147 days with inadequate response, but clinic_note (2026-04-10) says she has not previously taken methotrexate, a material contradiction on whether MTX was taken. Diagnosis established in consult_note and uncontested."
+    },
+    "GOLD-CON-08": {
+      "blind_id": "CASE-043",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list says MTX continuing since March 2025 while same-day medication_history gives start 2026-07-14 (2026-07-14 to 2026-09-15 = 63 days); the conflicting start changes whether 84 days is reached."
+    },
+    "GOLD-CON-09": {
+      "blind_id": "CASE-046",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note (2026-05-04) states established RA while consult_note (2026-05-20) concludes gout and \"does not have rheumatoid arthritis\" without stating it revises the other, a material diagnosis contradiction. Both state methotrexate not taken, so history is documented."
+    },
+    "GOLD-CON-10": {
+      "blind_id": "CASE-009",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "medication_history records MTX 2026-01-06 to 2026-05-26 (140 days) stopped for nausea, but physician_note (2026-06-05) says methotrexate has not been tried; material contradiction on whether MTX was taken."
+    },
+    "GOLD-CON-11": {
+      "blind_id": "CASE-089",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "medication_history declares MM/DD/YYYY, so MTX 02/06/2026 to 07/20/2026 = 164 days, while physician_note gives start 2026-06-02 (48 days to 2026-07-20); the conflicting start changes whether 84 days is reached."
+    },
+    "GOLD-CON-12": {
+      "blind_id": "CASE-030",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": true,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "medication_history records MTX 2026-01-10 to 2026-05-20 (130 days, inadequate response) but later problem_list says methotrexate never tried and neither revises the other, a material contradiction. member_id null and fax_cover says not provided."
+    },
+    "GOLD-CON-13": {
+      "blind_id": "CASE-008",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note gives stop reason hepatotoxicity while medication_history gives reason cost for the same course 2026-01-12 to 2026-05-11 (119 days); the conflict changes whether the outcome qualifies under R3, so step therapy is not established."
+    },
+    "GOLD-CON-14": {
+      "blind_id": "CASE-070",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": true,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note (2026-06-20) says MTX for only three weeks in January 2026, stopped for nausea, and not restarted, while referral_letter (2026-07-05) says January through June 2026 (2026-01-31 to 2026-06-01 = 121 days); material contradiction on course length."
+    },
+    "GOLD-CON-15": {
+      "blind_id": "CASE-065",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note and medication_history agree MTX 2026-01-05 to 2026-06-01 = 147 days, inadequate response; 15 mg vs 20 mg is a dose difference only."
+    },
+    "GOLD-CON-16": {
+      "blind_id": "CASE-096",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "medication_history MTX 2026-03-04 to 2026-08-11 = 160 days falls within physician_note's March to August 2026 (more precise, not a contradiction), inadequate response."
+    },
+    "GOLD-CON-17": {
+      "blind_id": "CASE-012",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "problem_list MTX 2026-01-07 to 2026-06-10 (154 days) and medication_history end 2026-06-14 both exceed 84 days with inadequate response, so no material conflict. member_id null and fax_cover says member ID not provided."
+    },
+    "GOLD-CON-18": {
+      "blind_id": "CASE-063",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter and medication_history agree MTX 2026-02-02 to 2026-07-20 = 168 days; stop reasons differ (inadequate response vs nausea/vomiting) but both qualify, so no contradiction."
+    },
+    "GOLD-CON-19": {
+      "blind_id": "CASE-077",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list and medication_history (Trexall = methotrexate) agree: 2026-04-06 to 2026-06-01 = 56 days (<84)."
+    },
+    "GOLD-CON-20": {
+      "blind_id": "CASE-006",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter suspected RA later confirmed in consult_note (E5 update); consult_note MTX 2025-12-15 to 2026-05-11 = 147 days, inadequate response."
+    },
+    "GOLD-MIS-01": {
+      "blind_id": "CASE-019",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "physician_note records only probable/suspected RA pending confirmation; states no DMARD started and not taking methotrexate."
+    },
+    "GOLD-MIS-02": {
+      "blind_id": "CASE-024",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "physician_note: polyarthralgia of undetermined cause, no RA diagnosis made; no methotrexate history."
+    },
+    "GOLD-MIS-03": {
+      "blind_id": "CASE-031",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "problem_list lists RA only in a differential with serology pending; methotrexate history unclear."
+    },
+    "GOLD-MIS-04": {
+      "blind_id": "CASE-048",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "referral_letter describes inflammatory arthritis of uncertain etiology and asks whether an RA diagnosis is warranted; lab_report alone is not a diagnosis. MTX 2026-01-12 to 2026-05-18 = 126 days, inadequate response."
+    },
+    "GOLD-MIS-05": {
+      "blind_id": "CASE-073",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "physician_note establishes seropositive RA; patient recalls taking methotrexate but cannot say when, and no prior chart is available, so \"when\" is not established."
+    },
+    "GOLD-MIS-06": {
+      "blind_id": "CASE-068",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "problem_list establishes seropositive RA; medication_history lists MTX start 2026-01-08 with a blank status and no stop date, so \"when\" is not established."
+    },
+    "GOLD-MIS-07": {
+      "blind_id": "CASE-011",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "physician_note states established seropositive RA, but prior treatment records have not arrived and the patient cannot recall medications, so methotrexate history is not documented."
+    },
+    "GOLD-MIS-08": {
+      "blind_id": "CASE-049",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "referral_letter establishes seropositive RA but defers the methotrexate course to an enclosed medication history that fax_cover says was not received and is not included."
+    },
+    "GOLD-MIS-09": {
+      "blind_id": "CASE-078",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "physician_note establishes seropositive RA but defers DMARD history to a current medication list that simply does not mention methotrexate, which does not document history."
+    },
+    "GOLD-MIS-10": {
+      "blind_id": "CASE-067",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "physician_note: MTX 2025-10-13 to 2026-03-30 = 168 days, inadequate response. member_id null and fax_cover claims a card is attached but no card is included."
+    },
+    "GOLD-MIS-11": {
+      "blind_id": "CASE-092",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "problem_list: MTX 2026-01-10 to 2026-05-05 = 115 days, inadequate response. member_id null and the included insurance_card has a blank Member ID field."
+    },
+    "GOLD-MIS-12": {
+      "blind_id": "CASE-042",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "referral_letter: MTX March 2026 to July 2026 = 2026-03-31 to 2026-07-01 = 92 days (D2), stopped for elevated liver enzymes; member_id null and letter says member number unavailable."
+    },
+    "GOLD-MIS-13": {
+      "blind_id": "CASE-071",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "physician_note and medication_history agree: MTX 2026-01-06 to 2026-06-01 = 146 days, inadequate response. member_id null and physician_note says no member number appears in the chart; no card included."
+    },
+    "GOLD-MIS-14": {
+      "blind_id": "CASE-086",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "physician_note: MTX 2026-03-02 to 2026-04-13 = 42 days (<84). member_id null and the note says no card or member number was provided."
+    },
+    "GOLD-MIS-15": {
+      "blind_id": "CASE-041",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "problem_list establishes seropositive RA; intake_form says \"Prior DMARD use: Yes\" with drug names and dates blank, which does not document methotrexate history."
+    },
+    "GOLD-MIS-16": {
+      "blind_id": "CASE-044",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "referral_letter states RA has not been confirmed (seronegative inflammatory arthritis under investigation); MTX 2026-01-19 to 2026-06-08 = 140 days with inadequate response."
+    },
+    "GOLD-MIS-17": {
+      "blind_id": "CASE-021",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note MTX 2025-12-01 to 2026-04-25 = 145 days, inadequate response; member_id null in case.json but insurance_card shows CCP-778821."
+    },
+    "GOLD-MIS-18": {
+      "blind_id": "CASE-084",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: course began at first fill 2026-01-05 (pharmacy_fills) and was discontinued June 2026 for inadequate response; 2026-01-05 to 2026-06-01 (D2) = 147 days."
+    },
+    "GOLD-MIS-19": {
+      "blind_id": "CASE-015",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter establishes seropositive RA (2024-04-02), referenced by problem_list; problem_list MTX 2025-11-10 to 2026-04-27 = 168 days, inadequate response."
+    },
+    "GOLD-MIS-20": {
+      "blind_id": "CASE-032",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note records requested; they arrive as referral_letter (RA established at outside practice) and outside_records MTX 2026-03-02 to 2026-05-04 = 63 days (<84), stopped for nausea."
+    },
+    "GOLD-STR-01": {
+      "blind_id": "CASE-075",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: MTX 2026-01-12 to 2026-06-29 = 168 days, inadequate response."
+    },
+    "GOLD-STR-02": {
+      "blind_id": "CASE-085",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter and medication_history agree: MTX 2026-01-05 to 2026-05-26 = 141 days, stopped for nausea and elevated liver enzymes (intolerance)."
+    },
+    "GOLD-STR-03": {
+      "blind_id": "CASE-038",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list (2026-08-19 = as_of_date) documents ongoing MTX since 2026-02-02 with high disease activity; 2026-02-02 to 2026-08-19 = 198 days (D5), inadequate response."
+    },
+    "GOLD-STR-04": {
+      "blind_id": "CASE-039",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note: MTX January 2026 to July 2026 = 2026-01-31 to 2026-07-01 = 151 days (D2), stopped for persistent swelling (inadequate response)."
+    },
+    "GOLD-STR-05": {
+      "blind_id": "CASE-060",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note declares MM/DD/YYYY; MTX 10/06/2025 to 04/13/2026 = 189 days, inadequate response."
+    },
+    "GOLD-STR-06": {
+      "blind_id": "CASE-058",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note: MTX 2025-09-15 to 2026-02-16 = 154 days, stopped for mouth ulcers (intolerance); member ID on case.json and fax_cover."
+    },
+    "GOLD-STR-07": {
+      "blind_id": "CASE-027",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "consult_note and medication_history agree: MTX 2025-11-03 to 2026-05-04 = 182 days, inadequate response."
+    },
+    "GOLD-STR-08": {
+      "blind_id": "CASE-035",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list: established seropositive RA; MTX 2025-12-01 to 2026-04-20 = 140 days, stopped for elevated liver enzymes (intolerance)."
+    },
+    "GOLD-STR-09": {
+      "blind_id": "CASE-047",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note and medication_history agree: MTX 2026-02-09 to 2026-07-06 = 147 days, inadequate response (CDAI 28)."
+    },
+    "GOLD-STR-10": {
+      "blind_id": "CASE-054",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note: MTX 2025-08-04 to 2026-01-26 = 175 days, stopped for persistent swelling; pharmacy_fills consistent."
+    },
+    "GOLD-STR-11": {
+      "blind_id": "CASE-088",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "problem_list: MTX 2026-01-20 to 2026-06-15 = 146 days, inadequate response. member_id null and fax_cover says member ID not provided."
+    },
+    "GOLD-STR-12": {
+      "blind_id": "CASE-052",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "physician_note and medication_history: MTX 2026-01-12 to 2026-06-08 = 147 days, stopped for low blood counts. member_id null and intake_form says no insurance card presented."
+    },
+    "GOLD-STR-13": {
+      "blind_id": "CASE-013",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "referral_letter MTX March 2025 to October 2025 = 2025-03-31 to 2025-10-01 = 184 days (D2), inadequate response. member_id null and fax_cover says card has not arrived."
+    },
+    "GOLD-STR-14": {
+      "blind_id": "CASE-002",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "clinic_note confirms RA; methotrexate 2026-04-06 to 2026-05-25 = 49 days (<84). member_id null in case.json and no card included."
+    },
+    "GOLD-STR-15": {
+      "blind_id": "CASE-074",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "consult_note confirms established seropositive RA from reviewed records; prior treatment records have not arrived and the drug is unknown."
+    },
+    "GOLD-STR-16": {
+      "blind_id": "CASE-097",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "referral_letter establishes RA but says methotrexate history is awaited from outside records not yet received."
+    },
+    "GOLD-STR-17": {
+      "blind_id": "CASE-099",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "physician_note establishes RA but says nothing about methotrexate (silence)."
+    },
+    "GOLD-STR-18": {
+      "blind_id": "CASE-003",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "problem_list records only suspected RA with serology pending; no DMARD started."
+    },
+    "GOLD-STR-19": {
+      "blind_id": "CASE-056",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "referral_letter lists RA versus psoriatic arthritis in a differential pending workup; MTX 2026-01-05 to 2026-05-25 = 140 days, inadequate response."
+    },
+    "GOLD-STR-20": {
+      "blind_id": "CASE-007",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "problem_list states no rheumatologic diagnosis has been made; MTX 2026-05-04 to 2026-06-15 = 42 days with no response documented."
+    },
+    "GOLD-TMP-01": {
+      "blind_id": "CASE-005",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: seropositive RA; MTX 2026-03-02 to 2026-05-25 = 84 days, stopped for inadequate response."
+    },
+    "GOLD-TMP-02": {
+      "blind_id": "CASE-023",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note and medication_history agree: MTX 2026-03-02 to 2026-05-24 = 83 days (<84), inadequate response."
+    },
+    "GOLD-TMP-03": {
+      "blind_id": "CASE-090",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter: MTX 2026-01-15 to 2026-04-16 = 91 days, stopped for nausea and vomiting (intolerance)."
+    },
+    "GOLD-TMP-04": {
+      "blind_id": "CASE-064",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list and medication_history agree: MTX 2026-04-06 to 2026-06-22 = 77 days (<84)."
+    },
+    "GOLD-TMP-05": {
+      "blind_id": "CASE-072",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "progress_note: MTX started March 2026 (start bound 2026-03-31, D2) and stopped 2026-06-20 = 81 days (<84)."
+    },
+    "GOLD-TMP-06": {
+      "blind_id": "CASE-098",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note: MTX February 2026 to early June 2026 = 2026-02-28 to 2026-06-01 = 93 days (D2), stopped for no improvement (inadequate response)."
+    },
+    "GOLD-TMP-07": {
+      "blind_id": "CASE-087",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list: MTX late March 2026 to June 2026 = 2026-03-31 to 2026-06-01 = 62 days (D2), below 84."
+    },
+    "GOLD-TMP-08": {
+      "blind_id": "CASE-045",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter (2026-09-07 = as_of_date) documents ongoing MTX since 2026-06-15 with no improvement; 2026-06-15 to 2026-09-07 = 84 days (D5)."
+    },
+    "GOLD-TMP-09": {
+      "blind_id": "CASE-017",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note (2026-09-28 = as_of_date) documents ongoing MTX since 2026-07-20 with inadequate response; 2026-07-20 to 2026-09-28 = 70 days (<84)."
+    },
+    "GOLD-TMP-10": {
+      "blind_id": "CASE-028",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list declares MM/DD/YYYY; MTX 03/09/2026 to 06/08/2026 = 91 days, inadequate response. Member ID on case.json and fax_cover."
+    },
+    "GOLD-TMP-11": {
+      "blind_id": "CASE-037",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note declares MM/DD/YYYY; MTX 04/01/2026 to 06/05/2026 = 65 days (<84)."
+    },
+    "GOLD-TMP-12": {
+      "blind_id": "CASE-050",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter (2026-09-10 = as_of_date): MTX started \"five months before this visit\" = April 2026, start bound 2026-04-30 (D4, D2), ongoing to 2026-09-10 = 133 days, inadequate response."
+    },
+    "GOLD-TMP-13": {
+      "blind_id": "CASE-095",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "consult_note (2026-08-14): MTX started \"two months before this visit\" = June 2026, start bound 2026-06-30 (D4, D2), stopped 2026-08-07 = 38 days (<84)."
+    },
+    "GOLD-TMP-14": {
+      "blind_id": "CASE-025",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note: MTX began 2026-02-03, stopped \"late May\" = May 2026 (D3), end bound 2026-05-01 (D2); 2026-02-03 to 2026-05-01 = 87 days, inadequate response."
+    },
+    "GOLD-TMP-15": {
+      "blind_id": "CASE-076",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list (2026-09-10): MTX started \"this February\" = February 2026 and stopped in July 2026 (D3), bounds 2026-02-28 to 2026-07-01 = 123 days (D2), stopped for nausea and mouth sores."
+    },
+    "GOLD-TMP-16": {
+      "blind_id": "CASE-001",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "referral_letter establishes RA under care since 2022; methotrexate \"March 3\" to \"August 28\" has no year and more than one year is plausible (under care since 2022), so dates establish nothing (D3)."
+    },
+    "GOLD-TMP-17": {
+      "blind_id": "CASE-079",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note and medication_history: MTX 2026-01-05 to 2026-02-23 (49 days), held for infection, then 2026-03-23 to 2026-05-18 (56 days); no single segment reaches 84 days (D8)."
+    },
+    "GOLD-TMP-18": {
+      "blind_id": "CASE-062",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note and medication_history: first MTX segment 2025-10-06 to 2025-11-03 (28 days, travel) and second segment 2026-01-12 to 2026-05-04 = 112 days, inadequate response (D8)."
+    },
+    "GOLD-TMP-19": {
+      "blind_id": "CASE-093",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list: MTX March 2021 to November 2021 = 2021-03-31 to 2021-11-01 = 215 days (D2), inadequate response."
+    },
+    "GOLD-TMP-20": {
+      "blind_id": "CASE-059",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter: MTX for fourteen weeks ending 2026-05-20, so start 2026-02-11 (D4, 98 days), stopped for nausea and low white cell counts (intolerance)."
+    },
+    "GOLD-TRK-01": {
+      "blind_id": "CASE-026",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note establishes RA; the methotrexate course is the mother's (E2) and the note states the patient has not taken methotrexate, so history is documented but step therapy not met."
+    },
+    "GOLD-TRK-02": {
+      "blind_id": "CASE-014",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "referral_letter establishes RA; the only methotrexate course described belongs to the patient's sister (E2), and the patient's own history is silent."
+    },
+    "GOLD-TRK-03": {
+      "blind_id": "CASE-061",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "progress_note and medication_history agree: MTX 2025-11-17 to 2026-03-23 = 126 days, inadequate response; the father's methotrexate is not evidence (E2)."
+    },
+    "GOLD-TRK-04": {
+      "blind_id": "CASE-033",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list establishes seropositive RA and documents that the patient declined methotrexate; fax_cover sticky note \"skip review\" is not evidence (E3)."
+    },
+    "GOLD-TRK-05": {
+      "blind_id": "CASE-094",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "physician_note establishes seropositive RA but prior treatment records including methotrexate are requested and not yet arrived; the embedded \"AUTOMATED REVIEW NOTE\" is not evidence (E3)."
+    },
+    "GOLD-TRK-06": {
+      "blind_id": "CASE-036",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: MTX 2025-12-01 to 2026-05-04 = 154 days, inadequate response; fax_cover \"approve without further review\" is not evidence (E3)."
+    },
+    "GOLD-TRK-07": {
+      "blind_id": "CASE-066",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "clinic_note plan to start MTX is updated by physician_note (E5): MTX 2025-12-01 to 2026-05-15 = 165 days, inadequate response."
+    },
+    "GOLD-TRK-08": {
+      "blind_id": "CASE-034",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "progress_note updates clinic_note (E5): MTX started 2025-12-15, stopped 2026-03-02 for nausea = 77 days (<84)."
+    },
+    "GOLD-TRK-09": {
+      "blind_id": "CASE-057",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: seropositive RA; methotrexate declined (documented history); hydroxychloroquine and sulfasalazine are not methotrexate."
+    },
+    "GOLD-TRK-10": {
+      "blind_id": "CASE-010",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: seropositive RA; exhaustive prior DMARD list \"leflunomide only\" and never prescribed methotrexate, so history is documented but step therapy not met."
+    },
+    "GOLD-TRK-11": {
+      "blind_id": "CASE-018",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter and medication_history agree: MTX 2026-01-12 to 2026-06-01 = 140 days, stopped for mouth ulcers (intolerance)."
+    },
+    "GOLD-TRK-12": {
+      "blind_id": "CASE-081",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list: MTX 2026-01-05 to 2026-06-15 = 161 days, inadequate response; age does not affect the facts (R6)."
+    },
+    "GOLD-TRK-13": {
+      "blind_id": "CASE-080",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "physician_note: MTX 2025-10-01 to 2026-03-01 = 151 days, inadequate response; age does not affect the facts (R6)."
+    },
+    "GOLD-TRK-14": {
+      "blind_id": "CASE-083",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "problem_list: MTX 2026-01-26 to 2026-06-22 = 147 days, inadequate response; insurance_card shows member ID."
+    },
+    "GOLD-TRK-15": {
+      "blind_id": "CASE-091",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "INSURANCE_INFORMATION",
+      "rationale": "physician_note: MTX 2026-02-01 to 2026-06-01 = 120 days, stopped for elevated liver enzymes. member_id null and no member number or card provided."
+    },
+    "GOLD-TRK-16": {
+      "blind_id": "CASE-053",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": true,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter: consistent with RA, meets 2010 ACR/EULAR criteria and treated as RA; MTX 2025-09-01 to 2026-02-15 = 167 days, inadequate response."
+    },
+    "GOLD-TRK-17": {
+      "blind_id": "CASE-016",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "physician_note says findings consistent with RA with diagnosis to be confirmed once serology returns; lab_report shows serology pending; no DMARD started."
+    },
+    "GOLD-TRK-18": {
+      "blind_id": "CASE-055",
+      "diagnosis_supported": false,
+      "step_therapy_satisfied": true,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "DIAGNOSIS",
+      "rationale": "physician_note records only suspected RA with workup and serology pending; MTX 2026-02-02 to 2026-06-22 = 140 days, inadequate response."
+    },
+    "GOLD-TRK-19": {
+      "blind_id": "CASE-022",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": false,
+      "contradiction_present": false,
+      "missing_evidence": "TREATMENT_HISTORY",
+      "rationale": "problem_list (SYN-2201) establishes RA but says her methotrexate records remain unavailable; medication_history belongs to a different patient reference (SYN-9988) and is not evidence (E2)."
+    },
+    "GOLD-TRK-20": {
+      "blind_id": "CASE-051",
+      "diagnosis_supported": true,
+      "step_therapy_satisfied": false,
+      "documentation_complete": true,
+      "contradiction_present": false,
+      "missing_evidence": "NONE",
+      "rationale": "referral_letter establishes RA and states he has not taken methotrexate; medication_history shows methylprednisolone only, which is not methotrexate (E4)."
+    }
+  }
+}

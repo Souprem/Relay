@@ -1,0 +1,13 @@
+{
+  "id": "GOLD-MIS-19",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-09-20",
+  "patient": {"age": 39, "state": "WI"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "Northstar", "plan": "Northstar Choice", "member_id": "NSC-556634"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "problem_list", "kind": "physician_note", "file": "problem_list.txt"},
+    {"id": "referral_letter", "kind": "physician_note", "file": "referral_letter.txt"}
+  ]
+}

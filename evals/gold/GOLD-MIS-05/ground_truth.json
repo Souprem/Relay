@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "physician_note: seropositive rheumatoid arthritis diagnosed 2021 (established). She reports past methotrexate stopped for nausea, but no start or stop date is recorded anywhere, so the course is undocumented."
+}

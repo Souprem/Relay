@@ -8,6 +8,8 @@ decisions, or a committed baseline was hand-edited — both worth stopping for.
 Skips cleanly (not a failure) when the corresponding generated dataset directory is absent, since
 `evals/generated/<dataset-id>/` is git-ignored and only exists after `relay generate` has been run
 (or the case folders were otherwise materialized) locally.
+
+Committed gold runs under evals/baselines/gold-v0.1/ are re-scored against the tracked evals/gold.
 """
 
 import json
@@ -24,10 +26,13 @@ REPO = Path(__file__).resolve().parents[2]
 BASELINES = REPO / "evals" / "baselines"
 GENERATED = REPO / "evals" / "generated"
 
+# Committed datasets whose case folders are tracked (not regenerated).
+DATASET_DIRS: dict[str, Path] = {"gold-v0.1": REPO / "evals" / "gold"}
+
 # Every committed gen-v0.2-* run directory: (dataset_id, run_dir).
 RUN_DIRS: list[tuple[str, Path]] = sorted(
     (dataset_dir.name, run_dir)
-    for dataset_dir in BASELINES.glob("gen-v0.2-*")
+    for dataset_dir in [*BASELINES.glob("gen-v0.2-*"), BASELINES / "gold-v0.1"]
     if dataset_dir.is_dir()
     for run_dir in dataset_dir.iterdir()
     if run_dir.is_dir()
@@ -44,7 +49,7 @@ KEY_METRICS = (
 
 @pytest.mark.parametrize("dataset_id,run_dir", RUN_DIRS, ids=[f"{d}/{r.name}" for d, r in RUN_DIRS])
 def test_committed_baseline_rescoring_matches_results_json(dataset_id, run_dir):
-    dataset_dir = GENERATED / dataset_id
+    dataset_dir = DATASET_DIRS.get(dataset_id, GENERATED / dataset_id)
     if not dataset_dir.exists():
         pytest.skip(f"{dataset_dir} is not on disk; run `relay generate` to materialize it")
     [trace_path] = run_dir.glob("traces.jsonl.gz")

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "clinic_note: rheumatoid arthritis diagnosed previously; outside records requested. referral_letter and outside_records, dated after the clinic note, establish methotrexate 2026-03-02 to 2026-05-04 = 63 days, stopped for nausea, which is under 84 days."
+}

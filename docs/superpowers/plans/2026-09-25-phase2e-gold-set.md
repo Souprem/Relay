@@ -2808,10 +2808,10 @@ uv run relay report --dataset evals/gold --traces "$D/traces.jsonl.gz" --at <AT_
 
 - [ ] **Step 5: Claude in batch mode, within the 2D budget ledger**
 
-The 2D budget guard projects cost from the smoke sync mean × 100 × 0.5 and refuses if spent plus projected exceeds the budget (default $60 for the whole of 2D, ledger `results/claude-spend.json`). Do not raise the budget. If the guard refuses, that is a stop rule.
+**Amended 2026-09-25 (controller, user ruling D9): the user capped TOTAL Claude API spend at $10 for all of Phase 2.** Run this step from the main checkout (`/Users/joelbrook/Desktop/Code/Relay`, after `feat/phase2e` is merged into `feat/phase2`), always pass `--budget-usd 10` and the absolute ledger `/Users/joelbrook/Desktop/Code/Relay/results/claude-spend.json` (use the actual flag name from `relay eval --help`). Before submitting, compute the remaining headroom = $10 − (settled + reserved spend in that ledger) and the projected gold cost = 100 × (measured 2D batch cost per case) × 1.25; if the projection exceeds the headroom, STOP and report — do not reduce the gold set or raise the budget. If the guard refuses, that is a stop rule.
 
 ```bash
-uv run relay eval --dataset evals/gold --provider claude --mode batch 2>&1 | tee results/gold-claude.txt
+uv run relay eval --dataset evals/gold --provider claude --mode batch --budget-usd 10 --ledger /Users/joelbrook/Desktop/Code/Relay/results/claude-spend.json 2>&1 | tee results/gold-claude.txt
 ```
 
 Record `<RUN_CLAUDE>`, the projected and actual cost lines the CLI prints, and the refusal/error count. Check them against the stop rule. Then:

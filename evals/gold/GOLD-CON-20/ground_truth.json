@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter, from November 2025, describes suspected rheumatoid arthritis pending rheumatology evaluation. consult_note, from December 2025, establishes seropositive rheumatoid arthritis. The later record confirms the earlier suspicion; methotrexate 2025-12-15 to 2026-05-11, one hundred forty-seven days, was stopped for inadequate response."
+}

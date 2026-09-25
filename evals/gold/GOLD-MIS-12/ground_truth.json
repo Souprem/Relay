@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "referral_letter: seropositive rheumatoid arthritis established; methotrexate March 2026 (D2: 2026-03-31) to July 2026 (D2: 2026-07-01) = 92 days, stopped for elevated liver enzymes (intolerance). Coverage is pending verification and insurance.member_id is null."
+}

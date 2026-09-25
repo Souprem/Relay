@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: MTX 2025-12-01 to 2026-05-15 = 165 days, stopped for inadequate response. The 2025-11-12 clinic_note only planned to start methotrexate; the later letter documents the completed course, updating it (E5)."
+}

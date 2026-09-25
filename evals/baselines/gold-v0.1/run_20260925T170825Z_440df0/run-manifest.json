@@ -1,0 +1,14 @@
+{
+  "run_id": "run_20260925T170825Z_440df0",
+  "created_at": "2026-09-25T17:08:25.895327Z",
+  "dataset_id": "gold-v0.1",
+  "dataset_path": "evals/gold",
+  "provider": "groundtruth",
+  "policy_version": "v0.1",
+  "question_set_version": "groundtruth",
+  "case_count": 100,
+  "trace_file": "traces/run_20260925T170825Z_440df0.jsonl",
+  "relay_git_sha": "2dbcf2c9d24449c2faae54dda5467c69666aa63c",
+  "sample_limit": null,
+  "sample_seed": null
+}

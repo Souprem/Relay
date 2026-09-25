@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA since 2021; methotrexate late March 2026 (D2: 2026-03-31) to June 2026 (D2: 2026-06-01) = 62 days (D7), under twelve weeks, stopped for nausea and mouth ulcers (intolerance)."
+}

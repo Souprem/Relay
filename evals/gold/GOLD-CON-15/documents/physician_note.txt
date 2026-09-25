@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Harborview Rheumatology - Office Visit - 2026-06-05
+
+Subjective: 71-year-old woman with seropositive rheumatoid arthritis, diagnosed at this clinic in 2016, reports ongoing hand and wrist pain.
+Objective: Synovitis at bilateral wrists and MCPs. Vitals stable. No new rashes.
+Assessment: Rheumatoid arthritis remains active despite oral methotrexate 15 mg weekly, taken from 2026-01-05 to 2026-06-01, discontinued for inadequate response.
+Plan: Discuss Immunara. Continue calcium supplementation.

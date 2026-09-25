@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Ashford Rheumatology - Medication History - 2026-07-25
+Patient reference SYN-9901.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-02-02 - end 2026-07-20 - reason: nausea and vomiting
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-02-02
+IBUPROFEN 400 MG PO AS NEEDED - status: active

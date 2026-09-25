@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Crossing Rheumatology - Office Visit - 06/10/2026
+Patient reference SYN-5561. Date format: MM/DD/YYYY (US) throughout this note.
+
+Subjective: 47-year-old woman with a long-standing diagnosis of seropositive rheumatoid arthritis, first diagnosed in 2019, presents for reassessment and reports persistent hand and wrist pain despite completing a lengthy course of methotrexate.
+Objective: Synovitis noted at bilateral wrists and MCP joints. No rashes. Weight stable.
+Assessment: Rheumatoid arthritis, active despite oral methotrexate 15 mg weekly from 10/06/2025 to 04/13/2026, discontinued for inadequate response.
+Plan: Proceed with Immunara. Continue routine rheumatology follow-up every three months.

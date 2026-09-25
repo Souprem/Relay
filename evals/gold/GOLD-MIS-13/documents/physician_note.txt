@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Eastgate Rheumatology Associates - Follow-up Visit - 2026-07-25
+Patient reference SYN-9987.
+
+Subjective: 49-year-old woman reports her hand swelling never fully settled during her methotrexate trial.
+Objective: Synovitis persists at bilateral wrists and MCPs. Vitals stable.
+Assessment: Seropositive rheumatoid arthritis (diagnosis dates to 2020) with inadequate response to oral methotrexate, taken from January 6, 2026 through June 1, 2026.
+Plan: Discontinue methotrexate, start Immunara. Insurance is on file per the front desk, though no member number appears in today's chart or intake paperwork.

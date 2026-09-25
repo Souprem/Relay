@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Timberline Family Clinic - Laboratory Report - 2026-07-05
+Patient reference SYN-2278.
+Rheumatoid factor: negative, 8 IU/mL (reference <14).
+Anti-CCP antibody: negative, 6 U/mL (reference <20).
+Erythrocyte sedimentation rate: 30 mm/hr (elevated).

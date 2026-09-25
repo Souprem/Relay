@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": true,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "medication_history lists methotrexate 2026-01-10 to 2026-05-20. problem_list states methotrexate has never been tried for this patient. The two sources disagree on whether methotrexate was taken, and no member ID appears anywhere in the packet."
+}

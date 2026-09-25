@@ -1,0 +1,13 @@
+{
+  "id": "GOLD-TMP-17",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-06-10",
+  "patient": {"age": 60, "state": "WI"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "CivicCare", "plan": "CivicCare Plus", "member_id": "CCP-118845"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "medication_history", "kind": "medication_history", "file": "medication_history.txt"},
+    {"id": "physician_note", "kind": "physician_note", "file": "physician_note.txt"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA since 2020; methotrexate March 2021 (D2: 2021-03-31) to November 2021 (D2: 2021-11-01) = 215 days (D7), stopped for inadequate response, other regimens tried since. Member ID confirmed on insurance_card."
+}

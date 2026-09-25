@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Copperfield Rheumatology - Medication History - 2026-06-16
+Patient reference SYN-8890.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-01-07 - end 2026-06-14 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-07
+NAPROXEN 250 MG PO AS NEEDED - status: active

@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Copperfield Rheumatology - Problem List Update - 2026-06-15
+Patient reference SYN-8890. 59-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed 2019, followed at this practice since.
+- Methotrexate 20 mg weekly from 2026-01-07 to 2026-06-10, discontinued for inadequate response.
+- Osteoarthritis of the knees, managed conservatively.
+- Plan: discuss Immunara given the inadequate response to methotrexate.

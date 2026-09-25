@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Timberline Family Medicine - Referral Note - 2025-11-10
+Patient reference SYN-2267. This 31-year-old man was seen for six weeks of symmetric swelling in both hands and feet, with morning stiffness lasting well over an hour.
+
+Suspected rheumatoid arthritis is noted given the joint distribution, and he is being referred to rheumatology for confirmatory evaluation and further management. He has not started any DMARD therapy at this point. He is otherwise healthy and takes no regular medications.

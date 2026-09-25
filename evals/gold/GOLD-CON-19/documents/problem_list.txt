@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Delta Rheumatology - Problem List Update - 2026-06-10
+Patient reference SYN-1056. 68-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed 2014, followed at this practice since.
+- Methotrexate (MTX) 2026-04-06 to 2026-06-01, stopped for nausea that did not resolve with dose adjustment.
+- Mild chronic kidney disease, stage 2, monitored.
+- Plan: discuss next steps given the brief methotrexate trial; consider Immunara.

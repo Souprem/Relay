@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Driftwood Rheumatology - Problem List Update - 2026-06-18
+Patient reference SYN-8814. 63-year-old woman.
+- Rheumatoid arthritis, seropositive, established 2020, with active synovitis of both wrists and MCPs on today's exam.
+- Methotrexate has not been taken; the patient declined it after reading about liver monitoring requirements.
+- Osteoarthritis of both knees, stable, managed with acetaminophen as needed.
+- Plan: Request Immunara given ongoing synovitis and the patient's unwillingness to trial methotrexate.

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "problem_list: rheumatoid arthritis versus reactive arthritis remains a differential, with serology pending. Treatment history is also unclear, but the diagnosis is not yet established."
+}

@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Summit Arthritis Center - Medication History - 2026-07-10
+Patient reference SYN-3315.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-02-15 - end 2026-07-01 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-02-15
+AMLODIPINE 5 MG PO DAILY - status: active

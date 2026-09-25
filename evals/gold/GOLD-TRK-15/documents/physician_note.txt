@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Wintergreen Rheumatology - Visit Summary - 2026-06-15
+Patient reference SYN-5541. Swelling across both hands brought this 31-year-old woman back for a treatment review today.
+
+RA, seropositive, was diagnosed in 2022 and remains active on exam, with synovitis at the wrists and MCPs. She took MTX 15 mg weekly from 2026-02-01 to 2026-06-01, discontinued because of elevated liver enzymes on routine labs, an intolerance. She did not bring an insurance card to today's visit and the front desk was unable to locate a member number on file.
+
+Immunara is recommended given her ongoing RA activity and the intolerance to MTX.

@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Ironwood Rheumatology - Problem List Update - 2026-09-15
+Patient reference SYN-8809. 66-year-old man.
+
+- Seropositive rheumatoid arthritis, diagnosed 2015, followed at this practice since.
+- Methotrexate 20 mg weekly, continuing since March 2025; disease activity remains high despite the ongoing trial, an inadequate response.
+- Benign prostatic hyperplasia, stable on tamsulosin.
+- Plan: discuss Immunara given the inadequate response to methotrexate.

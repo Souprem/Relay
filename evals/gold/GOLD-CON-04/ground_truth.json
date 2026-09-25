@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "consult_note reports an excellent response to methotrexate 2025-12-01 to 2026-06-01, stopped only for relocation. referral_letter reports the same drug as an inadequate-response failure. The two sources disagree on the outcome of the course."
+}

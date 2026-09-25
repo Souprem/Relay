@@ -1,0 +1,11 @@
+SYNTHETIC RECORD - Example Northgate Family Medicine - Referral Letter - 2026-08-20
+Patient reference SYN-4488.
+
+Dear Colleague,
+
+This 45-year-old man recently transferred to our practice and carries an established diagnosis of seropositive rheumatoid arthritis. He reports that his methotrexate trial failed, with continued swelling and pain that never meaningfully improved despite the medication, an inadequate response.
+
+He is requesting Immunara and I am forwarding him to your office along with his outside records for evaluation. He has no other active medical concerns apart from seasonal allergic rhinitis.
+
+Kind regards,
+The referring primary care physician

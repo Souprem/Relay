@@ -1,0 +1,13 @@
+SYNTHETIC RECORD - Example Coastal Family Medicine - Referral Letter - 2026-05-01
+Patient reference SYN-2277.
+
+Dear Colleague,
+
+I am referring my patient, a 39-year-old man with seropositive rheumatoid arthritis confirmed in 2021, for evaluation for Immunara. He has been under my care for his joint disease while awaiting a rheumatology appointment.
+
+He completed a twenty-five week course of oral methotrexate, from November 3, 2025 to April 27, 2026, which was discontinued for inadequate response despite dose escalation to 20 mg weekly. His hand and wrist swelling has persisted throughout, and he continues to describe stiffness that limits his work as an electrician. He has no other significant medical history apart from mild, diet-controlled reflux.
+
+I appreciate your evaluation and your consideration of Immunara given his disease course.
+
+Sincerely,
+The referring primary care physician

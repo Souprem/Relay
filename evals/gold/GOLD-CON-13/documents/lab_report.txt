@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Pinehurst Rheumatology - Laboratory Report - 2026-05-08
+Patient reference SYN-4456.
+ALT: 210 U/L (reference 7-56).
+AST: 185 U/L (reference 8-48).
+Complete blood count within normal limits.

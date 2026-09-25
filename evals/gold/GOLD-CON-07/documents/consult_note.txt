@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Lakeshore Rheumatology - Consultation Note - 2026-03-05
+Patient reference SYN-7724. This 29-year-old woman was seen for evaluation of symmetric hand and foot pain present for over a year.
+
+Her rheumatoid factor and anti-CCP were both strongly positive, and her exam showed synovitis at the wrists, MCPs and MTPs consistent with seropositive rheumatoid arthritis, a diagnosis established at this visit. She reports having completed a course of oral methotrexate, 15 mg weekly, from 2025-10-06 to 2026-03-02, discontinued because her joint swelling did not improve, an inadequate response.
+
+She is being sent back to her primary care physician for ongoing management while awaiting further specialty follow-up. She has no other chronic medical conditions.

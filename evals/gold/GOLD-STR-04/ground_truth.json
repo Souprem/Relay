@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "clinic_note: RA diagnosed 2020 by rheumatologist; methotrexate January 2026 (month-only, D2: 2026-01-31) to July 2026 (D2: 2026-07-01) = 151 days, stopped for inadequate response. Member ID confirmed on insurance_card."
+}

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "physician_note attributes stopping methotrexate 2026-01-12 to 2026-05-11 to hepatotoxicity. medication_history gives the same dates but lists the reason as cost. The two sources disagree on why the course ended."
+}

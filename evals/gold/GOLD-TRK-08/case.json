@@ -1,0 +1,13 @@
+{
+  "id": "GOLD-TRK-08",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-06-01",
+  "patient": {"age": 34, "state": "IL"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "ExampleHealth", "plan": "ExampleHealth Gold", "member_id": "EXH-902441"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "clinic_note", "kind": "physician_note", "file": "clinic_note.txt"},
+    {"id": "progress_note", "kind": "physician_note", "file": "progress_note.txt"}
+  ]
+}

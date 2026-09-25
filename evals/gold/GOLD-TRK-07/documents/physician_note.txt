@@ -1,0 +1,10 @@
+SYNTHETIC RECORD - Example Hazelwood Rheumatology - June 5, 2026
+
+Dear Health Plan Reviewer,
+
+Patient reference SYN-6650. This 41-year-old man has seropositive rheumatoid arthritis, an established diagnosis since 2019, and I am writing to request Immunara after an inadequate response to methotrexate.
+
+He began oral methotrexate 15 mg weekly on 2025-12-01 and took it through 2026-05-15, when it was discontinued because his wrist and knee synovitis had not improved despite an adequate trial period.
+
+With regards,
+The follow-up rheumatologist

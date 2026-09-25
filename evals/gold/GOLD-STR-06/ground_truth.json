@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "clinic_note: RA diagnosed 2022; subcutaneous methotrexate 2025-09-15 to 2026-02-16 = 154 days, stopped for mouth ulcers (intolerance). fax_cover confirms the member ID."
+}

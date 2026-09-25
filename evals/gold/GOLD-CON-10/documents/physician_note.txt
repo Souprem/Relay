@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Trailhead Rheumatology - Office Visit - 2026-06-05
+
+Subjective: 55-year-old man with seropositive rheumatoid arthritis, diagnosed at this clinic in 2018, reports continued hand and knee swelling. He was hospitalized for pneumonia on February 14, 2021, unrelated to his joint disease.
+Objective: Synovitis at bilateral MCPs and the right knee. Mild pitting edema at the ankles. Vitals stable.
+Assessment: Rheumatoid arthritis remains active. Methotrexate has not been tried for this patient; leflunomide 20 mg daily was started instead six months ago and has not controlled his disease.
+Plan: Discuss Immunara given the inadequate response to leflunomide. Continue routine labs.

@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - CivicCare Plus - Member Insurance Card (copy) - 2026-09-08
+Payer: CivicCare
+Plan: CivicCare Plus
+Member ID: CCP-778821
+Group Number: CCP-GRP-2290
+Customer Service: 555-0177

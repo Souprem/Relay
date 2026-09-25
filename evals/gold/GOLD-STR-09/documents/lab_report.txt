@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Cedar Grove Rheumatology - Laboratory Report - 2026-07-10
+Patient reference SYN-6674.
+Rheumatoid factor: positive, 54 IU/mL (reference <14).
+Anti-CCP antibody: positive, 71 U/mL (reference <20).
+Complete blood count: within normal limits.
+Liver function panel: within normal limits.

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "problem_list lists psoriatic arthritis with rheumatoid arthritis excluded. clinic_note from the same clinic the same week states an established diagnosis of rheumatoid arthritis. The two clinicians disagree on which disease is present; methotrexate 2026-01-05 to 2026-05-18 for inadequate response is uncontested."
+}

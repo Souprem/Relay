@@ -1,0 +1,8 @@
+SYNTHETIC RECORD - Example Prairie Urgent Care - Problem List - 2026-06-08
+Patient reference SYN-7781. 31-year-old man.
+
+- Suspected rheumatoid arthritis; symmetric swelling of both hands for six weeks, serology pending.
+- Referred to rheumatology for further workup and possible diagnosis confirmation.
+- No DMARD has been started yet.
+- Seasonal allergies, managed with over-the-counter antihistamines.
+- Plan: await rheumatology evaluation and lab results before initiating any RA therapy.

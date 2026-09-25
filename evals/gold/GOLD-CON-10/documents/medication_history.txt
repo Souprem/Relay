@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Trailhead Rheumatology - Medication History - 2026-06-01
+Patient reference SYN-1123.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-01-06 - end 2026-05-26 - reason: nausea
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-06
+LISINOPRIL 10 MG PO DAILY - status: active

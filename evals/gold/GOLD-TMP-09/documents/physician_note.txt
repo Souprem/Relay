@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Trailhead Rheumatology - Follow-up Visit - 2026-09-28
+Patient reference SYN-6009.
+
+Subjective: Continued swelling in both hands is now interfering with her ability to type at her desk job. She is 29 years old, with seropositive rheumatoid arthritis diagnosed in 2024, and has been followed at this practice since.
+Objective: Synovitis present at bilateral wrists and second through fourth MCPs bilaterally. Vitals stable.
+Assessment: Rheumatoid arthritis, active despite ongoing oral methotrexate 15 mg weekly since 2026-07-20, continuing today, inadequate response.
+Plan: Recommend Immunara. Continue methotrexate and folic acid pending transition.

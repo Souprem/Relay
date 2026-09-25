@@ -1,0 +1,26 @@
+{
+  "id": "GOLD-STR-16",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-06-30",
+  "patient": {
+    "age": 63,
+    "state": "MA"
+  },
+  "medication": {
+    "name": "Immunara",
+    "indication": "rheumatoid arthritis"
+  },
+  "insurance": {
+    "payer": "ExampleHealth",
+    "plan": "ExampleHealth Gold",
+    "member_id": "EXH-220981"
+  },
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {
+      "id": "referral_letter",
+      "kind": "physician_note",
+      "file": "referral_letter.txt"
+    }
+  ]
+}

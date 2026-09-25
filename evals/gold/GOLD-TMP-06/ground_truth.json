@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "clinic_note: seropositive RA since 2023; methotrexate February 2026 (D2: 2026-02-28) to early June 2026 (D2: 2026-06-01) = 93 days (D7), stopped for inadequate response. Member ID confirmed on fax_cover."
+}

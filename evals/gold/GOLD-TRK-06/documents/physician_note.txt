@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Longview Rheumatology - Visit Summary - 2026-06-08
+Patient reference SYN-4460. Six years of hand deformity and morning stiffness led this 57-year-old woman to seek a change in her regimen at today's visit.
+
+Her seropositive rheumatoid arthritis, diagnosed in 2020, has remained active despite treatment. She took oral methotrexate 20 mg weekly from 2025-12-01 to 2026-05-04, discontinued because synovitis and pain persisted throughout the trial, an inadequate response. She works part time as a librarian and reports the swelling now limits how long she can hold a book.
+
+Immunara is being requested to address her ongoing disease activity.

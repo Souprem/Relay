@@ -1,0 +1,13 @@
+SYNTHETIC RECORD - Example Westfield Family Practice - Referral Letter - 2026-06-20
+Patient reference SYN-2245.
+
+Dear Rheumatology Colleague,
+
+I am referring this 37-year-old woman, who carries an established diagnosis of rheumatoid arthritis made by our practice in 2024 after months of symmetric joint swelling and a positive rheumatoid factor.
+
+She was treated with oral methotrexate from March 2025 to October 2025, but her synovitis and fatigue did not improve, so the medication was discontinued for inadequate response. She has since tried physical therapy and topical anti-inflammatories with only modest benefit. She works part time as a florist and finds gripping tools increasingly difficult.
+
+I believe she is a good candidate for Immunara and would appreciate your evaluation.
+
+Best regards,
+The referring family physician

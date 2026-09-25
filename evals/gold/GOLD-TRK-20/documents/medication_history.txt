@@ -1,0 +1,2 @@
+SYNTHETIC RECORD - Example Rosedale Rheumatology - Medication History - 2026-06-09
+Patient reference SYN-7734. Methylprednisolone 4 mg tapering dose, oral, 2026-01-05 through 2026-06-01, for symptomatic flare control. Current medications: lisinopril 20 mg daily, atorvastatin 40 mg daily.

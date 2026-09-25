@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Delta Rheumatology - Medication History - 2026-06-05
+Patient reference SYN-1056.
+TREXALL 15 MG PO WEEKLY - status: inactive - start 2026-04-06 - end 2026-06-01 - reason: nausea
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-04-06
+FUROSEMIDE 20 MG PO DAILY - status: active

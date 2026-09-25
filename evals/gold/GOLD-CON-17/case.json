@@ -1,0 +1,36 @@
+{
+  "id": "GOLD-CON-17",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-06-20",
+  "patient": {
+    "age": 59,
+    "state": "SC"
+  },
+  "medication": {
+    "name": "Immunara",
+    "indication": "rheumatoid arthritis"
+  },
+  "insurance": {
+    "payer": "Northstar",
+    "plan": "Northstar Choice",
+    "member_id": null
+  },
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {
+      "id": "problem_list",
+      "kind": "physician_note",
+      "file": "problem_list.txt"
+    },
+    {
+      "id": "medication_history",
+      "kind": "medication_history",
+      "file": "medication_history.txt"
+    },
+    {
+      "id": "fax_cover",
+      "kind": "fax_cover",
+      "file": "fax_cover.txt"
+    }
+  ]
+}

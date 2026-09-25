@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note (dates stated MM/DD/YYYY): seropositive RA diagnosed 2019; methotrexate 10/06/2025 to 04/13/2026 = 189 days, stopped for inadequate response. Member ID set in case.json."
+}

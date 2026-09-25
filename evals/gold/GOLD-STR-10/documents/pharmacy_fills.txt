@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Synthetic River Primary Care - Pharmacy Fill History - 2026-06-03
+Patient reference SYN-3345.
+Methotrexate 2.5 mg tablets, take 6 weekly - filled monthly 2025-08-04, 2025-09-03, 2025-10-02, 2025-11-01, 2025-12-01, 2026-01-02.
+Folic acid 1 mg tablets - filled monthly on the same dates.

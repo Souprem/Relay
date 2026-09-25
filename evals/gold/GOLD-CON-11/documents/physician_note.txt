@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Bellwood Rheumatology - Follow-up Visit - 2026-07-28
+Patient reference SYN-2234. This 37-year-old woman has a seropositive rheumatoid arthritis diagnosis established at this practice in 2021, with recurrent wrist and finger synovitis.
+
+Her oral methotrexate, 20 mg weekly, started 2026-06-02 and was stopped 2026-07-20 because her joint swelling had not improved despite the trial, an inadequate response. She continues to report morning stiffness lasting about an hour and has found gardening increasingly difficult. She has no known drug allergies.
+
+Immunara is recommended given her sustained disease activity.

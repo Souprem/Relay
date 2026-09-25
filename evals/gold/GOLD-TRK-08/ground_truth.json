@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "progress_note: MTX 2025-12-15 to 2026-03-02 = 77 days, stopped for nausea, an intolerance. The 2026-01-20 clinic_note's 'continue' reflects status at that visit, not a longer course; the later progress_note gives the final stop date (E5, D5), and 77 days is short of 84."
+}

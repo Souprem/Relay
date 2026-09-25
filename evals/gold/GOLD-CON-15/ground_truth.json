@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note gives methotrexate 15 mg weekly and medication_history gives 20 mg weekly for the same course, 2026-01-05 to 2026-06-01, both for inadequate response. The dose is the only difference between the two records."
+}

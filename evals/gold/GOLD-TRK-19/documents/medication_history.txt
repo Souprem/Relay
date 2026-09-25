@@ -1,0 +1,2 @@
+SYNTHETIC RECORD - Example Millpond Rheumatology - Medication History - 2026-06-21
+Patient reference SYN-9988. Methotrexate 15 mg weekly, oral, 2025-08-04 through 2026-01-26. Discontinued: inadequate response. Current medications: folic acid 1 mg daily.

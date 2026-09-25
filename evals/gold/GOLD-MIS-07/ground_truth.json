@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "physician_note: seropositive rheumatoid arthritis confirmed today (established). Prior treatment records have not arrived and she cannot recall her medication history, so no methotrexate course is documented; insurance.member_id is also null, but treatment history is missing first under precedence."
+}

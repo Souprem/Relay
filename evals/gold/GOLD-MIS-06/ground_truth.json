@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "problem_list: seropositive rheumatoid arthritis diagnosed March 14, 2020 (established). medication_history: methotrexate started 2026-01-08 with no stop date or status recorded, and the note is otherwise silent on it, so the course's outcome is undocumented."
+}

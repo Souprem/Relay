@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "physician_note: rheumatoid arthritis diagnosed 2024; methotrexate 2026-03-02 to 2026-04-13 = 42 days, stopped for nausea (intolerance) — documented but under 84 days. insurance.member_id is null and no document shows a member ID."
+}

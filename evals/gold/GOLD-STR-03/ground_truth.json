@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA diagnosed 2021; methotrexate ongoing since 2026-02-02, still active in the note dated on as_of_date (2026-08-19) = 198 days. lab_report supports the diagnosis with positive RF and anti-CCP."
+}

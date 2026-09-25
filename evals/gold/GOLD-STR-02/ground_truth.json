@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter: RA confirmed 2024. medication_history agrees: methotrexate 2026-01-05 to 2026-05-26 = 141 days, stopped for nausea and elevated liver enzymes (intolerance)."
+}

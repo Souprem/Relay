@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "consult_note: seropositive RA confirmed by reviewed prior records. The patient cannot identify which medication she previously took, and her treatment records have not yet arrived, so no methotrexate history is established."
+}

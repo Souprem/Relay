@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Ridgeline Family Practice - Office Visit - 2026-05-10
+Patient reference SYN-3350. A 31-year-old woman presents for a new-patient visit after relocating. She reports she was diagnosed with rheumatoid arthritis last year by a rheumatology practice in her previous city and was treated there for a period of time before her move.
+
+Records of that diagnosis and her prior treatment have been requested from the outside practice but have not yet arrived at this office. She currently takes no arthritis medication. She will be scheduled for a follow-up visit once those records are received, and Immunara will be considered at that time.
