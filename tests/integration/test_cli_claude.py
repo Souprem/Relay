@@ -14,6 +14,7 @@ from relay.evaluation.budget import SpendLedger, load_ledger, reserve, write_led
 from relay.reporting import CLAUDE_NOTE
 from relay.traces.store import read_traces
 from tests.claude_fakes import FakeBatches, FakeMessages, message, succeeded
+from tests.factories import make_bundle
 
 REPO = Path(__file__).resolve().parents[2]
 SMOKE = REPO / "evals" / "smoke"
@@ -187,10 +188,9 @@ def test_the_run_report_labels_claude_runs(tmp_path, fake_claude):
 
 
 def test_a_batch_submission_failure_still_settles_the_reservation(tmp_path, fake_claude):
-    """A run that dies mid-flight (here: the batch submission call itself raises) must not leave
-    its reservation stuck at "reserved" forever: settle() has to run on every exit path, not just
-    the success path, or the budget guard would eventually treat outstanding failed runs as
-    permanently-spent money that never gets reconciled."""
+    """A run that dies mid-flight (here: the batch submission call itself raises, before any
+    batch id exists) must not leave its reservation stuck at "reserved" forever: nothing was ever
+    submitted or billed, so it settles at 0 rather than leaking its full projected cost."""
 
     async def boom(*, requests):
         raise RuntimeError("simulated batch submission failure")
@@ -202,3 +202,70 @@ def test_a_batch_submission_failure_still_settles_the_reservation(tmp_path, fake
     [entry] = load_ledger(tmp_path / "spend.json").entries
     assert entry.status == "settled"
     assert entry.cost_usd == Decimal("0")
+
+
+async def test_a_mid_run_sync_failure_settles_the_cases_actually_completed(tmp_path, monkeypatch):
+    """The in-memory `traces` list run_dataset would have returned is empty when it raises
+    partway through, but the cases that did complete already made a billable API call and are
+    durably written to the trace file. Settling must read the actual cost from disk, not report 0
+    spend for work that really happened."""
+    cases = load_dataset(SMOKE)
+    claude = cli_module.ClaudeRun(
+        mode="sync", budget_usd=Decimal("60"), ledger=tmp_path / "spend.json"
+    )
+
+    class DyingProvider:
+        name = "claude"
+
+        def __init__(self):
+            self.calls = 0
+
+        async def decide(self, case_input):
+            self.calls += 1
+            if self.calls > 3:
+                raise RuntimeError("simulated mid-run failure")
+            return make_bundle(case_id=case_input.id, provider="claude", cost=Decimal("0.01"))
+
+    async def fake_build_provider(*args, **kwargs):
+        return DyingProvider()
+
+    monkeypatch.setattr(cli_module, "_build_provider", fake_build_provider)
+    with pytest.raises(RuntimeError, match="simulated mid-run failure"):
+        await cli_module._execute(
+            cases,
+            cli_module.ProviderName.claude,
+            "v0.1",
+            1,
+            tmp_path / "traces",
+            tmp_path / "dataset",
+            "q-v0.2",
+            None,
+            claude,
+            Decimal("2.5"),
+        )
+
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert entry.status == "settled"
+    assert entry.cost_usd == Decimal("0.03")  # 3 completed cases x $0.01, not 0
+
+
+def test_a_failure_after_batch_submission_leaves_the_reservation_reserved(tmp_path, fake_claude):
+    """Once a batch is submitted, Anthropic bills for it whether or not this process is still
+    around to collect the results. If the CLI dies while polling or reading results, settling at
+    0 (or at whatever partial traces happen to exist) would hide real, already-incurred spend.
+    The reservation must stay "reserved" at its projected cost, with the batch id attached, so a
+    later --batch-id re-attach can read the real results and settle the real cost."""
+
+    async def boom(message_batch_id):
+        raise RuntimeError("simulated results failure")
+
+    fake_claude.batches.results = boom
+    result = claude_eval(tmp_path, "--mode", "batch")
+    assert result.exit_code != 0
+    assert list((tmp_path / "traces").glob("*.jsonl")) == []
+    assert len(fake_claude.batches.created) == 1
+    [entry] = load_ledger(tmp_path / "spend.json").entries
+    assert entry.status == "reserved"
+    assert entry.batch_id == "msgbatch_test"
+    assert entry.cost_usd == Decimal("1.25")  # untouched projected cost, not settled
+    assert "--batch-id msgbatch_test" in result.output

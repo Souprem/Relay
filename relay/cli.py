@@ -339,6 +339,42 @@ def _record_batch(claude: ClaudeRun, run_id: str, batch_id: str) -> None:
     )
 
 
+def _partial_traces(store: TraceStore) -> list[WorkflowTrace]:
+    """Traces already durably written to disk before a run died partway through. Read from the
+    file rather than the in-memory list, which is empty until run_dataset returns."""
+    if not store.path.exists():
+        return []
+    try:
+        return read_traces(store.path)
+    except (ValueError, KeyError, OSError):
+        return []
+
+
+def _settle_interrupted(
+    claude: ClaudeRun, run_id: str, store: TraceStore, batch_id: str | None
+) -> None:
+    """Account for a run that died mid-flight, without ever under- or over-counting real spend.
+
+    A submitted batch bills server-side whether or not this process is still around to see it, so
+    its reservation is never settled here: it stays "reserved" at its projected cost (with the
+    batch id attached, submitting it a second time if it isn't already) until a later --batch-id
+    re-attach reads the real results and settles the real cost. A sync run has no such hidden
+    spend: it is settled at the sum of whatever cases were actually completed and written to disk
+    before it died (0 if none were).
+    """
+    if batch_id is not None:
+        write_ledger(claude.ledger, attach_batch(_load_ledger(claude), run_id, batch_id))
+        typer.echo(
+            f"error: Claude run {run_id} was interrupted after submitting Message Batch "
+            f"{batch_id}; its reservation stays counted against the budget until it is "
+            f"resolved. Re-attach with --mode batch --batch-id {batch_id} to collect results "
+            "and settle its actual cost.",
+            err=True,
+        )
+        return
+    _settle(claude, run_id, _partial_traces(store), None)
+
+
 def _settle(
     claude: ClaudeRun, run_id: str, traces: list[WorkflowTrace], batch_id: str | None
 ) -> None:
@@ -440,11 +476,11 @@ async def _execute(
                 git_sha=git_sha,
             )
     except BaseException:
-        # Settle even a failed run (API error, batch submission failure, Ctrl-C, ...) so its
-        # reservation never leaks: it counts against the budget at whatever it actually cost
-        # (0 if the run died before producing any traces), not at its full projected cost.
+        # Account even for a failed run (API error, batch submission failure, Ctrl-C, ...) so its
+        # reservation never leaks: see _settle_interrupted for how a submitted batch differs from
+        # a sync run that died partway through.
         if claude is not None:
-            _settle(claude, run_id, traces, getattr(provider, "batch_id", None))
+            _settle_interrupted(claude, run_id, store, getattr(provider, "batch_id", None))
         if store.path.exists() and store.path.stat().st_size == 0:
             store.path.unlink()
         raise
