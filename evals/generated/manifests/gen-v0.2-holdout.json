@@ -1,0 +1,24 @@
+{
+  "dataset_id": "gen-v0.2-holdout",
+  "generator_version": "gen-v0.2",
+  "seed": 2,
+  "count": 1000,
+  "difficulty_counts": {
+    "adversarial": 250,
+    "easy": 250,
+    "hard": 250,
+    "medium": 250
+  },
+  "expected_action_counts": {
+    "AUTO_PROCESS": 281,
+    "HUMAN_REVIEW": 483,
+    "REQUEST_INFO": 236
+  },
+  "missing_evidence_counts": {
+    "DIAGNOSIS": 90,
+    "INSURANCE_INFORMATION": 97,
+    "NONE": 731,
+    "TREATMENT_HISTORY": 82
+  },
+  "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786"
+}

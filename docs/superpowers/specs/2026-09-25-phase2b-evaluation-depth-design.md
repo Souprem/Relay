@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-25
 - **Status:** Approved by controller. The user delegated Phase 2 design decisions.
-- **Depends on:** 2A generated datasets `gen-v0.1-dev` and `gen-v0.1-holdout`
+- **Depends on:** 2A generated datasets `gen-v0.2-dev` and `gen-v0.2-holdout`
 - **Parent:** handoff §"Evaluation plan", §"Calibration", §"Baselines and experiments"
 
 ## 1. Goal
@@ -30,7 +30,7 @@ All analysis is **offline over stored traces**. Sweeps re-run the deterministic 
 | E4 | Invalid bundles (where `bundle_problem` is not None) are excluded from calibration and confusion matrices and counted separately. |
 | E5 | Sweep: vary only `auto_process` over 0.50…0.99 in steps of 0.01 (50 points), keeping every other v0.1 threshold fixed. For each point, re-run `determine_action` on each trace's stored bundle. Expected actions come from ground truth, and certain probabilities make them independent of `auto_process`. |
 | E6 | Operating-point selection (on **dev only**): the maximum automation rate among points with ≥1 AUTO_PROCESS and UAR ≤ `ceiling` (default 0.01). Ties go to the higher threshold, because it's more conservative. If no point qualifies, report "no threshold meets the ceiling" and select nothing. Never fabricate a point. |
-| E7 | Held-out protocol: choose the threshold on `gen-v0.1-dev` traces, then report its performance on `gen-v0.1-holdout` traces with `--at <t>`. Calibration is reported on holdout. Holdout results are never used to change anything. |
+| E7 | Held-out protocol: choose the threshold on `gen-v0.2-dev` traces, then report its performance on `gen-v0.2-holdout` traces with `--at <t>`. Calibration is reported on holdout. Holdout results are never used to change anything. |
 | E8 | Traces gain `policy_text_hash: str \| None = None`, the SHA-256 of `policy.text` filled by the runner. `DecisionBundle` gains `client_version: str \| None = None`: the Jev provider sets it to `typesafe-sdk==<version>`, and ground truth leaves it `None`. Both default to `None`, so the committed v0.1 baseline traces still load. |
 | E9 | `read_traces` also accepts `.jsonl.gz`. Committed baseline traces for generated datasets are stored gzipped. |
 | E10 | Question set `q-v0.2`: an explicit version that changes two criteria, described in §6. `build_questions(policy, years, version="q-v0.2")` keeps `q-v0.1` available. The Jev provider takes `question_set_version`, and the CLI takes `--questions` (default `q-v0.2` after B). Whether to adopt q-v0.2 is decided on **dev only** and recorded in the README with both results. |
@@ -105,7 +105,7 @@ The change keeps positive phrasing, per Jev's guidance:
 
 Everything else stays identical to q-v0.1. The question-set hash therefore differs.
 
-Adoption rule (dev only): adopt q-v0.2 as the CLI default if, on `gen-v0.1-dev`, its correct-action rate is ≥ q-v0.1's and its unsafe count is ≤ q-v0.1's. Otherwise keep q-v0.1 as the default and document why. Both runs are committed either way.
+Adoption rule (dev only): adopt q-v0.2 as the CLI default if, on `gen-v0.2-dev`, its correct-action rate is ≥ q-v0.1's and its unsafe count is ≤ q-v0.1's. Otherwise keep q-v0.1 as the default and document why. Both runs are committed either way.
 
 ## 7. Testing
 
@@ -130,10 +130,10 @@ Adoption rule (dev only): adopt q-v0.2 as the CLI default if, on `gen-v0.1-dev`,
 
 ## 8. Live runs (Jev) and committed artifacts
 
-1. **q-v0.1 on dev:** `relay run --dataset evals/generated/gen-v0.1-dev --provider jev --questions q-v0.1`
+1. **q-v0.1 on dev:** `relay run --dataset evals/generated/gen-v0.2-dev --provider jev --questions q-v0.1`
 2. **q-v0.2 on dev:** the same command with `--questions q-v0.2`. Apply the adoption rule in §6.
 3. **Sweep on dev:** run `relay sweep` on the dev traces from the adopted question set. Record the selected threshold t\*, or "none".
-4. **Holdout:** `relay run --dataset evals/generated/gen-v0.1-holdout --provider jev --questions <adopted>`
+4. **Holdout:** `relay run --dataset evals/generated/gen-v0.2-holdout --provider jev --questions <adopted>`
 5. **Report on holdout:** `relay report` on the holdout traces with `--at t*` (or `--at 0.95` if nothing was selected).
 6. **Commit:** `evals/baselines/<dataset_id>/<run_id>/` holds `traces.jsonl.gz`, the manifest, the results and sweep JSON, and the report bundle. Nothing is edited after seeing results.
 

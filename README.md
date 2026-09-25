@@ -102,34 +102,41 @@ commit.
 
 ## Generated datasets
 
-`relay generate` produces seeded synthetic cases (generator `gen-v0.1`) in the same case-folder
+`relay generate` produces seeded synthetic cases (generator `gen-v0.2`) in the same case-folder
 format as the smoke set. Case `i` of a dataset uses seed `seed * 1_000_000 + i`, and difficulty
 rotates easy → medium → hard → adversarial, so each class is exactly a quarter of the dataset.
 Ground truth records what the rendered documents establish under `immunara-v0.1`. Month-only
-dates are judged conservatively and yearless dates establish nothing. Expected actions are derived
-by the engine, as for the smoke cases.
+dates are judged conservatively (latest possible start, earliest possible end). Their qualifiers
+never contradict that rule: a start may read "late March 2026" and an end "early June 2026", and
+there is no "around". The generator doesn't write dates without a year. Expected actions are
+derived by the engine, as for the smoke cases.
 
 | Dataset | Seed | Cases | Expected actions (auto / request info / review) | Use |
 |---|---|---|---|---|
-| `gen-v0.1-dev` | 1 | 400 | 102 / 111 / 187 | Development: any tuning, threshold sweeps, question changes |
-| `gen-v0.1-holdout` | 2 | 1000 | 264 / 279 / 457 | Final reporting only |
+| `gen-v0.2-dev` | 1 | 400 | 106 / 96 / 198 | Development: any tuning, threshold sweeps, question changes |
+| `gen-v0.2-holdout` | 2 | 1000 | 281 / 236 / 483 | Final reporting only |
 
 **Tune only on dev.** Do not change questions, thresholds, or the generator after looking at
 holdout results. Run the holdout once per frozen configuration and report what it says.
 
 ```bash
-uv run relay generate --count 400  --seed 1 --dataset-id gen-v0.1-dev     --out evals/generated/gen-v0.1-dev
-uv run relay generate --count 1000 --seed 2 --dataset-id gen-v0.1-holdout --out evals/generated/gen-v0.1-holdout
-uv run relay generate --verify evals/generated/manifests/gen-v0.1-dev.json --out evals/generated/gen-v0.1-dev
-uv run relay eval --dataset evals/generated/gen-v0.1-dev --provider groundtruth   # pipeline validation only
+uv run relay generate --count 400  --seed 1 --dataset-id gen-v0.2-dev     --out evals/generated/gen-v0.2-dev
+uv run relay generate --count 1000 --seed 2 --dataset-id gen-v0.2-holdout --out evals/generated/gen-v0.2-holdout
+uv run relay generate --verify evals/generated/manifests/gen-v0.2-dev.json --out evals/generated/gen-v0.2-dev
+uv run relay eval --dataset evals/generated/gen-v0.2-dev --provider groundtruth   # pipeline validation only
 ```
 
-The case folders are git-ignored. After cloning, regenerate them with the commands above.
-Committed manifests in [`evals/generated/manifests/`](evals/generated/manifests/) record the
-seed, count, generator version, label and action counts, and a dataset hash. `--verify` regenerates
-the dataset in a temporary directory and compares it with the manifest. It also checks the files in
-`--out` if they exist, and exits 2 on any mismatch. Any change to generator output requires bumping
-`GENERATOR_VERSION` in `relay/generation/facts.py` and generating new, newly named datasets.
+The case folders are git-ignored. After cloning, regenerate them with the commands above (run
+from the repository root: the manifest directory defaults to the relative path
+`evals/generated/manifests`). Committed manifests in
+[`evals/generated/manifests/`](evals/generated/manifests/) record the seed, count, generator
+version, label and action counts, and a dataset hash. `relay generate` refuses to overwrite an
+existing manifest unless you pass `--force`. `--verify` regenerates the dataset in a temporary
+directory and compares it with the manifest. With `--out` it also checks the files there (a missing
+`--out` directory is an error). It exits 2 on any mismatch. Any change to generator output requires
+bumping `GENERATOR_VERSION` in `relay/generation/facts.py` and generating new, newly named
+datasets. `gen-v0.2` replaced `gen-v0.1` before any model results were recorded. The changes are
+listed in the [2A spec](docs/superpowers/specs/2026-09-25-phase2a-case-generator-design.md).
 
 ## Limitations
 
@@ -137,7 +144,8 @@ the dataset in a temporary directory and compares it with the manifest. It also 
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
   document variety. No gold set, calibration analysis, or baselines yet (Phase 2B–2D).
 - Date parts are treated as independent when composing step therapy, which is an approximation.
-- Dates without a stated year count as unknown, so they reduce automation instead of being guessed.
+- Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
+  being guessed. The generator doesn't produce them.
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs
