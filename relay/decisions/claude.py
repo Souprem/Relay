@@ -329,11 +329,12 @@ class ClaudeProvider:
         started = time.perf_counter()
         try:
             message = await self._create(params)
-        except (
-            anthropic.RateLimitError,
-            anthropic.APIStatusError,
-            anthropic.APIConnectionError,
-        ) as error:
+        except anthropic.APIError as error:
+            # The base class for every typed Anthropic API error (RateLimitError,
+            # APIStatusError, APIConnectionError, and less common ones like
+            # APIResponseValidationError when a reply doesn't match the SDK's expected shape).
+            # Any of these means no usable Message came back, so it becomes a final error bundle
+            # here rather than propagating and losing the case (C7).
             return error_bundle(
                 case.id,
                 policy,

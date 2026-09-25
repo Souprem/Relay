@@ -11,6 +11,7 @@ from tests.claude_fakes import (
     SleepRecorder,
     connection_error,
     message,
+    response_validation_error,
     status_error,
 )
 
@@ -66,6 +67,16 @@ async def test_a_client_error_is_final_at_once():
 async def test_a_non_anthropic_exception_propagates():
     with pytest.raises(ValueError, match="bug"):
         await decide(ValueError("bug"))
+
+
+async def test_an_apierror_not_covered_by_the_specific_types_still_becomes_an_error_bundle():
+    """C7: anthropic.APIResponseValidationError (a reply the SDK itself couldn't parse) is
+    neither a RateLimitError, an APIStatusError, nor an APIConnectionError, but it is still an
+    anthropic.APIError, and must not crash the run."""
+    bundle, messages, sleep = await decide(response_validation_error())
+    assert bundle.decisions == []
+    assert bundle.error.startswith("APIResponseValidationError: ")
+    assert len(messages.calls) == 1 and sleep.delays == []
 
 
 async def test_a_refusal_reply_becomes_an_error_bundle():
