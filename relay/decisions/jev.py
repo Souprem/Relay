@@ -18,10 +18,11 @@ from relay.cases.models import CaseInput, MissingEvidence
 from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import Decision, DecisionBundle, DecisionId
 from relay.decisions.questions import (
-    QUESTION_SET_VERSION,
+    DEFAULT_QUESTION_SET_VERSION,
     build_questions,
     candidate_years,
     question_set_hash,
+    validate_question_set_version,
 )
 from relay.decisions.step_therapy import DateParts, p_duration_at_least
 
@@ -140,20 +141,24 @@ class JevProvider:
         client: SystemOneClient,
         *,
         model: str = JEV_MODEL,
+        question_set_version: str = DEFAULT_QUESTION_SET_VERSION,
         policy_loader: Callable[[str], AuthorizationPolicy] = load_policy,
     ) -> None:
+        validate_question_set_version(question_set_version)
         self._client = client
         self._model = model
+        self._question_set_version = question_set_version
         self._policy_loader = policy_loader
 
     async def decide(self, case: CaseInput) -> DecisionBundle:
         policy = self._policy_loader(case.policy_id)
-        questions = build_questions(policy, candidate_years(case))
+        version = self._question_set_version
+        questions = build_questions(policy, candidate_years(case), version)
         base: dict[str, Any] = {
             "case_id": case.id,
             "provider": self.name,
-            "question_set_version": QUESTION_SET_VERSION,
-            "question_set_hash": question_set_hash(policy),
+            "question_set_version": version,
+            "question_set_hash": question_set_hash(policy, version),
             "client_version": CLIENT_VERSION,
         }
         started = time.perf_counter()

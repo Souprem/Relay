@@ -1,9 +1,12 @@
+import pytest
 from typesafe_sdk import Choice, Noul
 
 from relay.cases.models import Document
 from relay.cases.policies import load_policy
 from relay.decisions.questions import (
+    DEFAULT_QUESTION_SET_VERSION,
     QUESTION_IDS,
+    QUESTION_SET_VERSIONS,
     build_questions,
     candidate_years,
     question_set_hash,
@@ -87,3 +90,62 @@ def test_hash_is_stable_and_independent_of_case_years():
 def test_hash_changes_when_wording_changes():
     other = POLICY.model_copy(update={"indication": "psoriatic arthritis"})
     assert question_set_hash(other) != question_set_hash(POLICY)
+
+
+# Pinned before Phase 2B: the committed smoke-v0.1 baseline traces carry exactly this hash.
+Q_V0_1_HASH = "sha256:b395531673a539ec02c1e66bb03d5952b8608eba15f041939549ece2617ac77a"
+NEVER_TOOK = "never took methotrexate"
+
+
+def test_known_versions_and_default():
+    assert QUESTION_SET_VERSIONS == ("q-v0.1", "q-v0.2")
+    # The default stays q-v0.1 until the dev-only adoption rule (spec §6) is applied.
+    assert DEFAULT_QUESTION_SET_VERSION == "q-v0.1"
+
+
+def test_q_v0_1_hash_is_unchanged_from_before_phase_2b():
+    assert question_set_hash(POLICY, "q-v0.1") == Q_V0_1_HASH
+
+
+def test_q_v0_2_hash_differs_from_q_v0_1():
+    assert question_set_hash(POLICY, "q-v0.2") != question_set_hash(POLICY, "q-v0.1")
+    assert question_set_hash(POLICY, "q-v0.2").startswith("sha256:")
+
+
+def test_q_v0_2_treatment_history_option_counts_never_taken_as_documented():
+    option = build_questions(POLICY, ["2026"], "q-v0.2")["missing_evidence"].criteria[
+        "TREATMENT_HISTORY"
+    ]
+    assert option == (
+        "The records do not say whether or when the patient took methotrexate. A record "
+        "stating that the patient never took methotrexate counts as documented treatment history."
+    )
+
+
+def test_q_v0_2_documentation_criterion_adds_the_never_taken_clause():
+    v1 = build_questions(POLICY, ["2026"], "q-v0.1")["documentation_complete"].criteria
+    v2 = build_questions(POLICY, ["2026"], "q-v0.2")["documentation_complete"].criteria
+    assert v2["true"] == v1["true"].removesuffix(".") + (
+        " (a statement that the patient never took methotrexate counts as treatment history)."
+    )
+    assert v2["false"] == v1["false"]
+    assert NEVER_TOOK not in v1["true"]
+
+
+def test_q_v0_2_changes_nothing_else():
+    v1 = build_questions(POLICY, ["2019", "2026"], "q-v0.1")
+    v2 = build_questions(POLICY, ["2019", "2026"], "q-v0.2")
+    assert tuple(v2) == QUESTION_IDS
+    changed = {qid for qid in QUESTION_IDS if v1[qid].model_dump() != v2[qid].model_dump()}
+    assert changed == {"documentation_complete", "missing_evidence"}
+    v1_options = dict(v1["missing_evidence"].criteria)
+    v2_options = dict(v2["missing_evidence"].criteria)
+    del v1_options["TREATMENT_HISTORY"], v2_options["TREATMENT_HISTORY"]
+    assert v1_options == v2_options
+
+
+def test_unknown_question_set_is_rejected():
+    with pytest.raises(ValueError, match="q-v9"):
+        build_questions(POLICY, ["2026"], "q-v9")
+    with pytest.raises(ValueError, match="q-v9"):
+        question_set_hash(POLICY, "q-v9")

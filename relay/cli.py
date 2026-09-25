@@ -17,6 +17,7 @@ from relay.cases.models import PriorAuthCase
 from relay.decisions.base import DecisionProvider
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
+from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_1, Q_V0_2
 from relay.evaluation.metrics import EvalError, score_run
 from relay.evaluation.runner import RunConfigError, run_dataset, validate_run_config
 from relay.generation.generator import generate_dataset, verify_dataset
@@ -43,6 +44,11 @@ class ProviderName(StrEnum):
     groundtruth = "groundtruth"
 
 
+class QuestionSet(StrEnum):
+    q_v0_1 = Q_V0_1
+    q_v0_2 = Q_V0_2
+
+
 Dataset = Annotated[
     Path,
     typer.Option(exists=True, file_okay=False, dir_okay=True, help="Directory of case folders."),
@@ -52,6 +58,10 @@ Policy = Annotated[str, typer.Option(help="Policy/threshold version.")]
 Concurrency = Annotated[int, typer.Option(min=1, help="Cases decided at once.")]
 TracesDir = Annotated[Path, typer.Option(help="Where trace files are written.")]
 ReportsDir = Annotated[Path, typer.Option(help="Where Markdown reports are written.")]
+Questions = Annotated[
+    QuestionSet, typer.Option(help="Jev question set (ignored by the groundtruth provider).")
+]
+DEFAULT_QUESTIONS = QuestionSet(DEFAULT_QUESTION_SET_VERSION)
 
 
 @app.callback()
@@ -91,6 +101,7 @@ async def _execute(
     concurrency: int,
     traces_dir: Path,
     dataset: Path,
+    questions: QuestionSet,
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
@@ -102,7 +113,7 @@ async def _execute(
                 provider = GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
             else:
                 client = await stack.enter_async_context(AsyncTypeSafeClient(timeout=30.0))
-                provider = JevProvider(client)
+                provider = JevProvider(client, question_set_version=questions.value)
             traces = await run_dataset(
                 cases,
                 provider,
@@ -139,12 +150,13 @@ def _run_and_report(
     traces_dir: Path,
     reports_dir: Path,
     dataset: Path,
+    questions: QuestionSet,
 ) -> list[WorkflowTrace]:
     _preflight(cases, provider, policy)
     if provider is ProviderName.groundtruth:
         typer.echo(f"NOTE: {GROUNDTRUTH_NOTE}")
     manifest, traces = asyncio.run(
-        _execute(cases, provider, policy, concurrency, traces_dir, dataset)
+        _execute(cases, provider, policy, concurrency, traces_dir, dataset, questions)
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -165,10 +177,13 @@ def run(
     concurrency: Concurrency = 4,
     traces_dir: TracesDir = Path("traces"),
     reports_dir: ReportsDir = Path("reports"),
+    questions: Questions = DEFAULT_QUESTIONS,
 ) -> None:
     """Decide every case in DATASET; write traces and a Markdown report."""
     cases = _load_cases(dataset)
-    _run_and_report(cases, provider, policy, concurrency, traces_dir, reports_dir, dataset)
+    _run_and_report(
+        cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions
+    )
 
 
 @app.command("eval")
@@ -190,12 +205,13 @@ def eval_command(
     results_dir: Annotated[Path, typer.Option(help="Where results JSON is written.")] = Path(
         "results"
     ),
+    questions: Questions = DEFAULT_QUESTIONS,
 ) -> None:
     """Run (or re-score) DATASET and print action-level and decision-level metrics."""
     cases = _load_cases(dataset)
     if traces is None:
         trace_list = _run_and_report(
-            cases, provider, policy, concurrency, traces_dir, reports_dir, dataset
+            cases, provider, policy, concurrency, traces_dir, reports_dir, dataset, questions
         )
     else:
         try:

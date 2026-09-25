@@ -11,7 +11,11 @@ from relay.cases.loader import load_case
 from relay.cases.policies import load_policy
 from relay.decisions.base import DecisionId
 from relay.decisions.jev import CLIENT_VERSION, JEV_MODEL, JevProvider, build_state
-from relay.decisions.questions import QUESTION_IDS
+from relay.decisions.questions import (
+    DEFAULT_QUESTION_SET_VERSION,
+    QUESTION_IDS,
+    question_set_hash,
+)
 from relay.workflow.engine import bundle_problem, determine_action
 from relay.workflow.outcomes import WorkflowAction
 from relay.workflow.thresholds import THRESHOLDS_V0_1
@@ -85,8 +89,10 @@ async def test_parses_response_into_five_decisions():
     assert bundle.input_tokens == 1800
     assert bundle.estimated_cost_usd == Decimal("0.0000756")
     assert set(bundle.raw_answers) == set(QUESTION_IDS)
-    assert bundle.question_set_version == "q-v0.1"
-    assert bundle.question_set_hash.startswith("sha256:")
+    assert bundle.question_set_version == DEFAULT_QUESTION_SET_VERSION
+    assert bundle.question_set_hash == question_set_hash(
+        load_policy("immunara-v0.1"), DEFAULT_QUESTION_SET_VERSION
+    )
 
 
 async def test_step_therapy_is_composed_in_code():
@@ -164,3 +170,19 @@ async def test_bundles_record_the_sdk_client_version():
     failed, _ = await decide(error=FakeRateLimit("rate limited"))
     assert ok.client_version == CLIENT_VERSION
     assert failed.client_version == CLIENT_VERSION
+
+
+@pytest.mark.parametrize("version", ["q-v0.1", "q-v0.2"])
+async def test_provider_sends_and_records_the_requested_question_set(version):
+    client = FakeClient(result=response())
+    bundle = await JevProvider(client, question_set_version=version).decide(AUTO01.input)
+    policy = load_policy("immunara-v0.1")
+    assert bundle.question_set_version == version
+    assert bundle.question_set_hash == question_set_hash(policy, version)
+    sent = client.calls[0]["questions"]["missing_evidence"].criteria["TREATMENT_HISTORY"]
+    assert ("never took methotrexate" in sent) is (version == "q-v0.2")
+
+
+def test_unknown_question_set_is_rejected_at_construction():
+    with pytest.raises(ValueError, match="q-v9"):
+        JevProvider(FakeClient(), question_set_version="q-v9")
