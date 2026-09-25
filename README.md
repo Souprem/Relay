@@ -46,7 +46,8 @@ uv run relay run  --dataset evals/smoke --provider jev --policy v0.1
 uv run relay eval --dataset evals/smoke --provider jev --policy v0.1
 uv run relay eval --dataset evals/smoke --traces traces/<run_id>.jsonl   # re-score, no API calls
 uv run relay eval --dataset evals/smoke --provider groundtruth           # pipeline validation only
-uv run relay eval --dataset evals/smoke --provider jev --questions q-v0.1      # pick a question set (jev only)
+uv run relay eval --dataset evals/smoke --provider rules                 # rules-only baseline, no key
+uv run relay eval --dataset evals/smoke --provider jev --questions q-v0.1      # pick a question set (jev only; an error with other providers)
 uv run relay sweep   --dataset <dir> --traces <file>                            # threshold frontier, no API calls
 uv run relay report  --dataset <dir> --traces <file> [--at 0.95]                 # report bundle, no API calls
 uv run relay compare --dataset <dir> --traces <a> --traces <b> [--labels a,b]    # side-by-side runs, no API calls
@@ -261,11 +262,64 @@ low-n `documentation_complete` bin, [0.7, 0.8) at −0.402 (n=18).
 These are template-generated synthetic cases scored against the generator's own ground truth,
 so they show how the pipeline and thresholds behave on this distribution, not real-world accuracy.
 
+### Baselines
+
+**Rules-only baseline** (`--provider rules`, `rules-v0.1`,
+[`relay/decisions/rules_baseline.py`](relay/decisions/rules_baseline.py)). A deterministic,
+network-free provider turns explicit cues into the same five decisions: day-precision dates, fixed
+phrases such as "never tried methotrexate" or "inadequate response", and the member-ID field. The
+same policy engine and thresholds as Jev then decide the action. It reads `CaseInput` only, ignores
+lines about relatives, and uses the fax cover only for the member-ID check. Its patterns are the
+[2C spec](docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md)'s §3, fixed before
+any rules run. Nothing was tuned after seeing results.
+
+Every rules probability is 0, 0.5 (abstain) or 1, so the rules are not calibrated and their
+automation/safety **frontier is flat**: `auto_process` has no effect anywhere from 0.50 to 0.99.
+`relay sweep` and `relay report` print `Frontier is flat across all thresholds.`, and every
+rules `sweep.json` records `"frontier_flat": true`. The rules' "dev-selected" threshold
+(0.99) is therefore only the selection rule's tie-break, not a tuned operating
+point, and any threshold gives the same rules row.
+
+```bash
+uv run relay eval --dataset evals/generated/gen-v0.2-holdout --provider rules    # no key, no network
+uv run relay compare --dataset evals/generated/gen-v0.2-holdout --traces <jev>.jsonl.gz --traces <rules>.jsonl.gz --labels jev-q-v0.2,rules-v0.1
+```
+
+**Rules vs Jev on `gen-v0.2-holdout`** (n=1000, policy `v0.1`):
+
+| Provider | Run | `auto_process` | Correct action | Automation | Unsafe / auto (UAR) | Request info | Human review | Frontier flat |
+|---|---|---|---|---|---|---|---|---|
+| Jev `q-v0.2` | `run_20260925T075242Z_fd455f` | 0.95 (recorded) | 815/1000 (81.5%) | 172/1000 (17.2%) | 0/172 (0.0%) | 313/1000 (31.3%) | 515/1000 (51.5%) | no |
+| Jev `q-v0.2` | `run_20260925T075242Z_fd455f` | 0.89 (dev-selected, `--at`) | 895/1000 (89.5%) | 252/1000 (25.2%) | 0/252 (0.0%) | 313/1000 (31.3%) | 435/1000 (43.5%) | no |
+| Rules `rules-v0.1` | `run_20260925T092425Z_0aee97` | 0.95 (recorded) | 667/1000 (66.7%) | 134/1000 (13.4%) | 0/134 (0.0%) | 569/1000 (56.9%) | 297/1000 (29.7%) | yes |
+| Rules `rules-v0.1` | `run_20260925T092425Z_0aee97` | 0.99 (dev-selected, `--at`) | 667/1000 (66.7%) | 134/1000 (13.4%) | 0/134 (0.0%) | 569/1000 (56.9%) | 297/1000 (29.7%) | yes |
+
+Jev has both the higher correct-action rate (81.5% vs. 66.7% at the recorded 0.95 threshold) and the
+higher automation rate (17.2% vs. 13.4%); neither provider has any unsafe automation on this
+holdout (Jev 0/172, rules 0/134). Where the rules do not automate, they lean toward asking for more
+documentation rather than escalating to a person: request-info is 56.9% for the rules against 31.3%
+for Jev, while human review is 29.7% for the rules against 51.5% for Jev. Rules automate less than
+Jev but just as safely on this holdout. `compare-jev-vs-rules.txt` puts the action-level disagreement
+at "Action differences jev-q-v0.2 -> rules-v0.1: 416 cases (0 new unsafe automations)".
+
+The rules see only explicit conflicts and fixed phrasings. Wording outside their pattern lists
+makes them abstain (usually `REQUEST_INFO`), and a contradiction they cannot see as an explicit
+cue stays at 0. Both are documented weaknesses of a pattern floor, not things to tune away.
+`tests/unit/test_rules_anti_shortcut.py` checks that the rules do not key on gen-v0.2's residual
+contradiction tell (see Limitations).
+
+Artifacts: smoke
+[`run_20260925T092347Z_cca17f`](evals/baselines/smoke-v0.1/run_20260925T092347Z_cca17f/), dev
+[`run_20260925T092358Z_36888d`](evals/baselines/gen-v0.2-dev/run_20260925T092358Z_36888d/) (with
+[`compare-jev-vs-rules.txt`](evals/baselines/gen-v0.2-dev/compare-jev-vs-rules.txt)), holdout
+[`run_20260925T092425Z_0aee97`](evals/baselines/gen-v0.2-holdout/run_20260925T092425Z_0aee97/) (full
+[`report.md`](evals/baselines/gen-v0.2-holdout/run_20260925T092425Z_0aee97/report/report.md)).
+
 ## Limitations
 
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
-  document variety. No gold set or baselines yet (Phase 2C–2E).
+  document variety. No gold set or LLM baseline yet (Phase 2D–2E); the rules-only baseline is above.
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
   being guessed. The generator doesn't produce them.
@@ -273,7 +327,8 @@ so they show how the pipeline and thresholds behave on this distribution, not re
   line predicts a contradiction roughly 81% of the time (never 100%), and the
   `NEVER_TAKEN_OTHER_DMARD` distractor wording has a weak base-rate skew of its own. Both bear on
   `material_contradiction` metrics above and on any rule-based baseline built from surface
-  phrasing rather than genuine reasoning.
+  phrasing rather than genuine reasoning. The rules baseline is tested not to key on the tell
+  (`tests/unit/test_rules_anti_shortcut.py`).
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs
@@ -285,3 +340,5 @@ so they show how the pipeline and thresholds behave on this distribution, not re
 - [Phase 2A implementation plan](docs/superpowers/plans/2026-09-25-phase2a-case-generator.md)
 - [Phase 2B evaluation depth design](docs/superpowers/specs/2026-09-25-phase2b-evaluation-depth-design.md)
 - [Phase 2B implementation plan](docs/superpowers/plans/2026-09-25-phase2b-evaluation-depth.md)
+- [Phase 2C rules baseline design](docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md)
+- [Phase 2C implementation plan](docs/superpowers/plans/2026-09-25-phase2c-rules-baseline.md)
