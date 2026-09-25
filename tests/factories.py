@@ -161,6 +161,7 @@ def make_facts(**overrides: object) -> CaseFacts:
         "other_dmards": (),
         "irrelevant_meds": ("IBUPROFEN 400 MG PO AS NEEDED",),
         "contradiction": None,
+        "history_start": None,
         "injection": False,
         "relative_distractor": False,
         "stale_note": False,

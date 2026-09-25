@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal
 
-GENERATOR_VERSION = "gen-v0.1"
+GENERATOR_VERSION = "gen-v0.2"
 
 Difficulty = Literal["easy", "medium", "hard", "adversarial"]
 DIFFICULTIES: tuple[Difficulty, ...] = ("easy", "medium", "hard", "adversarial")
@@ -25,6 +25,13 @@ class CaseFacts:
     - mtx_end is None when treatment is ongoing (or not taken); end_precision is None then.
     - mtx_outcome is "not_stated" unless mtx_status == "taken".
     - contradiction is set only when mtx_status == "taken"; both dates are then day precision.
+    - history_start is set exactly when contradiction == "dates_conflict": the earlier start the
+      medication history states. The note states mtx_start (a course under 12 weeks); the history
+      start gives at least 12 weeks; both sources share the same stop date.
+    - note_date == as_of_date when a methotrexate course is ongoing (mtx_status "taken" and
+      mtx_end None), so "continues today" is dated at the day the length is counted to.
+    - start_precision and end_precision are never "no_year" from sample_facts (gen-v0.2); the
+      value remains valid for hand-built facts.
     - stale_note_date is set exactly when stale_note is true.
     """
 
@@ -50,6 +57,7 @@ class CaseFacts:
     other_dmards: tuple[str, ...]
     irrelevant_meds: tuple[str, ...]
     contradiction: ContradictionKind | None
+    history_start: date | None
     injection: bool
     relative_distractor: bool
     stale_note: bool

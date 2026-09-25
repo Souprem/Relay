@@ -3,7 +3,6 @@
 Every document starts with "SYNTHETIC RECORD - ". Fictional plans only; no real names.
 """
 
-from datetime import date
 from random import Random
 
 from relay.cases.models import Document
@@ -97,19 +96,19 @@ OUTCOME_ONGOING: dict[str, tuple[str, ...]] = {
     ),
     "not_stated": ("",),
 }
+# The note's denial of methotrexate. One bank per shape (with or without another DMARD), shared
+# by never/relative_only cases AND history_vs_note contradictions, so no phrase predicts a label.
 NEVER_TAKEN: tuple[str, ...] = (
     "The patient has never taken {mtx}.",
     "The patient reports never having tried {mtx} and has managed with NSAIDs only.",
+    "The patient has never been prescribed {mtx} personally.",
+    "The patient's own treatment to date has been NSAIDs only; the patient has not taken {mtx}.",
 )
 NEVER_TAKEN_OTHER_DMARD: tuple[str, ...] = (
     "Prior treatment: {dmard} for about {months} months, stopped for inadequate response. "
     "The patient has not taken {mtx}.",
     "The patient's own treatment has been {dmard}, stopped after {months} months for "
     "inadequate response; the patient has not taken {mtx}.",
-)
-RELATIVE_ONLY: tuple[str, ...] = (
-    "The patient has never been prescribed {mtx} personally.",
-    "The patient's own treatment to date has been NSAIDs only; the patient has not taken {mtx}.",
 )
 UNDOCUMENTED: tuple[str, ...] = (
     "Prior treatment records were not included with this request.",
@@ -144,19 +143,12 @@ def _cap(text: str) -> str:
     return text[0].upper() + text[1:]
 
 
-def _shift_year_back(d: date) -> date:
-    day = 28 if (d.month, d.day) == (2, 29) else d.day
-    return date(d.year - 1, d.month, day)
-
-
 def _treatment_narrative(facts: CaseFacts, rng: Random, mtx: str, dose: str) -> list[str]:
     status = facts.mtx_status
     if status == "undocumented":
         return [rng.choice(UNDOCUMENTED)]
-    if status == "relative_only" and not facts.other_dmards:
-        return [rng.choice(RELATIVE_ONLY).format(mtx=mtx)]
     if status in ("never", "relative_only") or facts.contradiction == "history_vs_note":
-        if facts.other_dmards and facts.contradiction is None:
+        if facts.other_dmards:
             template = rng.choice(NEVER_TAKEN_OTHER_DMARD)
             return [template.format(dmard=facts.other_dmards[0], months=rng.randint(4, 9), mtx=mtx)]
         return [rng.choice(NEVER_TAKEN).format(mtx=mtx)]
@@ -168,18 +160,20 @@ def _treatment_narrative(facts: CaseFacts, rng: Random, mtx: str, dose: str) -> 
             sentence = rng.choice(TAKEN_ONGOING_SPLIT)
             text = sentence.format(mtx=mtx, Mtx=_cap(mtx), dose=dose)
         else:
-            start = date_phrase(facts.mtx_start, facts.start_precision, rng, since=True)
+            start = date_phrase(
+                facts.mtx_start, facts.start_precision, rng, bound="start", since=True
+            )
             text = rng.choice(TAKEN_ONGOING).format(mtx=mtx, dose=dose, start=start)
         narrative = [text + outcome]
     else:
         assert facts.end_precision is not None
         outcome = rng.choice(OUTCOME_ENDED[facts.mtx_outcome]).format(score=score)
-        end = date_phrase(facts.mtx_end, facts.end_precision, rng)
+        end = date_phrase(facts.mtx_end, facts.end_precision, rng, bound="end")
         if facts.split_across_documents:
             template = rng.choice(TAKEN_ENDED_SPLIT)
             text = template.format(mtx=mtx, Mtx=_cap(mtx), end=end, outcome=outcome)
         else:
-            start = date_phrase(facts.mtx_start, facts.start_precision, rng)
+            start = date_phrase(facts.mtx_start, facts.start_precision, rng, bound="start")
             template = rng.choice(TAKEN_ENDED)
             text = template.format(
                 mtx=mtx, Mtx=_cap(mtx), dose=dose, start=start, end=end, outcome=outcome
@@ -220,19 +214,18 @@ def _medication_history(facts: CaseFacts, rng: Random, dose_upper: str) -> Docum
     lines = [f"{SYNTHETIC_PREFIX}MEDICATION HISTORY"]
     if facts.mtx_status == "taken":
         assert facts.mtx_start is not None and facts.start_precision is not None
-        start_date = facts.mtx_start
-        if facts.contradiction == "dates_conflict":
-            start_date = _shift_year_back(start_date)
-        start = format_date(start_date, facts.start_precision, rng)
+        start_date = facts.history_start or facts.mtx_start
+        start = format_date(start_date, facts.start_precision, rng, bound="start")
         if facts.mtx_end is None:
             lines.append(f"METHOTREXATE {dose_upper} - status: active - start {start}")
         elif facts.split_across_documents:
             lines.append(
-                f"METHOTREXATE {dose_upper} - status: inactive - start {start} - end: see clinic note"
+                f"METHOTREXATE {dose_upper} - status: inactive - start {start} "
+                "- end: see most recent clinic note"
             )
         else:
             assert facts.end_precision is not None
-            end = format_date(facts.mtx_end, facts.end_precision, rng)
+            end = format_date(facts.mtx_end, facts.end_precision, rng, bound="end")
             lines.append(
                 f"METHOTREXATE {dose_upper} - status: inactive - start {start} - end {end}"
             )
@@ -258,14 +251,15 @@ def _fax_cover(facts: CaseFacts, rng: Random) -> Document:
 
 
 def _stale_note(facts: CaseFacts, rng: Random, dose: str) -> Document:
+    """The older note planning methotrexate. Its id is neutral: ids are shown to providers."""
     assert facts.stale_note_date is not None
     header = f"{SYNTHETIC_PREFIX}{rng.choice(NOTE_TITLES)} - {facts.stale_note_date.isoformat()}"
     body = rng.choice(STALE_NOTE_BODY).format(dose=dose)
-    return Document(id="stale_note", kind="physician_note", text=f"{header}\n{body}\n")
+    return Document(id="clinic_note", kind="physician_note", text=f"{header}\n{body}\n")
 
 
 def render_documents(facts: CaseFacts, rng: Random) -> tuple[Document, ...]:
-    """Documents in a fixed order: fax cover, medication history, stale note, physician note."""
+    """Documents in a fixed order: fax cover, medication history, older clinic note, physician note."""
     dose, dose_upper = rng.choice(MTX_DOSES)
     documents: list[Document] = []
     if facts.member_id is None or facts.injection:

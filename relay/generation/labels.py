@@ -47,16 +47,28 @@ def _missing_evidence(facts: CaseFacts) -> MissingEvidence:
 
 
 def _notes(facts: CaseFacts, days: int | None) -> str:
+    """A machine-written summary that mentions only what the rendered documents show."""
     head = f"{GENERATOR_VERSION} {facts.difficulty}: mtx {facts.mtx_status}"
     if facts.mtx_status == "taken":
         assert facts.mtx_start is not None
         actual_end = facts.mtx_end or facts.as_of_date
         end_precision = facts.end_precision or "ongoing"
         conservative = "unknown" if days is None else f"{days}d"
-        head += (
-            f" {(actual_end - facts.mtx_start).days}d actual, {conservative} conservative "
-            f"(start {facts.start_precision}, end {end_precision}), {facts.mtx_outcome}"
-        )
+        if facts.contradiction == "dates_conflict":
+            assert facts.history_start is not None
+            head += (
+                f" note {(actual_end - facts.mtx_start).days}d, "
+                f"history {(actual_end - facts.history_start).days}d "
+                f"(start day, end {end_precision}), {facts.mtx_outcome}"
+            )
+        else:
+            head += (
+                f" {(actual_end - facts.mtx_start).days}d actual, {conservative} conservative "
+                f"(start {facts.start_precision}, end {end_precision})"
+            )
+            # A history_vs_note note denies methotrexate, so no outcome is rendered.
+            if facts.contradiction is None:
+                head += f", {facts.mtx_outcome}"
     flags = [f"diagnosis {facts.diagnosis_status}"]
     if facts.member_id is None:
         flags.append("no member id")
@@ -64,7 +76,7 @@ def _notes(facts: CaseFacts, days: int | None) -> str:
         flags.append(f"contradiction {facts.contradiction}")
     if facts.split_across_documents:
         flags.append("split docs")
-    if facts.other_dmards:
+    if facts.other_dmards and facts.mtx_status != "undocumented":
         flags.append("other DMARD " + ", ".join(facts.other_dmards))
     if facts.relative_distractor:
         flags.append("relative distractor")
@@ -72,7 +84,8 @@ def _notes(facts: CaseFacts, days: int | None) -> str:
         flags.append("injection")
     if facts.stale_note:
         flags.append("stale note")
-    if facts.difficulty == "hard" and facts.mtx_status == "taken":
+    near_miss_course = facts.mtx_status == "taken" and facts.contradiction != "dates_conflict"
+    if facts.difficulty == "hard" and near_miss_course:
         flags.append("near-miss")
     return head + "; " + ", ".join(flags)
 

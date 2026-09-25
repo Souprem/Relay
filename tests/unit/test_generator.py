@@ -90,7 +90,7 @@ def test_same_arguments_give_byte_identical_datasets(tmp_path):
 
 
 def test_dev_sized_dataset_distribution(tmp_path):
-    manifest = generate_dataset(400, 1, "gen-v0.1-dev", tmp_path / "dev")
+    manifest = generate_dataset(400, 1, "gen-v0.2-dev", tmp_path / "dev")
     assert manifest.count == 400
     assert manifest.difficulty_counts == {d: 100 for d in sorted(DIFFICULTIES)}
     assert set(manifest.expected_action_counts) == {a.value for a in WorkflowAction}
@@ -105,7 +105,7 @@ def test_dev_sized_dataset_distribution(tmp_path):
     assert sum(manifest.missing_evidence_counts.values()) == 400
     cases = load_dataset(tmp_path / "dev")
     assert [c.input.id for c in cases][:2] == ["GEN-01000000", "GEN-01000001"]
-    assert {c.input.dataset_id for c in cases} == {"gen-v0.1-dev"}
+    assert {c.input.dataset_id for c in cases} == {"gen-v0.2-dev"}
 
 
 def test_manifest_hash_matches_files_and_has_no_timestamp(tmp_path):

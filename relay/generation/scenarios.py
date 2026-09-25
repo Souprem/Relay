@@ -42,6 +42,10 @@ IRRELEVANT_MEDS: tuple[str, ...] = (
 )
 ADVERSARIAL_FEATURES: tuple[str, ...] = ("other_dmard", "relative", "injection", "stale_note")
 CONTRADICTION_KINDS: tuple[ContradictionKind, ...] = ("history_vs_note", "dates_conflict")
+# dates_conflict: the note's course is 6-10 weeks (under 12 on its own) and the medication history
+# starts a further 6-10 weeks earlier (at least 12 weeks on its own), same stop date.
+CONFLICT_NOTE_DAYS = (42, 70)
+CONFLICT_EXTRA_DAYS = (42, 70)
 OUTCOMES_ENDED: tuple[MtxOutcome, ...] = ("inadequate_response", "intolerance", "not_stated")
 OUTCOME_WEIGHTS_ENDED: tuple[float, ...] = (0.6, 0.25, 0.15)
 OUTCOMES_ONGOING: tuple[MtxOutcome, ...] = ("inadequate_response", "not_stated")
@@ -59,7 +63,6 @@ class DifficultyProfile:
     note_noise: float
     near_miss: bool
     boundary_age_probability: float
-    no_year_gap: bool
     co_dmard_probability: float
     adversarial: bool
 
@@ -75,7 +78,6 @@ PROFILES: dict[Difficulty, DifficultyProfile] = {
         note_noise=0.0,
         near_miss=False,
         boundary_age_probability=0.0,
-        no_year_gap=False,
         co_dmard_probability=0.0,
         adversarial=False,
     ),
@@ -89,13 +91,12 @@ PROFILES: dict[Difficulty, DifficultyProfile] = {
         note_noise=0.3,
         near_miss=False,
         boundary_age_probability=0.0,
-        no_year_gap=False,
         co_dmard_probability=0.2,
         adversarial=False,
     ),
     "hard": DifficultyProfile(
-        precisions=("day", "month", "no_year"),
-        precision_weights=(0.4, 0.5, 0.1),
+        precisions=("day", "month"),
+        precision_weights=(0.45, 0.55),
         split_probability=0.6,
         medication_history_probability=0.5,
         contradiction_probability=0.35,
@@ -103,13 +104,12 @@ PROFILES: dict[Difficulty, DifficultyProfile] = {
         note_noise=0.5,
         near_miss=True,
         boundary_age_probability=0.25,
-        no_year_gap=True,
         co_dmard_probability=0.2,
         adversarial=False,
     ),
     "adversarial": DifficultyProfile(
-        precisions=("day", "month", "no_year"),
-        precision_weights=(0.5, 0.4, 0.1),
+        precisions=("day", "month"),
+        precision_weights=(0.55, 0.45),
         split_probability=0.5,
         medication_history_probability=0.5,
         contradiction_probability=0.15,
@@ -117,7 +117,6 @@ PROFILES: dict[Difficulty, DifficultyProfile] = {
         note_noise=0.7,
         near_miss=False,
         boundary_age_probability=0.0,
-        no_year_gap=True,
         co_dmard_probability=0.0,
         adversarial=True,
     ),
@@ -218,36 +217,32 @@ def sample_facts(
         injection = "injection" in features
         stale_note = "stale_note" in features
 
-    # 4. Documentation gap.
-    no_year_gap = False
+    # 4. Documentation gap. (Yearless dates are out of scope from gen-v0.2: see facts.py.)
     if rng.random() < p_missing:
         gaps = ["diagnosis", "member_id"]
         if mtx_status == "taken":
             gaps.append("treatment_history")
-            if profile.no_year_gap:
-                gaps.append("no_year")
         gap = rng.choice(gaps)
         if gap == "diagnosis":
             diagnosis_status = rng.choice(("pending", "absent"))
         elif gap == "member_id":
             member_id = None
-        elif gap == "treatment_history":
-            mtx_status = "undocumented"
         else:
-            no_year_gap = True
-            if ongoing or rng.random() < 0.5:
-                start_precision = "no_year"
-            else:
-                end_precision = "no_year"
+            mtx_status = "undocumented"
 
     # 5. Contradiction (needs a documented methotrexate course with full dates).
     contradiction: ContradictionKind | None = None
-    if mtx_status == "taken" and not no_year_gap and rng.random() < p_contradiction:
+    history_start: date | None = None
+    if mtx_status == "taken" and rng.random() < p_contradiction:
         contradiction = rng.choice(CONTRADICTION_KINDS)
         start_precision = "day"
         end_precision = None if ongoing else "day"
         split = False
         medication_history = True
+        if contradiction == "dates_conflict":
+            mtx_start = (mtx_end or as_of) - _days(rng, *CONFLICT_NOTE_DAYS)
+            history_start = mtx_start - _days(rng, *CONFLICT_EXTRA_DAYS)
+            diagnosis_year = min(diagnosis_year, history_start.year)
 
     # 6. Normalize fields that only apply to a documented methotrexate course.
     if mtx_status != "taken":
@@ -257,9 +252,11 @@ def sample_facts(
         split = False
     if mtx_status == "undocumented":
         medication_history = False
+    if mtx_status == "taken" and mtx_end is None:
+        note_date = as_of  # "continues today" is dated at the as-of date the length counts to
     stale_note_date: date | None = None
     if stale_note:
-        anchor = mtx_start or (as_of - timedelta(days=210))
+        anchor = history_start or mtx_start or (as_of - timedelta(days=210))
         stale_note_date = anchor - _days(rng, 14, 90)
 
     return CaseFacts(
@@ -285,6 +282,7 @@ def sample_facts(
         other_dmards=other_dmards,
         irrelevant_meds=irrelevant_meds,
         contradiction=contradiction,
+        history_start=history_start,
         injection=injection,
         relative_distractor=relative_distractor,
         stale_note=stale_note,

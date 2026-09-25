@@ -6,6 +6,7 @@ from relay.generation.facts import DIFFICULTIES
 from relay.generation.scenarios import AS_OF_MAX, AS_OF_MIN, PROFILES, sample_facts
 
 SEEDS = range(400)
+WIDE_SEEDS = range(1000)
 
 
 def sample(seed, difficulty, **overrides):
@@ -18,6 +19,11 @@ def all_facts(difficulty, **overrides):
 
 def actual_days(f):
     return ((f.mtx_end or f.as_of_date) - f.mtx_start).days
+
+
+def profile_courses(facts):
+    """Courses drawn from the profile's duration sampler (dates_conflict redraws its own)."""
+    return [f for f in facts if f.mtx_status == "taken" and f.contradiction != "dates_conflict"]
 
 
 def test_profiles_cover_every_difficulty():
@@ -57,13 +63,21 @@ def test_invariants_hold_for_every_difficulty(difficulty):
         if f.contradiction is not None:
             assert taken and f.medication_history and not f.split_across_documents
             assert f.start_precision == "day" and f.end_precision in ("day", None)
+        assert (f.history_start is not None) is (f.contradiction == "dates_conflict")
+        if f.history_start is not None:
+            end = f.mtx_end or f.as_of_date
+            assert 42 <= (end - f.mtx_start).days <= 70
+            assert 42 <= (f.mtx_start - f.history_start).days <= 70
+            assert f.diagnosis_year <= f.history_start.year
+        if taken and f.mtx_end is None:
+            assert f.note_date == f.as_of_date
         if f.split_across_documents:
             assert f.medication_history
         if f.mtx_status == "undocumented":
             assert not f.medication_history
         assert (f.stale_note_date is not None) is f.stale_note
         if f.stale_note and f.mtx_start is not None:
-            assert f.stale_note_date < f.mtx_start
+            assert f.stale_note_date < min(f.mtx_start, f.history_start or f.mtx_start)
         assert f.noise == PROFILES[difficulty].note_noise
 
 
@@ -78,13 +92,13 @@ def test_easy_cases_are_clean():
 
 @pytest.mark.parametrize("difficulty", ["easy", "medium"])
 def test_easy_and_medium_durations_are_clearly_short_or_clearly_long(difficulty):
-    days = [actual_days(f) for f in all_facts(difficulty) if f.mtx_status == "taken"]
+    days = [actual_days(f) for f in profile_courses(all_facts(difficulty))]
     assert days and all(28 <= d <= 56 or 112 <= d <= 210 for d in days)
 
 
 def test_hard_durations_straddle_twelve_weeks_and_ages_include_minors():
     facts = all_facts("hard")
-    days = [actual_days(f) for f in facts if f.mtx_status == "taken"]
+    days = [actual_days(f) for f in profile_courses(facts)]
     assert days and all(56 <= d <= 105 for d in days)  # 8 * 7 = 56, 15 * 7 = 105
     assert min(days) < 84 <= max(days)
     ages = [f.age for f in facts]
@@ -101,9 +115,29 @@ def test_adversarial_cases_have_at_least_one_adversarial_feature():
             assert f.relative_distractor
 
 
-@pytest.mark.parametrize("difficulty", ["hard", "adversarial"])
-def test_harder_profiles_produce_yearless_dates(difficulty):
-    assert any("no_year" in (f.start_precision, f.end_precision) for f in all_facts(difficulty))
+@pytest.mark.parametrize("difficulty", DIFFICULTIES)
+def test_no_profile_produces_yearless_dates(difficulty):
+    # gen-v0.2: yearless dates are out of scope (the year is usually inferable and the rule is not
+    # stated to readers). The labeller still handles hand-built no_year facts.
+    assert "no_year" not in PROFILES[difficulty].precisions
+    for seed in WIDE_SEEDS:
+        f = sample(seed, difficulty, missing_data_probability=1.0)
+        assert "no_year" not in (f.start_precision, f.end_precision), seed
+    for seed in WIDE_SEEDS:
+        f = sample(seed, difficulty)
+        assert "no_year" not in (f.start_precision, f.end_precision), seed
+
+
+def test_ongoing_courses_are_noted_on_the_as_of_date():
+    ongoing = [
+        f
+        for d in DIFFICULTIES
+        for f in all_facts(d)
+        if f.mtx_status == "taken" and f.mtx_end is None
+    ]
+    assert ongoing and all(f.note_date == f.as_of_date for f in ongoing)
+    ended = [f for f in all_facts("medium") if f.mtx_end is not None]
+    assert any(f.note_date < f.as_of_date for f in ended)
 
 
 def test_zero_probabilities_remove_gaps_and_contradictions():
@@ -119,7 +153,6 @@ def test_missing_data_probability_one_always_leaves_a_gap():
             f.diagnosis_status != "established"
             or f.member_id is None
             or f.mtx_status == "undocumented"
-            or "no_year" in (f.start_precision, f.end_precision)
         )
         assert gap, f
 

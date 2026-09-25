@@ -8,6 +8,7 @@ from relay.generation.render import (
     FILLER_SENTENCES,
     INJECTION_LINES,
     MEMBER_ID_MISSING,
+    NEVER_TAKEN,
     RELATIVES,
     SYNTHETIC_PREFIX,
     UNDOCUMENTED,
@@ -100,7 +101,7 @@ def test_split_documents_put_start_in_history_and_stop_in_note():
     history = documents["medication_history"].text
     paragraph = treatment_paragraph(documents["physician_note"].text)
     assert "start 2026-01-12" in history or "start January 12, 2026" in history
-    assert "end: see clinic note" in history
+    assert "end: see most recent clinic note" in history
     assert "2026-06-01" in paragraph or "June 1, 2026" in paragraph
     assert "2026-01-12" not in paragraph and "January 12, 2026" not in paragraph
 
@@ -114,23 +115,46 @@ def test_ongoing_treatment_is_rendered_as_continuing():
     )
 
 
-def test_history_vs_note_contradiction():
-    documents = docs(make_facts(contradiction="history_vs_note", medication_history=True))
-    assert "METHOTREXATE" in documents["medication_history"].text
-    assert "never" in treatment_paragraph(documents["physician_note"].text)
+def test_history_vs_note_contradiction_uses_the_never_taken_bank():
+    facts = make_facts(contradiction="history_vs_note", medication_history=True)
+    for seed in range(20):
+        documents = docs(facts, seed)
+        assert "METHOTREXATE" in documents["medication_history"].text
+        paragraph = treatment_paragraph(documents["physician_note"].text)
+        filled = {t.format(mtx=m) for t in NEVER_TAKEN for m in ("methotrexate", "MTX")}
+        assert paragraph in filled, paragraph
 
 
-def test_dates_conflict_uses_different_start_years():
-    documents = docs(make_facts(contradiction="dates_conflict", medication_history=True))
+def test_history_vs_note_contradiction_keeps_the_co_dmard():
+    facts = make_facts(
+        contradiction="history_vs_note",
+        medication_history=True,
+        other_dmards=("leflunomide 20 mg daily",),
+    )
+    paragraph = treatment_paragraph(note(facts))
+    assert "leflunomide" in paragraph and "has not taken" in paragraph
+
+
+def test_dates_conflict_history_starts_earlier_with_the_same_stop():
+    facts = make_facts(
+        contradiction="dates_conflict",
+        medication_history=True,
+        mtx_start=date(2026, 4, 6),
+        history_start=date(2026, 2, 9),
+    )
+    documents = docs(facts)
     history = documents["medication_history"].text
     paragraph = treatment_paragraph(documents["physician_note"].text)
-    assert "2025-01-12" in history or "January 12, 2025" in history
-    assert "2026-01-12" in paragraph or "January 12, 2026" in paragraph
+    assert "start 2026-02-09" in history or "start February 9, 2026" in history
+    assert "2026-04-06" in paragraph or "April 6, 2026" in paragraph
+    assert "2026-06-01" in history or "June 1, 2026" in history
+    assert "2026-06-01" in paragraph or "June 1, 2026" in paragraph
 
 
-def test_stale_note_plans_methotrexate_and_is_dated_earlier():
+def test_older_note_plans_methotrexate_under_a_neutral_id():
     documents = docs(make_facts(stale_note=True, stale_note_date=date(2025, 12, 1)))
-    stale = documents["stale_note"]
+    assert list(documents) == ["clinic_note", "physician_note"]
+    stale = documents["clinic_note"]
     assert stale.kind == "physician_note"
     assert "2025-12-01" in stale.text.splitlines()[0]
     assert "start methotrexate" in stale.text

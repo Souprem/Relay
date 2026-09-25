@@ -119,12 +119,60 @@ def test_date_without_year_establishes_nothing_and_requests_history(field):
 
 
 def test_contradiction_overrides_a_sufficient_duration():
-    facts = make_facts(contradiction="dates_conflict", medication_history=True)
+    facts = make_facts(contradiction="history_vs_note", medication_history=True)
     truth = label_case(facts)
     assert conservative_days(facts) == 140
     assert truth.contradiction_present and not truth.step_therapy_satisfied
     assert truth.missing_evidence is MissingEvidence.NONE and truth.documentation_complete
     assert action_for(facts) is WorkflowAction.HUMAN_REVIEW
+
+
+def dates_conflict_facts(**overrides):
+    # Note: 2026-04-06 -> 2026-06-01 (56 days). History: starts 2026-02-09 (112 days).
+    values = {
+        "contradiction": "dates_conflict",
+        "medication_history": True,
+        "mtx_start": date(2026, 4, 6),
+        "history_start": date(2026, 2, 9),
+    }
+    values.update(overrides)
+    return make_facts(**values)
+
+
+def test_dates_conflict_is_a_contradiction_that_fails_step_therapy():
+    facts = dates_conflict_facts()
+    truth = label_case(facts)
+    assert conservative_days(facts) == 56 < MIN_DAYS
+    assert truth.contradiction_present and not truth.step_therapy_satisfied
+    assert truth.missing_evidence is MissingEvidence.NONE and truth.documentation_complete
+    assert action_for(facts) is WorkflowAction.HUMAN_REVIEW
+    assert "note 56d, history 112d" in truth.notes
+
+
+def test_notes_do_not_mention_an_other_dmard_that_is_not_rendered():
+    dmard = ("sulfasalazine 1000 mg twice daily",)
+    undocumented = make_facts(
+        mtx_status="undocumented", mtx_outcome="not_stated", other_dmards=dmard, **NOT_TAKEN
+    )
+    assert "DMARD" not in label_case(undocumented).notes
+    for rendered in (
+        make_facts(other_dmards=dmard),
+        make_facts(mtx_status="never", mtx_outcome="not_stated", other_dmards=dmard, **NOT_TAKEN),
+        make_facts(contradiction="history_vs_note", medication_history=True, other_dmards=dmard),
+    ):
+        assert "other DMARD sulfasalazine" in label_case(rendered).notes
+
+
+def test_notes_omit_the_outcome_a_history_vs_note_note_does_not_render():
+    notes = label_case(make_facts(contradiction="history_vs_note", medication_history=True)).notes
+    assert "inadequate_response" not in notes
+    assert "inadequate_response" in label_case(make_facts()).notes
+    assert "inadequate_response" in label_case(dates_conflict_facts()).notes
+
+
+def test_near_miss_flag_is_only_for_near_miss_courses():
+    assert "near-miss" in label_case(make_facts(difficulty="hard")).notes
+    assert "near-miss" not in label_case(dates_conflict_facts(difficulty="hard")).notes
 
 
 def test_contradiction_case_does_not_request_history_for_a_yearless_date():
@@ -206,5 +254,5 @@ def test_notes_summarize_the_scenario():
             mtx_end=date(2026, 6, 22),
         )
     ).notes
-    assert notes.startswith("gen-v0.1 hard: mtx taken 104d actual, 83d conservative")
+    assert notes.startswith("gen-v0.2 hard: mtx taken 104d actual, 83d conservative")
     assert "near-miss" in notes

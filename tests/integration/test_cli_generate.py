@@ -47,7 +47,7 @@ def test_generate_writes_cases_and_manifest(tmp_path):
     assert case_dirs == [f"GEN-0300000{i}" for i in range(8)]
     manifest = json.loads((tmp_path / "manifests" / "gen-test.json").read_text())
     assert (manifest["dataset_id"], manifest["seed"], manifest["count"]) == ("gen-test", 3, 8)
-    assert manifest["generator_version"] == "gen-v0.1"
+    assert manifest["generator_version"] == "gen-v0.2"
     assert manifest["dataset_hash"] in result.output
 
 
