@@ -75,6 +75,14 @@ def test_columns_carry_metrics_calibration_and_frontier_points():
     assert "Action differences jev -> rules: 2 cases (1 new unsafe automations)" in text
     assert "NEW UNSAFE AUTO" in text
     assert text.index("  X ") < text.index("  W ")
+    assert "at auto_process >= 0.95 (--at)" in text  # C3: always states which threshold is used
+
+
+def test_render_comparison_states_the_at_threshold_used_for_diffs():
+    cases = dataset()
+    result = compare_runs([("jev", baseline(cases)), ("rules", worse(cases))], cases, at=0.9)
+    text = render_comparison(result)
+    assert "at auto_process >= 0.9 (--at)" in text
 
 
 def test_three_runs_give_every_pair_in_order():
@@ -95,6 +103,33 @@ def test_case_hash_mismatch_is_an_error():
     stale = [t.model_copy(update={"case_content_hash": "sha256:old"}) for t in worse(cases)]
     with pytest.raises(EvalError, match="hash"):
         compare_runs([("jev", baseline(cases)), ("rules", stale)], cases)
+
+
+def test_diffs_use_each_runs_own_thresholds_by_default():
+    """C3: with no --at, diffs come from each run's own stored (v0.1, auto_process=0.95) action."""
+    case = make_case("V")  # expected AUTO
+    a = [make_trace(case, make_bundle("V", diag=0.90), run_id="run_a")]  # below 0.95: not auto
+    b = [make_trace(case, make_bundle("V", diag=0.99), run_id="run_b")]  # at/above 0.95: auto
+    result = compare_runs([("a", a), ("b", b)], [case])
+    [pair] = result.pairs
+    assert len(pair.diffs) == 1
+    assert pair.diffs[0].action_b == AUTO and pair.diffs[0].action_a != AUTO
+    assert "own thresholds" in result.threshold_note
+
+
+def test_at_threshold_recomputes_diffs_on_stored_bundles():
+    """C3: --at re-runs determine_action on both runs' stored bundles at that auto_process."""
+    case = make_case("V")  # expected AUTO
+    a = [make_trace(case, make_bundle("V", diag=0.90), run_id="run_a")]
+    b = [make_trace(case, make_bundle("V", diag=0.99), run_id="run_b")]
+    # At their own thresholds (0.95) this is a diff (see test above); at 0.85 both clear the bar.
+    result = compare_runs([("a", a), ("b", b)], [case], at=0.85)
+    [pair] = result.pairs
+    assert pair.diffs == []
+    assert "0.85" in result.threshold_note and "--at" in result.threshold_note
+    # 0.95 (--at) matches both runs' own default threshold, so it reproduces the same diff.
+    at_own = compare_runs([("a", a), ("b", b)], [case], at=0.95)
+    assert len(at_own.pairs[0].diffs) == 1
 
 
 def test_needs_two_runs_with_distinct_labels():

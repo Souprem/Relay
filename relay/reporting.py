@@ -522,6 +522,7 @@ def render_comparison(c: Comparison) -> str:
     lines = [f"Relay compare — dataset {c.dataset_id} · n={c.n_cases}", ""]
     for row in rows:
         lines.append("".join(cell.ljust(w) for cell, w in zip(row, widths, strict=True)).rstrip())
+    lines += ["", f"Action diffs computed {c.threshold_note}."]
     for pair in c.pairs:
         lines.append("")
         if not pair.diffs:
