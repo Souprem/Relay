@@ -1,11 +1,12 @@
 """Typed judgments returned by decision providers. Providers never return workflow actions."""
 
+import math
 from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
 from typing import Any, Literal, Protocol, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from relay.cases.models import CaseInput
 
@@ -29,6 +30,16 @@ class Decision(BaseModel):
     confidence: float | None = None
     evidence_refs: list[str] = Field(default_factory=list)
     provider: str
+
+    @field_validator("probabilities")
+    @classmethod
+    def _validate_probabilities(cls, value: dict[str, float]) -> dict[str, float]:
+        for label, probability in value.items():
+            if not math.isfinite(probability) or not (0.0 <= probability <= 1.0):
+                raise ValueError(
+                    f"probability for {label!r} must be finite and within [0, 1], got {probability}"
+                )
+        return value
 
     @model_validator(mode="after")
     def _shape(self) -> Self:

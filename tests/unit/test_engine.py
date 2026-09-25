@@ -182,3 +182,9 @@ def test_decision_probability_of_selected_answer():
     assert Decision.yes_no(DecisionId.STEP_THERAPY, 0.2, "t").probability == pytest.approx(0.8)
     choice = Decision.choice(DecisionId.MISSING_EVIDENCE, "NONE", {"NONE": 0.7, "DOSAGE": 0.3}, "t")
     assert choice.probability == pytest.approx(0.7)
+
+
+@pytest.mark.parametrize("bad_value", [1.5, -0.1, float("nan"), float("inf")])
+def test_choice_rejects_out_of_range_or_non_finite_probabilities(bad_value):
+    with pytest.raises(ValueError, match="probabilit"):
+        Decision.choice(DecisionId.MISSING_EVIDENCE, "NONE", {"NONE": bad_value}, "t")

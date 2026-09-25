@@ -3,6 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from typesafe_sdk import SystemOneResponse, TypeSafeError
 
 from relay.cases.loader import load_case
@@ -122,3 +123,35 @@ async def test_unknown_missing_evidence_label_yields_error_bundle():
     payload["answers"]["missing_evidence"]["choice"] = "SOMETHING"
     bundle, _ = await decide(payload)
     assert "SOMETHING" in bundle.error
+
+
+async def test_out_of_range_noul_yields_error_bundle_instead_of_crashing():
+    payload = fixture_payload()
+    payload["answers"]["diagnosis_support"]["noul"] = 1.5
+    bundle, _ = await decide(payload)
+    assert bundle.decisions == []
+    assert bundle.error is not None
+    assert "diagnosis_support" in bundle.error
+
+
+async def test_non_finite_noul_is_either_rejected_by_the_sdk_or_yields_error_bundle():
+    payload = fixture_payload()
+    payload["answers"]["diagnosis_support"] = {"type": "noul", "noul": float("nan")}
+    try:
+        parsed = SystemOneResponse.model_validate(payload)
+    except ValidationError:
+        return  # the SDK itself rejects non-finite nouls; nothing further for the adapter to do.
+    client = FakeClient(result=parsed)
+    bundle = await JevProvider(client).decide(AUTO01.input)
+    assert bundle.decisions == []
+    assert bundle.error is not None
+    assert "diagnosis_support" in bundle.error
+
+
+async def test_out_of_range_choice_probability_yields_error_bundle():
+    payload = fixture_payload()
+    payload["answers"]["missing_evidence"]["probabilities"]["DIAGNOSIS"] = 5.0
+    bundle, _ = await decide(payload)
+    assert bundle.decisions == []
+    assert bundle.error is not None
+    assert "missing_evidence" in bundle.error

@@ -4,11 +4,13 @@ Jev answers narrow questions; this adapter turns the answers into the five decis
 engine consumes. step_therapy is composed in code from date-part answers (see step_therapy.py).
 """
 
+import math
 import time
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Any, Protocol
 
+from pydantic import ValidationError
 from typesafe_sdk import ChoiceAnswer, NoulAnswer, SystemOneResponse, TypeSafeError
 
 from relay.cases.models import CaseInput, MissingEvidence
@@ -54,13 +56,21 @@ def _noul(response: SystemOneResponse, qid: str) -> float:
     answer = response.answers.get(qid)
     if not isinstance(answer, NoulAnswer):
         raise _MalformedResponse(f"{qid}: expected noul answer, got {type(answer).__name__}")
-    return answer.noul
+    value = answer.noul
+    if not (math.isfinite(value) and 0.0 <= value <= 1.0):
+        raise _MalformedResponse(f"{qid}: noul {value!r} is not a finite value in [0, 1]")
+    return value
 
 
 def _choice(response: SystemOneResponse, qid: str) -> ChoiceAnswer:
     answer = response.answers.get(qid)
     if not isinstance(answer, ChoiceAnswer):
         raise _MalformedResponse(f"{qid}: expected choice answer, got {type(answer).__name__}")
+    for label, probability in answer.probabilities.items():
+        if not (math.isfinite(probability) and 0.0 <= probability <= 1.0):
+            raise _MalformedResponse(
+                f"{qid}: probability for {label!r} is {probability!r}, not a finite value in [0, 1]"
+            )
     return answer
 
 
@@ -169,6 +179,6 @@ class JevProvider:
         }
         try:
             decisions, derivations = _to_decisions(response, case, policy)
-        except _MalformedResponse as error:
+        except (_MalformedResponse, ValidationError) as error:
             return DecisionBundle(**common, error=f"malformed response: {error}")
         return DecisionBundle(**common, decisions=decisions, derivations=derivations)

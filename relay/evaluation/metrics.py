@@ -87,6 +87,10 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
     run_ids = {t.run_id for t in traces}
     if len(run_ids) != 1:
         raise EvalError(f"traces come from multiple runs: {sorted(run_ids)}")
+    trace_case_ids = [t.case_id for t in traces]
+    duplicates = sorted({cid for cid in trace_case_ids if trace_case_ids.count(cid) > 1})
+    if duplicates:
+        raise EvalError(f"duplicate case ids in traces: {duplicates}")
     by_id = {c.input.id: c for c in cases}
     scored: list[ScoredCase] = []
     hits: dict[DecisionId, list[bool]] = {q: [] for q in DecisionId}
@@ -116,6 +120,10 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
         if not invalid:
             for decision in trace.decisions.decisions:
                 hits[decision.question_id].append(_decision_correct(decision, case.ground_truth))
+
+    missing = sorted(set(by_id) - set(trace_case_ids))
+    if missing:
+        raise EvalError(f"traces do not cover every case in the dataset, missing: {missing}")
 
     n = len(scored)
     autos = sum(c.action == WorkflowAction.AUTO_PROCESS for c in scored)
@@ -150,5 +158,5 @@ def score_run(traces: Sequence[WorkflowTrace], cases: Sequence[PriorAuthCase]) -
         latency_low_sample=n < LOW_SAMPLE_N,
         total_cost_usd=total_cost,
         cost_per_case_usd=None if total_cost is None else total_cost / n,
-        cases=scored,
+        cases=sorted(scored, key=lambda c: c.case_id),
     )

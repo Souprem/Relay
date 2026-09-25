@@ -93,22 +93,27 @@ async def _execute(
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
     git_sha = current_git_sha()
-    async with AsyncExitStack() as stack:
-        provider: DecisionProvider
-        if provider_name is ProviderName.groundtruth:
-            provider = GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
-        else:
-            client = await stack.enter_async_context(AsyncTypeSafeClient(timeout=30.0))
-            provider = JevProvider(client)
-        traces = await run_dataset(
-            cases,
-            provider,
-            policy_version=policy,
-            store=store,
-            run_id=run_id,
-            concurrency=concurrency,
-            git_sha=git_sha,
-        )
+    try:
+        async with AsyncExitStack() as stack:
+            provider: DecisionProvider
+            if provider_name is ProviderName.groundtruth:
+                provider = GroundTruthProvider({c.input.id: c.ground_truth for c in cases})
+            else:
+                client = await stack.enter_async_context(AsyncTypeSafeClient(timeout=30.0))
+                provider = JevProvider(client)
+            traces = await run_dataset(
+                cases,
+                provider,
+                policy_version=policy,
+                store=store,
+                run_id=run_id,
+                concurrency=concurrency,
+                git_sha=git_sha,
+            )
+    except Exception:
+        if store.path.exists() and store.path.stat().st_size == 0:
+            store.path.unlink()
+        raise
     manifest = RunManifest(
         run_id=run_id,
         created_at=datetime.now(UTC),
@@ -191,10 +196,13 @@ def eval_command(
             cases, provider, policy, concurrency, traces_dir, reports_dir, dataset
         )
     else:
-        trace_list = read_traces(traces)
+        try:
+            trace_list = read_traces(traces)
+        except (ValueError, KeyError) as error:
+            raise _fail(str(error)) from error
     try:
         summary = score_run(trace_list, cases)
-    except EvalError as error:
+    except (EvalError, ValueError, KeyError) as error:
         raise _fail(str(error)) from error
     results_dir.mkdir(parents=True, exist_ok=True)
     results_path = results_dir / f"{summary.run_id}.json"

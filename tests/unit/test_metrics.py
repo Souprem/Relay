@@ -111,3 +111,32 @@ def test_unknown_case_is_an_error():
 def test_empty_traces_is_an_error():
     with pytest.raises(EvalError):
         score_run([], [make_case("A")])
+
+
+def test_multiple_runs_is_an_error():
+    case = make_case("A")
+    traces = [make_trace(case, run_id="run_one"), make_trace(case, run_id="run_two")]
+    with pytest.raises(EvalError, match="multiple runs"):
+        score_run(traces, [case])
+
+
+def test_duplicate_case_id_in_traces_is_an_error():
+    case = make_case("A")
+    trace = make_trace(case)
+    with pytest.raises(EvalError, match="A"):
+        score_run([trace, trace], [case])
+
+
+def test_cases_are_ordered_by_case_id_regardless_of_trace_order():
+    cases = [make_case("B"), make_case("C"), make_case("A")]
+    traces = [make_trace(cases[0]), make_trace(cases[1]), make_trace(cases[2])]
+    summary = score_run(traces, cases)
+    assert [c.case_id for c in summary.cases] == ["A", "B", "C"]
+
+
+def test_incomplete_trace_coverage_is_an_error():
+    cases = [make_case("A"), make_case("B"), make_case("C")]
+    traces = [make_trace(cases[0])]
+    with pytest.raises(EvalError, match="B") as excinfo:
+        score_run(traces, cases)
+    assert "C" in str(excinfo.value)

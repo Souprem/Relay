@@ -115,6 +115,64 @@ def test_wrong_policy_version_fails_before_writing_traces(tmp_path):
     assert not (tmp_path / "traces").exists()
 
 
+def test_eval_with_corrupt_trace_file_fails_cleanly(tmp_path):
+    bad_trace = tmp_path / "bad.jsonl"
+    bad_trace.write_text("not valid json\n")
+    result = invoke(
+        tmp_path,
+        "eval",
+        "--dataset",
+        str(SMOKE),
+        "--provider",
+        "groundtruth",
+        "--traces",
+        str(bad_trace),
+        *dirs(tmp_path),
+        "--results-dir",
+        str(tmp_path / "results"),
+    )
+    assert result.exit_code == 2, result.output
+    assert result.output.startswith("error:")
+
+
+def test_eval_with_unknown_policy_id_in_trace_fails_cleanly(tmp_path):
+    invoke(tmp_path, "run", "--dataset", str(SMOKE), "--provider", "groundtruth", *dirs(tmp_path))
+    [trace_file] = (tmp_path / "traces").glob("*.jsonl")
+    lines = trace_file.read_text().splitlines()
+    edited = [line.replace('"immunara-v0.1"', '"no-such-policy"') for line in lines]
+    trace_file.write_text("\n".join(edited) + "\n")
+    result = invoke(
+        tmp_path,
+        "eval",
+        "--dataset",
+        str(SMOKE),
+        "--provider",
+        "groundtruth",
+        "--traces",
+        str(trace_file),
+        *dirs(tmp_path),
+        "--results-dir",
+        str(tmp_path / "results"),
+    )
+    assert result.exit_code == 2, result.output
+    assert result.output.startswith("error:")
+
+
+def test_run_failure_before_any_trace_removes_the_empty_trace_file(tmp_path, monkeypatch):
+    import relay.cli as cli_module
+
+    async def boom(*args, **kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(cli_module, "run_dataset", boom)
+    result = invoke(
+        tmp_path, "run", "--dataset", str(SMOKE), "--provider", "groundtruth", *dirs(tmp_path)
+    )
+    assert result.exit_code != 0
+    assert isinstance(result.exception, RuntimeError)
+    assert list((tmp_path / "traces").glob("*.jsonl")) == []
+
+
 def test_invalid_dataset_fails_with_path(tmp_path):
     bad = tmp_path / "bad"
     (bad / "X-01").mkdir(parents=True)

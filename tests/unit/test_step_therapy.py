@@ -116,6 +116,16 @@ def test_hand_computed_mixed_probabilities():
     assert result.p_duration == pytest.approx(0.8 * 0.9)
 
 
+def test_exactly_eighty_four_days_passes():
+    result = duration(parts("January", "1", "2026"), parts("March", "26", "2026"))
+    assert result.p_duration == pytest.approx(1.0)  # exactly 84 days
+
+
+def test_eighty_three_days_fails():
+    result = duration(parts("January", "1", "2026"), parts("March", "25", "2026"))
+    assert result.p_duration == pytest.approx(0.0)  # 83 days
+
+
 def test_to_dict_is_json_friendly():
     result = duration(parts("January", "12", "2026"), parts("June", "1", "2026"))
     data = result.to_dict()
