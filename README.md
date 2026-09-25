@@ -46,6 +46,10 @@ uv run relay run  --dataset evals/smoke --provider jev --policy v0.1
 uv run relay eval --dataset evals/smoke --provider jev --policy v0.1
 uv run relay eval --dataset evals/smoke --traces traces/<run_id>.jsonl   # re-score, no API calls
 uv run relay eval --dataset evals/smoke --provider groundtruth           # pipeline validation only
+uv run relay eval --dataset evals/smoke --provider jev --questions q-v0.1      # pick a question set (jev only)
+uv run relay sweep   --dataset <dir> --traces <file>                            # threshold frontier, no API calls
+uv run relay report  --dataset <dir> --traces <file> [--at 0.95]                 # report bundle, no API calls
+uv run relay compare --dataset <dir> --traces <a> --traces <b> [--labels a,b]    # side-by-side runs, no API calls
 ```
 
 `relay run` writes `traces/<run_id>.jsonl` and `reports/<run_id>.md`, a per-case explanation
@@ -138,11 +142,99 @@ bumping `GENERATOR_VERSION` in `relay/generation/facts.py` and generating new, n
 datasets. `gen-v0.2` replaced `gen-v0.1` before any model results were recorded. The changes are
 listed in the [2A spec](docs/superpowers/specs/2026-09-25-phase2a-case-generator-design.md).
 
+## Evaluation
+
+Phase 2B analyses stored traces offline: per-decision calibration (five reliability bins over
+[0.5, 1.0], plus [0.0, 0.5) for the missing-evidence choice; Brier score; ECE), confusion
+matrices, an automation/safety frontier that re-runs the engine on the stored decisions with
+`auto_process` swept from 0.50 to 0.99, and run comparison. None of these commands calls a model.
+
+```bash
+uv run relay eval    --dataset evals/generated/gen-v0.2-dev --provider jev --questions q-v0.2
+uv run relay sweep   --dataset evals/generated/gen-v0.2-dev --traces traces/<run_id>.jsonl [--ceiling 0.01] [--at 0.95]
+uv run relay report  --dataset evals/generated/gen-v0.2-holdout --traces <file>.jsonl.gz --at <t>
+uv run relay compare --dataset evals/generated/gen-v0.2-dev --traces A.jsonl --traces B.jsonl --labels q-v0.1,q-v0.2
+```
+
+`report` writes `summary.json`, `calibration.json`, `calibration.csv`, `frontier.csv`,
+`confusion.json` and `report.md`. Traces may be `.jsonl` or `.jsonl.gz`.
+
+**Protocol.** Everything was decided on `gen-v0.2-dev`; `gen-v0.2-holdout` was run once, afterwards.
+
+1. Question sets `q-v0.1` and `q-v0.2` (which counts "never took methotrexate" as documented
+   treatment history) both ran on dev. Rule, fixed in advance: adopt `q-v0.2` iff its
+   correct-action rate is ≥ q-v0.1's and its unsafe-automation count is ≤ q-v0.1's.
+2. The adopted dev run was swept. Rule, fixed in advance: take the highest automation rate among
+   thresholds with at least one `AUTO_PROCESS` and an unsafe automation rate ≤ 1%; ties go to the
+   higher threshold; if nothing qualifies, select nothing.
+3. Holdout ran once with the adopted question set and was reported at the dev-selected threshold
+   (`--at`), with calibration measured on holdout.
+
+**Results** (Jev `jev-1.13.0`, policy `v0.1`; all runs committed under
+[`evals/baselines/`](evals/baselines/)):
+
+| Dataset | Questions | Run | Correct action | Automation | Unsafe / auto | Invalid | Selected (in-sample) | At `--at` | Cost |
+|---|---|---|---|---|---|---|---|---|---|
+| `gen-v0.2-dev` | `q-v0.1` | `run_20260925T071157Z_d6b218` | 257/400 (64.2%) | 29/400 (7.2%) | 0/29 (0.0%) | 0 | 0.87 (auto 99/400 (24.8%), unsafe 0) | none | $0.0442 |
+| `gen-v0.2-dev` | `q-v0.2` | `run_20260925T071231Z_6f0b73` | 330/400 (82.5%) | 64/400 (16.0%) | 0/64 (0.0%) | 0 | 0.89 (auto 99/400 (24.8%), unsafe 0) | none | $0.0448 |
+| `gen-v0.2-holdout` | `q-v0.2` | `run_20260925T075242Z_fd455f` | 815/1000 (81.5%) | 172/1000 (17.2%) | 0/172 (0.0%) | 0 | 0.91 (auto 252/1000 (25.2%), unsafe 0) | 0.89 (auto 252/1000 (25.2%), unsafe 0) | $0.1120 |
+
+Total estimated cost of these runs: $0.2010
+
+**Question set.** Adoption on dev:
+
+```text
+Adoption rule (spec §6, dev only): adopt q-v0.2 iff its correct-action rate >= q-v0.1's
+and its unsafe-automation count <= q-v0.1's.
+  q-v0.1: run run_20260925T071157Z_d6b218 correct 257/400 (0.6425), unsafe 0
+  q-v0.2: run run_20260925T071231Z_6f0b73 correct 330/400 (0.8250), unsafe 0
+DECISION: ADOPT q-v0.2
+```
+
+`q-v0.2` was adopted: its correct-action rate (330/400, 82.5%) is above q-v0.1's (257/400, 64.2%)
+and its unsafe-automation count (0) is no worse than q-v0.1's (0), so both legs of the rule pass.
+[`compare-q-v0.1-vs-q-v0.2.txt`](evals/baselines/gen-v0.2-dev/compare-q-v0.1-vs-q-v0.2.txt) shows
+73 action differences between the two question sets, 0 of which are new unsafe automations.
+
+**Operating point (dev).** Selected operating point: auto_process >= 0.89 (automation 24.8%, UAR
+0/99, correct action 91.2%; ceiling UAR <= 1.0%)
+
+**Holdout at the dev-chosen threshold.** Full report:
+[`report.md`](evals/baselines/gen-v0.2-holdout/run_20260925T075242Z_fd455f/report/report.md).
+
+| auto_process >= | AUTO | Automation | Unsafe / auto (UAR) | Human review | Correct action | Note |
+|---|---|---|---|---|---|---|
+| 0.89 | 252 | 25.2% | 0/252 (0.0%) | 43.5% | 89.5% | --at |
+
+0 of 252 automated cases were unsafe (0.0%), within the 1% ceiling chosen on dev.
+
+**Calibration on holdout:**
+
+| Decision | n | Brier | ECE |
+|---|---|---|---|
+| diagnosis_support | 1000 | 0.001 | 0.029 |
+| step_therapy | 1000 | 0.011 | 0.022 |
+| documentation_complete | 1000 | 0.032 | 0.075 |
+| material_contradiction | 1000 | 0.030 | 0.121 |
+| missing_evidence | 1000 | 0.212 | 0.078 |
+
+Per-decision ECE on holdout ranges from 0.022 (`step_therapy`) to 0.121 (`material_contradiction`),
+the highest of the five. `diagnosis_support` and `step_therapy` each have four of their five
+non-empty confidence bins flagged low-n (fewer than 20 predictions), so most of their reliability
+curve besides the dominant [0.9, 1.0] bin is not statistically meaningful; `material_contradiction`
+and `missing_evidence`, by contrast, have enough mass in every mid-confidence bin to read the curve.
+There were 0 invalid outputs on the full 1000-case holdout. Unexpectedly, `documentation_complete`
+is overconfident rather than underconfident in its low-confidence bins: at mean confidence 0.643
+its actual accuracy is only 0.314 (gap −0.329), the largest miscalibration of any bin in this run.
+
+These are template-generated synthetic cases scored against the generator's own ground truth,
+so they show how the pipeline and thresholds behave on this distribution, not real-world accuracy.
+
 ## Limitations
 
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
-  document variety. No gold set, calibration analysis, or baselines yet (Phase 2B–2D).
+  document variety. No gold set or baselines yet (Phase 2C–2E).
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
   being guessed. The generator doesn't produce them.
@@ -155,3 +247,5 @@ listed in the [2A spec](docs/superpowers/specs/2026-09-25-phase2a-case-generator
 - [v0.1 implementation plan](docs/superpowers/plans/2026-09-24-relay-v0.1-milestone.md)
 - [Phase 2A case generator design](docs/superpowers/specs/2026-09-25-phase2a-case-generator-design.md)
 - [Phase 2A implementation plan](docs/superpowers/plans/2026-09-25-phase2a-case-generator.md)
+- [Phase 2B evaluation depth design](docs/superpowers/specs/2026-09-25-phase2b-evaluation-depth-design.md)
+- [Phase 2B implementation plan](docs/superpowers/plans/2026-09-25-phase2b-evaluation-depth.md)
