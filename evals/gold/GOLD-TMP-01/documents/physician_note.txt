@@ -4,4 +4,4 @@ Patient reference SYN-6001.
 Subjective: 39-year-old man returns for reassessment of seropositive rheumatoid arthritis, diagnosed in 2021, reporting ongoing bilateral hand and wrist discomfort that limits his grip when lifting boxes at his warehouse job.
 Objective: Synovial thickening noted at bilateral wrists and second and third MCP joints. Vitals stable, blood pressure 122/78.
 Assessment: Rheumatoid arthritis with persistent synovitis despite a full course of oral methotrexate 15 mg weekly from 2026-03-02 through 2026-05-25, discontinued for inadequate response.
-Plan: Initiate Immunara. Continue folic acid. Follow up in six weeks.
+Plan: Switch to Immunara. Continue folic acid. Follow up in six weeks.
