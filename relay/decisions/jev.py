@@ -1,7 +1,8 @@
 """Jev decision provider: one TypeSafe System One call per case, 12 typed questions.
 
-Jev answers narrow questions; this adapter turns the answers into the five decisions the policy
-engine consumes. step_therapy is composed in code from date-part answers (see step_therapy.py).
+Jev answers narrow questions; this adapter maps them into an AnswerSet, and composition.py turns
+that into the five decisions the policy engine consumes (step_therapy is composed in code from
+the date-part answers, see step_therapy.py).
 """
 
 import math
@@ -14,9 +15,17 @@ from typing import Any, Protocol
 from pydantic import ValidationError
 from typesafe_sdk import ChoiceAnswer, NoulAnswer, SystemOneResponse, TypeSafeError
 
-from relay.cases.models import CaseInput, MissingEvidence
+from relay.cases.models import CaseInput
 from relay.cases.policies import AuthorizationPolicy, load_policy
-from relay.decisions.base import Decision, DecisionBundle, DecisionId
+from relay.decisions.base import DecisionBundle
+from relay.decisions.composition import (
+    CHOICE_QUESTIONS,
+    YES_NO_QUESTIONS,
+    AnswerSet,
+    ChoiceResult,
+    MalformedAnswers,
+    compose_decisions,
+)
 from relay.decisions.questions import (
     DEFAULT_QUESTION_SET_VERSION,
     build_questions,
@@ -24,7 +33,6 @@ from relay.decisions.questions import (
     question_set_hash,
     validate_question_set_version,
 )
-from relay.decisions.step_therapy import DateParts, p_duration_at_least
 
 JEV_MODEL = "jev-1.13.0"
 PRICE_PER_INPUT_TOKEN_USD = Decimal("0.042") / Decimal(1_000_000)
@@ -77,60 +85,14 @@ def _choice(response: SystemOneResponse, qid: str) -> ChoiceAnswer:
     return answer
 
 
-def _date_parts(response: SystemOneResponse, prefix: str) -> DateParts:
-    return DateParts(
-        month=_choice(response, f"{prefix}_month").probabilities,
-        day=_choice(response, f"{prefix}_day").probabilities,
-        year=_choice(response, f"{prefix}_year").probabilities,
+def _answer_set(response: SystemOneResponse) -> AnswerSet:
+    choices = {}
+    for qid in CHOICE_QUESTIONS:
+        answer = _choice(response, qid)
+        choices[qid] = ChoiceResult(answer.choice, answer.probabilities, answer.confidence)
+    return AnswerSet(
+        yes_no={qid: _noul(response, qid) for qid in YES_NO_QUESTIONS}, choices=choices
     )
-
-
-def _to_decisions(
-    response: SystemOneResponse, case: CaseInput, policy: AuthorizationPolicy
-) -> tuple[list[Decision], dict[str, Any]]:
-    missing = _choice(response, "missing_evidence")
-    if missing.choice not in {m.value for m in MissingEvidence}:
-        raise _MalformedResponse(f"missing_evidence: unknown label {missing.choice!r}")
-    duration = p_duration_at_least(
-        start=_date_parts(response, "mtx_start"),
-        end_status=_choice(response, "mtx_end_status").probabilities,
-        end=_date_parts(response, "mtx_end"),
-        as_of=case.as_of_date,
-        min_days=policy.min_weeks * 7,
-    )
-    p_inadequate = _noul(response, "mtx_inadequate_response")
-    p_step = duration.p_duration * p_inadequate
-    decisions = [
-        Decision.yes_no(
-            DecisionId.DIAGNOSIS_SUPPORT, _noul(response, "diagnosis_support"), PROVIDER_NAME
-        ),
-        Decision.yes_no(DecisionId.STEP_THERAPY, p_step, PROVIDER_NAME),
-        Decision.yes_no(
-            DecisionId.DOCUMENTATION_COMPLETE,
-            _noul(response, "documentation_complete"),
-            PROVIDER_NAME,
-        ),
-        Decision.yes_no(
-            DecisionId.MATERIAL_CONTRADICTION,
-            _noul(response, "material_contradiction"),
-            PROVIDER_NAME,
-        ),
-        Decision.choice(
-            DecisionId.MISSING_EVIDENCE,
-            missing.choice,
-            missing.probabilities,
-            PROVIDER_NAME,
-            missing.confidence,
-        ),
-    ]
-    derivations = {
-        "step_therapy": {
-            **duration.to_dict(),
-            "p_inadequate_response": p_inadequate,
-            "p_yes": p_step,
-        }
-    }
-    return decisions, derivations
 
 
 class JevProvider:
@@ -186,7 +148,9 @@ class JevProvider:
             "raw_answers": {k: a.model_dump(mode="json") for k, a in response.answers.items()},
         }
         try:
-            decisions, derivations = _to_decisions(response, case, policy)
-        except (_MalformedResponse, ValidationError) as error:
+            decisions, derivations = compose_decisions(
+                _answer_set(response), case, policy, PROVIDER_NAME
+            )
+        except (_MalformedResponse, MalformedAnswers, ValidationError) as error:
             return DecisionBundle(**common, error=f"malformed response: {error}")
         return DecisionBundle(**common, decisions=decisions, derivations=derivations)
