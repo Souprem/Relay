@@ -179,3 +179,67 @@ def test_report_refuses_a_dataset_that_does_not_match_its_manifest(gt_run, tmp_p
     )
     assert result.exit_code == 2
     assert "does not match its manifest" in result.output
+
+
+def second_run(root, dataset, tmp_path):
+    result = invoke(
+        root,
+        "run",
+        "--dataset",
+        str(dataset),
+        "--provider",
+        "groundtruth",
+        "--traces-dir",
+        str(tmp_path / "traces2"),
+        "--reports-dir",
+        str(tmp_path / "reports2"),
+    )
+    assert result.exit_code == 0, result.output
+    [trace_file] = (tmp_path / "traces2").glob("*.jsonl")
+    return trace_file
+
+
+def test_compare_two_groundtruth_runs_reports_no_diffs(gt_run, tmp_path, monkeypatch):
+    monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
+    root, dataset, first = gt_run
+    second = second_run(root, dataset, tmp_path)
+    result = invoke(
+        root, "compare", "--dataset", str(dataset), "--traces", str(first), "--traces", str(second)
+    )
+    assert result.exit_code == 0, result.output
+    assert first.stem in result.output and second.stem in result.output
+    assert f"No action differences between {first.stem} and {second.stem}." in result.output
+
+
+def test_compare_uses_labels_and_rejects_a_count_mismatch(gt_run, tmp_path):
+    root, dataset, first = gt_run
+    args = ["compare", "--dataset", str(dataset), "--traces", str(first), "--traces", str(first)]
+    labelled = invoke(root, *args, "--labels", "jev,rules")
+    assert labelled.exit_code == 0, labelled.output
+    assert "No action differences between jev and rules." in labelled.output
+    mismatch = invoke(root, *args, "--labels", "only-one")
+    assert mismatch.exit_code == 2
+    assert "--labels" in mismatch.output
+    unlabelled_same_file = invoke(root, *args)
+    assert unlabelled_same_file.exit_code == 2
+    assert "duplicate run labels" in unlabelled_same_file.output
+
+
+def test_compare_with_incomplete_coverage_exits_2(gt_run, tmp_path):
+    root, dataset, first = gt_run
+    partial = tmp_path / "partial.jsonl"
+    partial.write_text("\n".join(first.read_text().splitlines()[:5]) + "\n")
+    result = invoke(
+        root,
+        "compare",
+        "--dataset",
+        str(dataset),
+        "--traces",
+        str(first),
+        "--traces",
+        str(partial),
+        "--labels",
+        "full,partial",
+    )
+    assert result.exit_code == 2
+    assert "partial:" in result.output and "missing" in result.output

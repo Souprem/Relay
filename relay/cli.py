@@ -20,6 +20,7 @@ from relay.decisions.jev import JevProvider
 from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_1, Q_V0_2
 from relay.evaluation.artifacts import write_eval_bundle
 from relay.evaluation.calibration import calibrate_run
+from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
 from relay.evaluation.metrics import EvalError, run_identity, score_run
@@ -30,6 +31,7 @@ from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
     describe_selection,
+    render_comparison,
     render_eval_summary,
     render_frontier_table,
     render_run_report,
@@ -328,6 +330,43 @@ def report(
     typer.echo(f"\nReport bundle: {out_dir}")
     for path in paths:
         typer.echo(f"  {path.name}")
+
+
+@app.command()
+def compare(
+    dataset: Dataset,
+    traces: Annotated[
+        list[Path],
+        typer.Option(
+            exists=True, dir_okay=False, help="Trace file; repeat once per run (at least two)."
+        ),
+    ],
+    labels: Annotated[
+        str | None, typer.Option(help="Comma-separated run labels, in --traces order.")
+    ] = None,
+    ceiling: Ceiling = DEFAULT_CEILING,
+    at: At = None,
+) -> None:
+    """Compare runs over the same dataset side by side, with action diffs (no provider calls)."""
+    cases = _load_cases(dataset)
+    trace_lists = [_read_trace_file(path) for path in traces]
+    if labels is None:
+        names = [
+            t[0].run_id if t else path.stem for t, path in zip(trace_lists, traces, strict=True)
+        ]
+    else:
+        names = [name.strip() for name in labels.split(",")]
+        if len(names) != len(trace_lists):
+            raise _fail(
+                f"--labels has {len(names)} names but {len(trace_lists)} --traces were given"
+            )
+    try:
+        comparison = compare_runs(
+            list(zip(names, trace_lists, strict=True)), cases, ceiling=ceiling, at=at
+        )
+    except (EvalError, ValueError, KeyError) as error:
+        raise _fail(str(error)) from error
+    typer.echo(render_comparison(comparison))
 
 
 @app.command()

@@ -7,6 +7,7 @@ from typing import Any
 from relay.cases.models import CaseInput
 from relay.decisions.base import DecisionBundle, DecisionId
 from relay.evaluation.calibration import CalibrationReport, RunCalibration
+from relay.evaluation.compare import Comparison
 from relay.evaluation.confusion import ConfusionMatrix
 from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
 from relay.evaluation.metrics import EvalSummary, RunIdentity
@@ -447,3 +448,89 @@ def render_eval_report(
     lines += _latency_cost_markdown(summary)
     lines += ["## Limitations", ""] + [f"- {item}" for item in LIMITATIONS]
     return "\n".join(lines) + "\n"
+
+
+def _point_text(point: FrontierPoint | None) -> str:
+    if point is None:
+        return "none"
+    return (
+        f"{_threshold(point.auto_threshold)} (auto {_pct(point.automation_rate)}, "
+        f"UAR {point.unsafe}/{point.auto})"
+    )
+
+
+def _comparison_rows(c: Comparison) -> list[list[str]]:
+    rows = [
+        ["Run"] + [r.identity.run_id for r in c.runs],
+        ["Provider / model"]
+        + [f"{r.identity.provider} {','.join(r.identity.provider_versions)}" for r in c.runs],
+        ["Question set"] + [",".join(r.identity.question_set_versions) for r in c.runs],
+        ["Correct action rate"]
+        + [_rate(r.summary.correct_actions, r.summary.n_cases) for r in c.runs],
+        ["Automation rate"]
+        + [_rate(r.summary.auto_process_count, r.summary.n_cases) for r in c.runs],
+        ["Unsafe automation rate"]
+        + [
+            _rate(r.summary.unsafe_automation_count, r.summary.auto_process_count)
+            if r.summary.auto_process_count
+            else "n/a (no AUTO)"
+            for r in c.runs
+        ],
+        ["Request-info rate"]
+        + [_rate(r.summary.request_info_count, r.summary.n_cases) for r in c.runs],
+        ["Human escalation rate"]
+        + [_rate(r.summary.human_review_count, r.summary.n_cases) for r in c.runs],
+        ["Invalid outputs"] + [str(r.summary.invalid_outputs) for r in c.runs],
+    ]
+    for decision in c.runs[0].calibration.decisions:
+        rows.append(
+            [f"Brier / ECE {decision}"]
+            + [
+                f"{_num(r.calibration.decisions[decision].brier)} / "
+                f"{_num(r.calibration.decisions[decision].ece)}"
+                for r in c.runs
+            ]
+        )
+    rows.append(
+        [f"Selected (UAR <= {c.runs[0].sweep.ceiling:.1%})"]
+        + [_point_text(r.sweep.selected) for r in c.runs]
+    )
+    if c.runs[0].sweep.at_point is not None:
+        at = _threshold(c.runs[0].sweep.at_point.auto_threshold)
+        rows.append([f"At {at}"] + [_point_text(r.sweep.at_point) for r in c.runs])
+    return rows
+
+
+def render_comparison(c: Comparison) -> str:
+    header = ["Metric"] + [r.label for r in c.runs]
+    rows = [header] + _comparison_rows(c)
+    widths = [max(len(row[i]) for row in rows) + 2 for i in range(len(header))]
+    lines = [f"Relay compare — dataset {c.dataset_id} · n={c.n_cases}", ""]
+    for row in rows:
+        lines.append("".join(cell.ljust(w) for cell, w in zip(row, widths, strict=True)).rstrip())
+    for pair in c.pairs:
+        lines.append("")
+        if not pair.diffs:
+            lines.append(f"No action differences between {pair.a} and {pair.b}.")
+            continue
+        new_unsafe = sum(d.new_unsafe for d in pair.diffs)
+        lines.append(
+            f"Action differences {pair.a} -> {pair.b}: {len(pair.diffs)} cases "
+            f"({new_unsafe} new unsafe automations)"
+        )
+        a_width = max(len(pair.a), 14) + 2
+        b_width = max(len(pair.b), 14) + 2
+        lines.append(
+            f"  {'CASE':<14}{'EXPECTED':<14}{pair.a:<{a_width}}{pair.b:<{b_width}}FLAG".rstrip()
+        )
+        for d in pair.diffs:
+            flag = (
+                "NEW UNSAFE AUTO"
+                if d.new_unsafe
+                else ("unsafe resolved" if d.resolved_unsafe else "")
+            )
+            lines.append(
+                f"  {d.case_id:<14}{d.expected:<14}{d.action_a:<{a_width}}"
+                f"{d.action_b:<{b_width}}{flag}".rstrip()
+            )
+    return "\n".join(lines)
