@@ -1,5 +1,6 @@
 import gzip
 import re
+import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -102,6 +103,33 @@ def test_current_git_sha_in_repo():
 
 def test_current_git_sha_outside_repo(tmp_path):
     assert current_git_sha(tmp_path) is None
+
+
+def _git(cwd, *args):
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
+
+
+def _init_repo(tmp_path):
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "test@example.com")
+    _git(tmp_path, "config", "user.name", "Test")
+    (tmp_path / "tracked.txt").write_text("one\n")
+    _git(tmp_path, "add", "tracked.txt")
+    _git(tmp_path, "commit", "-q", "-m", "initial")
+    return current_git_sha(tmp_path)
+
+
+def test_current_git_sha_ignores_untracked_files(tmp_path):
+    """C1: an untracked working file must not mark the sha dirty."""
+    sha = _init_repo(tmp_path)
+    (tmp_path / "untracked.txt").write_text("scratch\n")
+    assert current_git_sha(tmp_path) == sha
+
+
+def test_current_git_sha_flags_modified_tracked_files_as_dirty(tmp_path):
+    sha = _init_repo(tmp_path)
+    (tmp_path / "tracked.txt").write_text("changed\n")
+    assert current_git_sha(tmp_path) == f"{sha}-dirty"
 
 
 REPO = Path(__file__).resolve().parents[2]

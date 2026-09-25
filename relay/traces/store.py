@@ -25,7 +25,11 @@ def current_git_sha(cwd: Path | None = None) -> str | None:
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True, cwd=cwd
         ).stdout.strip()
         dirty = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, check=True, cwd=cwd
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=cwd,
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return None
