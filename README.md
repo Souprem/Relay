@@ -100,10 +100,42 @@ run time, and the manifest's recorded git SHA ends in `-dirty` because the run h
 README/baseline commit; `relay/` and `policies/` were unchanged between that SHA and the baseline
 commit.
 
+## Generated datasets
+
+`relay generate` produces seeded synthetic cases (generator `gen-v0.1`) in the same case-folder
+format as the smoke set. Case `i` of a dataset uses seed `seed * 1_000_000 + i`, and difficulty
+rotates easy → medium → hard → adversarial, so each class is exactly a quarter of the dataset.
+Ground truth records what the rendered documents establish under `immunara-v0.1`. Month-only
+dates are judged conservatively and yearless dates establish nothing. Expected actions are derived
+by the engine, as for the smoke cases.
+
+| Dataset | Seed | Cases | Expected actions (auto / request info / review) | Use |
+|---|---|---|---|---|
+| `gen-v0.1-dev` | 1 | 400 | 102 / 111 / 187 | Development: any tuning, threshold sweeps, question changes |
+| `gen-v0.1-holdout` | 2 | 1000 | 264 / 279 / 457 | Final reporting only |
+
+**Tune only on dev.** Do not change questions, thresholds, or the generator after looking at
+holdout results. Run the holdout once per frozen configuration and report what it says.
+
+```bash
+uv run relay generate --count 400  --seed 1 --dataset-id gen-v0.1-dev     --out evals/generated/gen-v0.1-dev
+uv run relay generate --count 1000 --seed 2 --dataset-id gen-v0.1-holdout --out evals/generated/gen-v0.1-holdout
+uv run relay generate --verify evals/generated/manifests/gen-v0.1-dev.json --out evals/generated/gen-v0.1-dev
+uv run relay eval --dataset evals/generated/gen-v0.1-dev --provider groundtruth   # pipeline validation only
+```
+
+The case folders are git-ignored. After cloning, regenerate them with the commands above.
+Committed manifests in [`evals/generated/manifests/`](evals/generated/manifests/) record the
+seed, count, generator version, label and action counts, and a dataset hash. `--verify` regenerates
+the dataset in a temporary directory and compares it with the manifest. It also checks the files in
+`--out` if they exist, and exits 2 on any mismatch. Any change to generator output requires bumping
+`GENERATOR_VERSION` in `relay/generation/facts.py` and generating new, newly named datasets.
+
 ## Limitations
 
-- Ten smoke cases only. No gold set, generated holdout, calibration analysis, or baselines yet
-  (Phase 2).
+- Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
+  comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
+  document variety. No gold set, calibration analysis, or baselines yet (Phase 2B–2D).
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown, so they reduce automation instead of being guessed.
 - Actions are simulated. Relay never submits anything anywhere.
@@ -113,3 +145,5 @@ commit.
 - [Project handoff](docs/RELAY_PROJECT_HANDOFF.md)
 - [v0.1 design spec](docs/superpowers/specs/2026-09-24-relay-v0.1-milestone-design.md)
 - [v0.1 implementation plan](docs/superpowers/plans/2026-09-24-relay-v0.1-milestone.md)
+- [Phase 2A case generator design](docs/superpowers/specs/2026-09-25-phase2a-case-generator-design.md)
+- [Phase 2A implementation plan](docs/superpowers/plans/2026-09-25-phase2a-case-generator.md)
