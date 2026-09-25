@@ -1,5 +1,5 @@
 SYNTHETIC RECORD - Example Fairview Rheumatology - New Patient Visit - 2026-05-28
-Patient reference SYN-9012. This 24-year-old man has an established diagnosis of rheumatoid arthritis, confirmed six months ago by rheumatology based on symmetric small-joint swelling and a positive anti-CCP antibody.
+Patient reference SYN-9012. Seen today after an urgent-care referral for worsening joint swelling and a medication side effect. Rheumatology confirmed his rheumatoid arthritis six months ago, citing symmetric small-joint swelling and a positive anti-CCP antibody; he is 24 years old.
 
 He briefly tried oral methotrexate from 2026-04-06 to 2026-05-25, but stopped early after developing significant nausea that did not improve with dose adjustment or anti-nausea medication. He works as a line cook and says standing for long shifts has become harder with his wrist pain. He has not brought his insurance card to either visit and reports he is still waiting on a replacement from his employer.
 
