@@ -532,11 +532,110 @@ holdout sample (150, seed 7)
 [`compare-jev-rules-claude.txt`](evals/baselines/gen-v0.2-holdout/compare-jev-rules-claude.txt)). The
 full 1,000-case holdout and a dedicated sync latency sample were not run (see Budget above).
 
+## Gold set
+
+[`evals/gold/`](evals/gold/) holds `gold-v0.1`: 100 individually written synthetic cases, 20
+each of straightforward (STR), missing information (MIS), conflicting evidence (CON), temporal
+reasoning (TMP) and tricky/ambiguous (TRK). Their wording and structure are not produced by the
+generator, so they test generalization beyond its templates.
+
+> **Provenance.** The cases and labels were written by AI agents (Claude) following
+> [`AUTHORING_GUIDE.md`](evals/gold/AUTHORING_GUIDE.md), checked by a blind second labelling pass
+> by a separate agent, and adjudicated by a third agent
+> ([`ADJUDICATION.md`](evals/gold/ADJUDICATION.md)). They were not written or reviewed by a human
+> domain expert. Have a qualified human review them before making any external claim.
+
+Blind second-pass agreement before adjudication: `diagnosis_supported` 100/100 (100.0%),
+`step_therapy_satisfied` 100/100 (100.0%), `documentation_complete` 100/100 (100.0%),
+`contradiction_present` 100/100 (100.0%), `missing_evidence` 100/100 (100.0%), all five facts
+100/100 (100.0%), derived action 100/100 (100.0%). Adjudication summary: 0 disagreements; no
+labels or documents were changed.
+
+**Never tune on gold.** Every provider ran on gold exactly once, after all other Phase 2 work was
+final, with the configuration chosen on `gen-v0.2-dev`: Jev with question set `q-v0.2`, rules
+`rules-v0.1`, and Claude `claude-opus-5` in batch. Each report's `--at` row uses that provider's
+dev-selected threshold (Jev 0.89, rules 0.99, Claude 0.55). The ground-truth run is a pipeline
+check, not a model result.
+
+**Two spend events on the Claude gold run, disclosed honestly.** A first submission
+(`run_20260925T222258Z_91d2e1`) failed with a connection error during batch upload; the user
+confirmed in the Anthropic console that no batch was ever created, so its reservation was released
+at $0 (the $0.000000 `gold-v0.1` ledger entry) and the run was resubmitted once, succeeding as
+`run_20260926T011730Z_f1852f`. The batch cost projection the CLI prints is now conservative — the
+maximum observed per-case cost times 1.25, not a mean — which is why the actual cost ($1.560455)
+came in well under the printed projection ($2.0468) for 100 cases.
+
+| Provider | Run | Correct action | Automation | Unsafe / auto | Request info | Review | Invalid | At dev t* (`--at`) | Cost |
+|---|---|---|---|---|---|---|---|---|---|
+| Ground truth | `run_20260925T170825Z_440df0` | 100/100 (100.0%) | 34/100 (34.0%) | 0/34 | 34/100 (34.0%) | 32/100 (32.0%) | 0 | — | $0.0000 |
+| Jev `q-v0.2` | `run_20260925T170857Z_b95be9` | 82/100 (82.0%) | 18/100 (18.0%) | 0/18 | 32/100 (32.0%) | 50/100 (50.0%) | 0 | 0.89: correct 91/100 (91.0%), auto 29/100 (29.0%), unsafe 1 | $0.0115 |
+| Rules `rules-v0.1` | `run_20260925T170839Z_d3b427` | 61/100 (61.0%) | 20/100 (20.0%) | 6/20 | 66/100 (66.0%) | 14/100 (14.0%) | 0 | 0.99: correct 61/100 (61.0%), auto 20/100 (20.0%), unsafe 6 | $0.0000 |
+| Claude `claude-opus-5` (batch) | `run_20260926T011730Z_f1852f` | 65/100 (65.0%) | 0/100 (0.0%) | 0/0 | 33/100 (33.0%) | 67/100 (67.0%) | 0 | 0.55: correct 93/100 (93.0%), auto 30/100 (30.0%), unsafe 1 | $1.5605 |
+
+**Claude's 0% headline automation is the raw run's default threshold, not its dev-selected
+operating point.** Every one of Claude's gold `step_therapy` values falls below that bar, for the
+structural reason already documented in Baselines above: `step_therapy` is composed in code from
+up to seven of Claude's self-reported sub-answer probabilities multiplied together, so even
+accurate per-answer confidences compound down well below any individual confidence. At Claude's
+dev-selected operating point (`--at 0.55`) gold automation is 30/100 with 1/30 unsafe, shown in the
+table's last column; this is the same composition effect on a new, hand-written dataset, not a
+new failure mode.
+
+**Per category** (as run, policy `v0.1` thresholds;
+[`per-category.md`](evals/baselines/gold-v0.1/per-category.md)):
+
+| Provider | Category | Correct action | Automation | Unsafe / auto | Request info | Review | Invalid |
+|---|---|---|---|---|---|---|---|
+| Ground truth | STR | 20/20 (100%) | 10/20 (50%) | 0/10 | 10/20 (50%) | 0/20 (0%) | 0 |
+| Ground truth | MIS | 20/20 (100%) | 3/20 (15%) | 0/3 | 16/20 (80%) | 1/20 (5%) | 0 |
+| Ground truth | CON | 20/20 (100%) | 4/20 (20%) | 0/4 | 1/20 (5%) | 15/20 (75%) | 0 |
+| Ground truth | TMP | 20/20 (100%) | 11/20 (55%) | 0/11 | 1/20 (5%) | 8/20 (40%) | 0 |
+| Ground truth | TRK | 20/20 (100%) | 6/20 (30%) | 0/6 | 6/20 (30%) | 8/20 (40%) | 0 |
+| Ground truth | ALL | 100/100 (100%) | 34/100 (34%) | 0/34 | 34/100 (34%) | 32/100 (32%) | 0 |
+| Jev q-v0.2 | STR | 16/20 (80%) | 6/20 (30%) | 0/6 | 10/20 (50%) | 4/20 (20%) | 0 |
+| Jev q-v0.2 | MIS | 18/20 (90%) | 1/20 (5%) | 0/1 | 16/20 (80%) | 3/20 (15%) | 0 |
+| Jev q-v0.2 | CON | 18/20 (90%) | 2/20 (10%) | 0/2 | 1/20 (5%) | 17/20 (85%) | 0 |
+| Jev q-v0.2 | TMP | 12/20 (60%) | 4/20 (20%) | 0/4 | 0/20 (0%) | 16/20 (80%) | 0 |
+| Jev q-v0.2 | TRK | 18/20 (90%) | 5/20 (25%) | 0/5 | 5/20 (25%) | 10/20 (50%) | 0 |
+| Jev q-v0.2 | ALL | 82/100 (82%) | 18/100 (18%) | 0/18 | 32/100 (32%) | 50/100 (50%) | 0 |
+| Rules rules-v0.1 | STR | 17/20 (85%) | 7/20 (35%) | 0/7 | 13/20 (65%) | 0/20 (0%) | 0 |
+| Rules rules-v0.1 | MIS | 17/20 (85%) | 0/20 (0%) | 0/0 | 19/20 (95%) | 1/20 (5%) | 0 |
+| Rules rules-v0.1 | CON | 8/20 (40%) | 9/20 (45%) | 6/9 | 7/20 (35%) | 4/20 (20%) | 0 |
+| Rules rules-v0.1 | TMP | 7/20 (35%) | 2/20 (10%) | 0/2 | 13/20 (65%) | 5/20 (25%) | 0 |
+| Rules rules-v0.1 | TRK | 12/20 (60%) | 2/20 (10%) | 0/2 | 14/20 (70%) | 4/20 (20%) | 0 |
+| Rules rules-v0.1 | ALL | 61/100 (61%) | 20/100 (20%) | 6/20 | 66/100 (66%) | 14/100 (14%) | 0 |
+| Claude claude-opus-5 | STR | 10/20 (50%) | 0/20 (0%) | 0/0 | 10/20 (50%) | 10/20 (50%) | 0 |
+| Claude claude-opus-5 | MIS | 17/20 (85%) | 0/20 (0%) | 0/0 | 16/20 (80%) | 4/20 (20%) | 0 |
+| Claude claude-opus-5 | CON | 16/20 (80%) | 0/20 (0%) | 0/0 | 1/20 (5%) | 19/20 (95%) | 0 |
+| Claude claude-opus-5 | TMP | 8/20 (40%) | 0/20 (0%) | 0/0 | 0/20 (0%) | 20/20 (100%) | 0 |
+| Claude claude-opus-5 | TRK | 14/20 (70%) | 0/20 (0%) | 0/0 | 6/20 (30%) | 14/20 (70%) | 0 |
+| Claude claude-opus-5 | ALL | 65/100 (65%) | 0/100 (0%) | 0/0 | 33/100 (33%) | 67/100 (67%) | 0 |
+
+Rules had by far the most unsafe automations on gold: all 6 (30% UAR at its own dev-selected
+`0.99` threshold) are in CON, with 0% UAR in every other category; Jev and Claude have 0 unsafe
+automations in this raw per-category view and 1 each at their own dev-selected `--at` points (Jev
+0.89: 1/29; Claude 0.55: 1/30). TMP is the weakest category by correct-action rate for every model
+provider — rules 7/20 (35%), Jev 12/20 (60%), Claude 8/20 (40%) — while ground truth is 100% in
+every category by construction. Of the five TMP cases that hinge on relative or inferable-year
+dates (`GOLD-TMP-12/13/14/15/16`, Q3a/b), ground truth calls three (12, 14, 15) `AUTO_PROCESS`;
+Jev auto-processes only one of those (14) and Claude auto-processes none of them, both sending the
+rest to human review rather than acting unsafely — the date arithmetic depresses automation, it
+does not produce a wrong ground-truth call. `compare` finds 6 new unsafe automations across the 47
+cases where jev-q-v0.2 and rules-v0.1 differ, 0 new unsafe automations across the 19 cases where
+jev-q-v0.2 and claude-opus-5 differ, and 0 new unsafe automations across the 53 cases where
+rules-v0.1 and claude-opus-5 differ (mostly rules' 6 CON unsafe automations resolving to
+`HUMAN_REVIEW` under Claude). Claude had 0 refusals and 0 invalid outputs on the 100-case gold
+batch, at a cost of $1.560455 (total ledger spend $8.710495 of the $10 Phase 2 cap).
+
+With 20 cases per category, one case is 5 percentage points, so per-category rates are indicative
+only. All runs, including gzipped traces, are committed under
+[`evals/baselines/gold-v0.1/`](evals/baselines/gold-v0.1/).
+
 ## Limitations
 
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
-  document variety. No gold set yet (Phase 2E); the rules-only and Claude baselines are above.
+  document variety. Gold-set results (100 hand-written cases, `gold-v0.1`) are in "Gold set" above.
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
   being guessed. The generator doesn't produce them.
@@ -568,6 +667,8 @@ full 1,000-case holdout and a dedicated sync latency sample were not run (see Bu
   multiplicative composition (see Baselines above) is a structural property of the shared
   composition code, not something specific to gen-v0.2, so it will also depress Claude's automation
   rate on the gold set.
+- The gold set (`gold-v0.1`, 100 cases) was authored and labelled by AI agents, not human domain
+  experts, and has 20 cases per category, so per-category rates carry wide uncertainty.
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs
@@ -583,3 +684,5 @@ full 1,000-case holdout and a dedicated sync latency sample were not run (see Bu
 - [Phase 2C implementation plan](docs/superpowers/plans/2026-09-25-phase2c-rules-baseline.md)
 - [Phase 2D LLM baseline design](docs/superpowers/specs/2026-09-25-phase2d-llm-baseline-design.md)
 - [Phase 2D implementation plan](docs/superpowers/plans/2026-09-25-phase2d-llm-baseline.md)
+- [Phase 2E gold set design](docs/superpowers/specs/2026-09-25-phase2e-gold-set-design.md)
+- [Phase 2E implementation plan](docs/superpowers/plans/2026-09-25-phase2e-gold-set.md)

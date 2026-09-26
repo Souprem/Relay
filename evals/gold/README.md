@@ -84,3 +84,8 @@ uv run relay eval --dataset evals/gold --provider groundtruth   # pipeline check
 uv run python -m scripts.gold_check                             # structural and label checks
 uv run pytest tests/unit/test_gold_dataset.py tests/integration/test_cli_gold.py
 ```
+
+## Results
+
+Per-provider and per-category results are in the repository README's "Gold set" section. The runs
+are committed under [`evals/baselines/gold-v0.1/`](../baselines/gold-v0.1/).
