@@ -1,0 +1,57 @@
+# Offline gates on every push and pull request. No provider keys and no secrets: every step runs
+# on committed or regenerated synthetic data, and the regression gate never calls a provider.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-gates:
+    runs-on: ubuntu-latest
+    # TYPESAFE_API_KEY and ANTHROPIC_API_KEY are deliberately never set here.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv and Python 3.12
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Tests (live tests are deselected by default)
+        run: uv run pytest -q
+
+      - name: Regenerate the generated datasets and verify them against the committed manifests
+        run: |
+          uv run relay --env-file .no-such.env generate --out evals/generated/gen-v0.2-dev \
+            --count 400 --seed 1 --dataset-id gen-v0.2-dev --manifests-dir "$RUNNER_TEMP/manifests"
+          uv run relay --env-file .no-such.env generate --out evals/generated/gen-v0.2-holdout \
+            --count 1000 --seed 2 --dataset-id gen-v0.2-holdout --manifests-dir "$RUNNER_TEMP/manifests"
+          uv run relay --env-file .no-such.env generate \
+            --verify evals/generated/manifests/gen-v0.2-dev.json --out evals/generated/gen-v0.2-dev
+          uv run relay --env-file .no-such.env generate \
+            --verify evals/generated/manifests/gen-v0.2-holdout.json --out evals/generated/gen-v0.2-holdout
+
+      - name: Regression gate
+        run: >-
+          uv run relay --env-file .no-such.env regression
+          --config evals/regression/gates.json --out regression-report
+
+      - name: Upload the regression report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report
+          path: regression-report/
+          if-no-files-found: warn
