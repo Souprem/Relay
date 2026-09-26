@@ -33,6 +33,9 @@ class WorkflowTrace(BaseModel):
     gate_path: list[GateResult]
     mode: Literal["evaluate", "shadow", "simulated"] = "evaluate"
     relay_git_sha: str | None
+    # The trace_id this trace was replayed from (relay replay); None for ordinary runs and for
+    # every trace written before Phase 3A.
+    replay_of: str | None = None
 
 
 class RunManifest(BaseModel):

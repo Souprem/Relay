@@ -164,3 +164,28 @@ def test_committed_v0_1_baseline_still_loads_without_new_fields():
     assert len(traces) == 10
     assert all(t.policy_text_hash is None for t in traces)
     assert all(t.decisions.client_version is None for t in traces)
+
+
+GOLD_JEV_TRACES = (
+    Path(__file__).resolve().parents[2]
+    / "evals"
+    / "baselines"
+    / "gold-v0.1"
+    / "run_20260925T170857Z_b95be9"
+    / "traces.jsonl.gz"
+)
+
+
+def test_replay_of_defaults_to_none_and_round_trips(tmp_path):
+    trace = make_trace(make_case())
+    assert trace.replay_of is None
+    replayed = trace.model_copy(update={"replay_of": trace.trace_id, "mode": "simulated"})
+    store = TraceStore.create(tmp_path, "run_x")
+    store.append(replayed)
+    assert read_traces(store.path) == [replayed]
+
+
+def test_committed_traces_written_before_replay_of_still_load():
+    traces = read_traces(GOLD_JEV_TRACES)
+    assert len(traces) == 100
+    assert all(t.replay_of is None for t in traces)
