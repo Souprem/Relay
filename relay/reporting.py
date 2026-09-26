@@ -1,6 +1,7 @@
 """Human-readable output: run table and report, eval summary, frontier, and the eval report."""
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
@@ -11,6 +12,7 @@ from relay.evaluation.compare import Comparison
 from relay.evaluation.confusion import ConfusionMatrix
 from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
 from relay.evaluation.metrics import EvalSummary, RunIdentity
+from relay.evaluation.regression import CHANGE_ORDER, CaseEntry, Rate, RegressionResult
 from relay.evaluation.tracediff import GateDelta, TraceDiff, classify
 from relay.traces.models import RunManifest, WorkflowTrace
 from relay.workflow.outcomes import WorkflowAction
@@ -778,3 +780,185 @@ def render_trace_diff(diff: TraceDiff, all_gates: bool = False, *, reproduce: bo
     if verdict is not None:
         lines.append(verdict)
     return "\n".join(lines)
+
+
+# ---- relay regression ----
+
+REGRESSED_SHOWN = 20
+PASS_LINE = "REGRESSION GATE: PASS"
+REPRODUCE_NOTE = (
+    "REPRODUCE: the baseline's stored decisions under the current engine, policy and "
+    "thresholds; any case that is not identical is ENGINE DRIFT"
+)
+
+
+def _rate_cell(r: Rate) -> str:
+    return "n/a" if r.rate is None else f"{r.count}/{r.n} ({r.rate:.1%})"
+
+
+def _ci_cell(r: Rate) -> str:
+    return "n/a" if r.ci95 is None else f"[{r.ci95.low:.1%}, {r.ci95.high:.1%}]"
+
+
+def _pp(before: Rate, after: Rate) -> str:
+    if before.rate is None or after.rate is None:
+        return "n/a"
+    return f"{(after.rate - before.rate) * 100:+.1f} pp"
+
+
+def _signed(value: float | None) -> str:
+    return "—" if value is None else f"{value:+.3f}"
+
+
+def _metrics_lines(result: RegressionResult) -> list[str]:
+    b, c = result.baseline, result.candidate
+    rows = [["METRIC", "BASELINE", "CANDIDATE", "Δ", "BASELINE 95% CI", "CANDIDATE 95% CI"]]
+    for name, before, after in (
+        ("Correct action rate", b.correct, c.correct),
+        ("Automation rate", b.automation, c.automation),
+        ("Request-info rate", b.request_info, c.request_info),
+        ("Human escalation rate", b.human_review, c.human_review),
+        ("Unsafe automation rate", b.uar, c.uar),
+    ):
+        rows.append(
+            [
+                name,
+                _rate_cell(before),
+                _rate_cell(after),
+                _pp(before, after),
+                _ci_cell(before),
+                _ci_cell(after),
+            ]
+        )
+    rows.append(
+        [
+            "Invalid outputs",
+            str(b.invalid_outputs),
+            str(c.invalid_outputs),
+            f"{c.invalid_outputs - b.invalid_outputs:+d}",
+            "",
+            "",
+        ]
+    )
+    return _table(rows)
+
+
+def _entry_lines(entry: CaseEntry) -> list[str]:
+    expected = f"expected {entry.expected}"
+    if entry.expected_candidate is not None:
+        expected += f" (candidate policy: {entry.expected_candidate})"
+    crossed = "; ".join(f"{q}: {', '.join(names)}" for q, names in entry.crossed_gated.items())
+    lines = [
+        f"  {entry.case_id}  {expected}  {entry.action_baseline} → {entry.action_candidate}",
+        f"      answer changed: {', '.join(entry.answer_changed) or 'none'}"
+        f" · gated crossings: {crossed or 'none'}",
+    ]
+    if entry.replay_command is not None:
+        lines.append(f"      replay: {entry.replay_command}")
+    else:
+        lines.append("      replay: re-run with --out DIR for a replayable command")
+    return lines
+
+
+def _section(title: str, entries: Sequence[CaseEntry], limit: int | None = None) -> list[str]:
+    if not entries:
+        return []
+    shown = entries if limit is None else entries[:limit]
+    header = f"{title} ({len(entries)})"
+    if len(shown) < len(entries):
+        header += f" — showing {len(shown)}; --all shows every case"
+    lines = ["", header]
+    for entry in shown:
+        lines += _entry_lines(entry)
+    return lines
+
+
+def _calibration_lines(result: RegressionResult) -> list[str]:
+    rows = [["DECISION", "BRIER (BASE → CAND)", "Δ BRIER", "ECE (BASE → CAND)", "Δ ECE"]]
+    for c in result.calibration:
+        rows.append(
+            [
+                c.decision,
+                f"{_num(c.brier_baseline)} → {_num(c.brier_candidate)}",
+                _signed(c.brier_delta),
+                f"{_num(c.ece_baseline)} → {_num(c.ece_candidate)}",
+                _signed(c.ece_delta),
+            ]
+        )
+    return ["", "CALIBRATION (Δ = candidate − baseline)"] + [" " + line for line in _table(rows)]
+
+
+def gate_line(result: RegressionResult) -> str:
+    if result.verdict == "PASS":
+        return PASS_LINE
+    return "REGRESSION GATE: FAIL — " + "; ".join(result.failures)
+
+
+def render_regression(result: RegressionResult, *, show_all: bool = False) -> str:
+    """Terminal output for `relay regression` (and regression.md): header, metrics with 95%
+    Clopper-Pearson intervals, change counts, then NEWLY UNSAFE first, each with a replay
+    command, waived and stale waivers, UNSAFE RESOLVED, REGRESSED (20 unless show_all),
+    calibration deltas and the gate line last."""
+    title = f"Relay regression — dataset {result.dataset_id} · n={result.n}"
+    if result.gate is not None:
+        title = (
+            f"Relay regression — gate {result.gate} · dataset {result.dataset_id} · n={result.n}"
+        )
+    lines = [title, f"BASELINE  {result.baseline.label}", f"CANDIDATE {result.candidate.label}"]
+    if result.reproduce:
+        lines.append(REPRODUCE_NOTE)
+    lines += [""] + _metrics_lines(result)
+    counts = " · ".join(f"{name} {result.change_counts[name]}" for name in CHANGE_ORDER)
+    lines += ["", f"CHANGES: {counts} · not identical {result.not_identical}"]
+    limit = None if show_all else REGRESSED_SHOWN
+    lines += _section("ENGINE DRIFT", result.drifted, limit)
+    lines += _section("NEWLY UNSAFE", result.newly_unsafe)
+    if result.waived:
+        lines += ["", f"WAIVED NEWLY UNSAFE ({len(result.waived)}) — reviewed, not failures"]
+        for waived in result.waived:
+            w = waived.waiver
+            lines += _entry_lines(waived.entry)
+            lines.append(
+                f"      waiver: {w.reason} (approved by {w.approved_by}, {w.date}, gate {w.gate})"
+            )
+    if result.stale_waivers:
+        lines += [
+            "",
+            f"STALE WAIVERS ({len(result.stale_waivers)}) — warning: no newly unsafe case",
+        ]
+        lines += [
+            f"  {w.case_id} (gate {w.gate}, approved by {w.approved_by}, {w.date})"
+            for w in result.stale_waivers
+        ]
+    lines += _section("UNSAFE RESOLVED", result.unsafe_resolved)
+    lines += _section("REGRESSED", result.regressed, limit)
+    lines += _calibration_lines(result)
+    lines += ["", gate_line(result)]
+    return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class GateRow:
+    """One row of the `relay regression --config` summary."""
+
+    name: str
+    verdict: str  # PASS, FAIL, SKIPPED or ERROR
+    newly_unsafe: int | None
+    regressed: int | None
+    exit_code: int
+    note: str | None = None
+
+
+def render_gate_summary(rows: Sequence[GateRow]) -> str:
+    table = [["GATE", "VERDICT", "NEWLY UNSAFE", "REGRESSED", "EXIT"]]
+    for r in rows:
+        table.append(
+            [
+                r.name,
+                r.verdict if r.note is None else f"{r.verdict} ({r.note})",
+                "—" if r.newly_unsafe is None else str(r.newly_unsafe),
+                "—" if r.regressed is None else str(r.regressed),
+                str(r.exit_code),
+            ]
+        )
+    return "\n".join(["REGRESSION GATES", *_table(table)])
