@@ -5,16 +5,21 @@ today's engine. `relay replay` renders one TraceDiff; the Phase 3B regression ga
 same functions over whole runs.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Literal
 
 from pydantic import BaseModel
 
-from relay.cases.models import MissingEvidence
-from relay.cases.policies import AuthorizationPolicy
+from relay.cases.models import MissingEvidence, PriorAuthCase
+from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import Decision, DecisionBundle, DecisionId
+from relay.evaluation.metrics import paired_cases
+from relay.evaluation.runner import policy_text_hash
 from relay.traces.models import WorkflowTrace
+from relay.traces.store import current_git_sha, new_trace_id
+from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import GateResult, WorkflowAction
 from relay.workflow.thresholds import Thresholds
 
@@ -360,3 +365,83 @@ def live_label(trace: WorkflowTrace) -> str:
     return (
         f"live run {trace.run_id} · {trace.provider} {trace.question_set_version} on frozen inputs"
     )
+
+
+def replay_trace(
+    trace: WorkflowTrace,
+    case: PriorAuthCase,
+    *,
+    policy: AuthorizationPolicy,
+    thresholds: Thresholds,
+    now: datetime | None = None,
+    git_sha: str | None = None,
+) -> WorkflowTrace:
+    """The trace's stored decisions re-run through determine_action under `policy`/`thresholds`.
+
+    Returns a new trace: new trace_id, run_id "replay-<original run_id>", replay_of the original
+    trace_id, the given policy (and its current policy_text_hash) and thresholds,
+    mode="simulated". `git_sha` defaults to current_git_sha(); replay_run passes it once for a
+    whole run. Raises ValueError if `case` is not the trace's case or its inputs changed.
+    """
+    if case.input.id != trace.case_id:
+        raise ValueError(f"case {case.input.id} is not the trace's case {trace.case_id}")
+    if case.input.content_hash() != trace.case_content_hash:
+        raise ValueError(f"{trace.case_id}: case content hash changed since run {trace.run_id}")
+    outcome = determine_action(case.input, trace.decisions, policy, thresholds)
+    return trace.model_copy(
+        update={
+            "trace_id": new_trace_id(),
+            "run_id": f"replay-{trace.run_id}",
+            "timestamp": now or datetime.now(UTC),
+            "policy_id": policy.id,
+            "policy_version": policy.version,
+            "policy_text_hash": policy_text_hash(policy),
+            "thresholds": thresholds,
+            "action": outcome.action,
+            "decision_reasons": outcome.reasons,
+            "gate_path": outcome.gate_path,
+            "mode": "simulated",
+            "relay_git_sha": git_sha if git_sha is not None else current_git_sha(),
+            "replay_of": trace.trace_id,
+        }
+    )
+
+
+def replay_run(
+    traces: Sequence[WorkflowTrace],
+    cases: Sequence[PriorAuthCase],
+    *,
+    policy_id: str | None,
+    auto_process: float | None,
+) -> list[WorkflowTrace]:
+    """Run-level policy replay (for Phase 3B), in trace order.
+
+    Pairs traces with cases through paired_cases, so every check there applies (one run, no
+    duplicates, no unknown or changed cases, full coverage; EvalError otherwise). None keeps each
+    trace's own policy / auto_process. Every replayed trace shares run_id "replay-<run_id>".
+    """
+    pairs = paired_cases(traces, cases)
+    now = datetime.now(UTC)
+    git_sha = current_git_sha()
+    policies: dict[str, AuthorizationPolicy] = {}
+    replayed = []
+    for trace, case in pairs:
+        target = policy_id or trace.policy_id
+        if target not in policies:
+            policies[target] = load_policy(target)
+        thresholds = (
+            trace.thresholds
+            if auto_process is None
+            else trace.thresholds.model_copy(update={"auto_process": auto_process})
+        )
+        replayed.append(
+            replay_trace(
+                trace,
+                case,
+                policy=policies[target],
+                thresholds=thresholds,
+                now=now,
+                git_sha=git_sha,
+            )
+        )
+    return replayed
