@@ -1,5 +1,7 @@
 # Relay
 
+[![CI](https://github.com/Souprem/Relay/actions/workflows/ci.yml/badge.svg)](https://github.com/Souprem/Relay/actions/workflows/ci.yml)
+
 > Relay uses synthetic data only and is an engineering/evaluation prototype. It is not for clinical use or real authorization decisions.
 
 Relay is an evaluation-first, confidence-aware workflow engine for **synthetic** prior-authorization
@@ -737,9 +739,9 @@ EXPECTED (evaluation-only): HUMAN_REVIEW
    diagnosis_support       p_yes=0.980  p_yes=0.970  -0.010
    step_therapy            p_yes=0.932  p_yes=0.551  -0.380
    documentation_complete  p_yes=0.970  p_yes=0.950  -0.020
-   material_contradiction  p_yes=0.100  p_yes=0.030  -0.070  auto_process
+   material_contradiction  p_yes=0.100  p_yes=0.030  -0.070  (auto_process)
    missing_evidence        NONE (0.85)  NONE (0.88)  +0.030
-  (* = answer changed)
+  ((name) = reported-only comparison: no engine gate acts on it)
 
 GATES: same outcome at every gate (--all-gates shows every row)
 
@@ -753,8 +755,8 @@ ACTION UNCHANGED: HUMAN_REVIEW
 ```
 
 Both providers escalate the case, which is correct, but Claude's composed `step_therapy`
-probability is 0.380 lower than Jev's. The `auto_process` mark on `material_contradiction` is a
-reported-only comparison (1 − p_yes against the bar), not an engine gate, so no gate changes.
+probability is 0.380 lower than Jev's. The parenthesised `(auto_process)` on `material_contradiction`
+is a reported-only comparison (1 − p_yes against the bar), not an engine gate, so no gate changes.
 
 The same Jev trace under Jev's own dev-selected threshold, 0.89 (from
 [`compare-own-thresholds.txt`](evals/baselines/gold-v0.1/compare-own-thresholds.txt)):
@@ -766,16 +768,16 @@ $ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.
     --at 0.89
 Relay replay — GOLD-TMP-17
 ORIGINAL run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
-CANDIDATE policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), auto_process=0.89 — judgments were made against the original policy's questions
+CANDIDATE policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), auto_process=0.89, thresholds v0.1+at0.89 — judgments were made against the original policy's questions
 EXPECTED (evaluation-only): HUMAN_REVIEW
 
    DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
    diagnosis_support       p_yes=0.980  p_yes=0.980  +0.000
    step_therapy            p_yes=0.932  p_yes=0.932  +0.000  auto_process
    documentation_complete  p_yes=0.970  p_yes=0.970  +0.000
-   material_contradiction  p_yes=0.100  p_yes=0.100  +0.000  auto_process
+   material_contradiction  p_yes=0.100  p_yes=0.100  +0.000  (auto_process)
    missing_evidence        NONE (0.85)  NONE (0.85)  +0.000
-  (* = answer changed)
+  ((name) = reported-only comparison: no engine gate acts on it)
 
 THRESHOLDS CHANGED
   auto_process  0.95 → 0.89
@@ -799,6 +801,161 @@ ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS (NEWLY UNSAFE)
 This command exits 4. At 0.89, Jev's 0.932 `step_therapy` clears the bar and the case
 auto-processes, but its expected action is `HUMAN_REVIEW`. This is the unsafe automation that
 `compare-own-thresholds.txt` records for Jev on `GOLD-TMP-17`.
+
+## Regression gate
+
+`relay regression` compares a candidate run against an accepted baseline over the same frozen
+dataset and fails loudly when the candidate automates a case unsafely that nobody has reviewed.
+A candidate can be a new question set, provider, policy or threshold. The command is offline: the
+candidate is either an existing trace file (`--candidate-traces`, for example a run made earlier
+with `relay eval`, which applies its own budget guard) or a policy replay of the baseline's stored
+decisions (`--candidate-policy ID`, `--candidate-latest-policy`, `--candidate-at X`).
+`--reproduce` replays the baseline under today's engine; that is the engine-drift gate.
+`--baseline-at X` re-decides the baseline at its own dev-selected operating point first. Both
+runs must cover exactly the dataset's cases with unchanged content hashes. A baseline recorded on
+a `--limit/--sample-seed` subsample is paired with the same subsample, read from its run manifest.
+
+The report puts both runs' rates side by side, each with a 95% Clopper-Pearson interval, then the
+change counts. Newly unsafe cases come first, each with a `relay replay` command that reproduces
+that case's diff, followed by resolved and regressed cases and calibration deltas. The gate fails
+when:
+
+- a newly unsafe case is not covered by a waiver (exit 4)
+- `--max-regressed N` is given and more than N cases regressed (exit 4)
+- in `--reproduce` mode, any case is not identical (ENGINE DRIFT, exit 3)
+
+Input and usage errors exit 2, and the highest applicable code wins. `--json` prints the result as
+JSON and nothing else. `--out DIR` writes `regression.json` and `regression.md`, plus
+`candidate.jsonl.gz` and `candidate.manifest.json` (`mode: "simulated"`) for a replayed candidate,
+which `relay eval --traces`, `compare` and `replay` can read.
+
+Jev's gold traces at its dev-selected threshold, 0.89, against the same traces as recorded at
+0.95. This fails, because at 0.89 Jev automates `GOLD-TMP-17` (the interrupted methotrexate
+course from "Replay" above):
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env regression \
+    --dataset evals/gold \
+    --baseline evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz \
+    --candidate-at 0.89
+Relay regression — dataset gold-v0.1 · n=100
+BASELINE  run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), auto_process=0.89, thresholds v0.1+at0.89 — judgments were made against the original policy's questions
+
+METRIC                  BASELINE        CANDIDATE       Δ         BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     82/100 (82.0%)  91/100 (91.0%)  +9.0 pp   [73.1%, 89.0%]   [83.6%, 95.8%]
+Automation rate         18/100 (18.0%)  29/100 (29.0%)  +11.0 pp  [11.0%, 26.9%]   [20.4%, 38.9%]
+Request-info rate       32/100 (32.0%)  32/100 (32.0%)  +0.0 pp   [23.0%, 42.1%]   [23.0%, 42.1%]
+Human escalation rate   50/100 (50.0%)  39/100 (39.0%)  -11.0 pp  [39.8%, 60.2%]   [29.4%, 49.3%]
+Unsafe automation rate  0/18 (0.0%)     1/29 (3.4%)     +3.4 pp   [0.0%, 18.5%]    [0.1%, 17.8%]
+Invalid outputs         0               0               +0
+
+CHANGES: improved 10 · unchanged 89 · regressed 1 · changed-both-wrong 0 · not identical 56
+
+NEWLY UNSAFE (1)
+  GOLD-TMP-17  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-17 --traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz --dataset evals/gold --at 0.89
+
+REGRESSED (1)
+  GOLD-TMP-17  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-17 --traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz --dataset evals/gold --at 0.89
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.011 → 0.011        +0.000   0.049 → 0.049      +0.000
+ step_therapy            0.075 → 0.075        +0.000   0.049 → 0.049      +0.000
+ documentation_complete  0.063 → 0.063        +0.000   0.035 → 0.035      +0.000
+ material_contradiction  0.040 → 0.040        +0.000   0.086 → 0.086      +0.000
+ missing_evidence        0.120 → 0.120        +0.000   0.067 → 0.067      +0.000
+
+REGRESSION GATE: FAIL — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
+```
+
+The command exits 4. The same run passes with the committed example waiver
+[`waiver-tmp17.json`](evals/regression/examples/waiver-tmp17.json), which exists only to show the
+mechanism. It is not a real review:
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env regression \
+    --dataset evals/gold \
+    --baseline evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz \
+    --candidate-at 0.89 \
+    --waivers evals/regression/examples/waiver-tmp17.json
+Relay regression — dataset gold-v0.1 · n=100
+BASELINE  run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), auto_process=0.89, thresholds v0.1+at0.89 — judgments were made against the original policy's questions
+
+METRIC                  BASELINE        CANDIDATE       Δ         BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     82/100 (82.0%)  91/100 (91.0%)  +9.0 pp   [73.1%, 89.0%]   [83.6%, 95.8%]
+Automation rate         18/100 (18.0%)  29/100 (29.0%)  +11.0 pp  [11.0%, 26.9%]   [20.4%, 38.9%]
+Request-info rate       32/100 (32.0%)  32/100 (32.0%)  +0.0 pp   [23.0%, 42.1%]   [23.0%, 42.1%]
+Human escalation rate   50/100 (50.0%)  39/100 (39.0%)  -11.0 pp  [39.8%, 60.2%]   [29.4%, 49.3%]
+Unsafe automation rate  0/18 (0.0%)     1/29 (3.4%)     +3.4 pp   [0.0%, 18.5%]    [0.1%, 17.8%]
+Invalid outputs         0               0               +0
+
+CHANGES: improved 10 · unchanged 89 · regressed 1 · changed-both-wrong 0 · not identical 56
+
+WAIVED NEWLY UNSAFE (1) — reviewed, not failures
+  GOLD-TMP-17  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-17 --traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz --dataset evals/gold --at 0.89
+      waiver: EXAMPLE ONLY, not a real review: shows how a reviewed waiver lets the README's gold demo (Jev at auto_process 0.89) pass despite automating the interrupted methotrexate course (approved by example (README demonstration), 2026-09-26, gate *)
+
+REGRESSED (1)
+  GOLD-TMP-17  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-17 --traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz --dataset evals/gold --at 0.89
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.011 → 0.011        +0.000   0.049 → 0.049      +0.000
+ step_therapy            0.075 → 0.075        +0.000   0.049 → 0.049      +0.000
+ documentation_complete  0.063 → 0.063        +0.000   0.035 → 0.035      +0.000
+ material_contradiction  0.040 → 0.040        +0.000   0.086 → 0.086      +0.000
+ missing_evidence        0.120 → 0.120        +0.000   0.067 → 0.067      +0.000
+
+REGRESSION GATE: PASS
+```
+
+**Committed gates.** [`evals/regression/gates.json`](evals/regression/gates.json) holds the gates
+CI runs with `relay regression --config evals/regression/gates.json`. Each gate's report is
+printed, then a summary table; the exit code is the highest across gates, and `--gate NAME` runs
+only the named gates.
+
+| Gate | Baseline | Candidate | What it guards |
+|---|---|---|---|
+| `gold-reproduce-groundtruth`, `-rules`, `-jev`, `-claude` | each committed gold run | `--reproduce` | engine drift on gold, all four providers |
+| `smoke-reproduce-jev` | the v0.1 smoke Jev run (its case hashes still match `evals/smoke`) | `--reproduce` | engine drift on the oldest committed trace, which predates policy-text hashes |
+| `gold-jev-vs-claude` | Jev gold, re-decided at 0.89 | Claude gold traces, re-decided at 0.55 | Claude at its own operating point is not an unsafe regression versus Jev: 4 action differences (3 improved, 1 regressed), 0 newly unsafe |
+| `holdout-reproduce-jev`, `-rules`, `-claude-150` | each committed gen-v0.2-holdout run | `--reproduce` | engine drift on the holdout; `requires_generated`, so SKIPPED when `evals/generated/gen-v0.2-holdout` is absent. The Claude gate uses the run's 150-case sample. |
+
+The failing demonstration above is deliberately not a committed gate, so CI stays green.
+
+**Adding a waiver.** A waiver is the deliberate, reviewed policy decision that lets a newly unsafe
+case through. Add an entry to a waiver file, pass it with `--waivers FILE` (or `"waivers"` in a
+gate), and get the change reviewed in its pull request; that review is the approval:
+
+```json
+{"waivers": [{"case_id": "GOLD-TMP-17", "gate": "gold-jev-vs-claude",
+              "reason": "why this automation is acceptable", "approved_by": "reviewer",
+              "date": "2026-09-26"}]}
+```
+
+Every field is required and non-empty, `date` is `YYYY-MM-DD`, and `gate` is a gate name or `*`
+for every gate (a command-line run without `--config` has no gate name, so only `*` waivers apply
+there). A malformed file exits 2. Waivers cover newly unsafe cases only: regressions and engine
+drift cannot be waived. The report lists waived cases in their own section, and a waiver that
+matches no newly unsafe case is reported as a stale waiver, which is a warning, not a failure.
+
+**CI.** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request
+on ubuntu-latest with uv and Python 3.12. It installs with `uv sync --frozen`, runs `ruff check`,
+`ruff format --check` and `pytest -q` (live tests are deselected by default), regenerates
+gen-v0.2-dev and gen-v0.2-holdout with `relay generate` and checks both against the committed
+manifests with `--verify` (a few seconds locally), then runs the committed gates and uploads
+`regression-report/` as an artifact, even when a step fails. The workflow references no secrets
+and sets no provider keys, and a test checks that it contains no `secrets.` reference.
 
 ## Limitations
 
