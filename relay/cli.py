@@ -1490,7 +1490,11 @@ def regression(
         except RegressionInputError as error:
             raise _fail(str(error)) from error
         if ignored:
-            typer.echo(f"{ignored} waiver(s) for other gates ignored (no --config here)\n")
+            # N1: stderr, not stdout — --json must give stdout that parses as JSON and nothing
+            # else.
+            typer.echo(
+                f"{ignored} waiver(s) for other gates ignored (no --config here)\n", err=True
+            )
     try:
         result, rendered = _run_gate(request, out, show_all)
     except RegressionInputError as error:

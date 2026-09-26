@@ -191,6 +191,18 @@ def test_json_prints_only_the_result(tmp_path):
     assert parsed.verdict == "FAIL"
 
 
+def test_json_is_not_broken_by_the_ignored_waiver_notice(tmp_path):
+    """N1: the "N waiver(s) for other gates ignored" notice (M2) must go to stderr, not stdout,
+    or it corrupts --json's stdout."""
+    result = regression(
+        tmp_path, *GOLD_DEMO, "--waivers", waiver_file(tmp_path, gate="some-other-gate"), "--json"
+    )
+    assert result.exit_code == 4, result.output
+    parsed = RegressionResult.model_validate_json(result.stdout)
+    assert parsed.verdict == "FAIL"
+    assert "ignored" in result.output and "ignored" not in result.stdout
+
+
 def test_out_writes_artifacts_that_relay_eval_can_read(tmp_path, smoke_runs):
     out = tmp_path / "report"
     result = regression(
