@@ -199,3 +199,25 @@ def test_sample_cases_is_deterministic_sorted_and_order_independent():
 def test_sample_cases_keeps_everything_when_the_limit_covers_the_dataset():
     data = [make_case("T-02"), make_case("T-01")]
     assert [c.input.id for c in sample_cases(data, 5, seed=7)] == ["T-01", "T-02"]
+
+
+async def test_run_dataset_stamps_every_trace_with_the_mode(tmp_path):
+    data = cases()
+    default = await run_dataset(
+        data,
+        SpyProvider(data),
+        policy_version="v0.1",
+        store=TraceStore.create(tmp_path, "a"),
+        run_id="a",
+    )
+    assert {t.mode for t in default} == {"evaluate"}
+    shadow = await run_dataset(
+        data,
+        SpyProvider(data),
+        policy_version="v0.1",
+        store=TraceStore.create(tmp_path, "b"),
+        run_id="b",
+        mode="shadow",
+    )
+    assert {t.mode for t in shadow} == {"shadow"}
+    assert {t.mode for t in read_traces(tmp_path / "b.jsonl")} == {"shadow"}

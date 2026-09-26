@@ -191,3 +191,30 @@ def test_replay_run_labels_an_auto_process_override_in_the_thresholds_version():
     cases, traces = run_of("T-01")
     [replayed] = replay_run(traces, cases, policy_id=None, auto_process=0.9)
     assert replayed.thresholds.version == "v0.1+at0.9"
+
+
+# ---- Phase 3C: mode and run id for relay run --from-traces ----
+
+
+def test_replay_trace_takes_a_mode_and_a_run_id():
+    case = make_case("T-01")
+    original = make_trace(case)
+    shadow = replay_trace(
+        original,
+        case,
+        policy=POLICY,
+        thresholds=THRESHOLDS_V0_1,
+        git_sha="x",
+        mode="shadow",
+        run_id="run_new",
+    )
+    assert (shadow.mode, shadow.run_id, shadow.replay_of) == ("shadow", "run_new", "tr_T-01")
+
+
+def test_replay_run_passes_the_mode_and_run_id_to_every_trace():
+    cases, traces = run_of("T-01", "T-02")
+    replayed = replay_run(
+        traces, cases, policy_id=None, auto_process=0.9, mode="shadow", run_id="run_new"
+    )
+    assert {(t.mode, t.run_id) for t in replayed} == {("shadow", "run_new")}
+    assert [t.replay_of for t in replayed] == [t.trace_id for t in traces]

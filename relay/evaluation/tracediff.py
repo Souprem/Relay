@@ -18,7 +18,7 @@ from relay.decisions.base import Decision, DecisionBundle, DecisionId
 from relay.evaluation.labels import expected_action
 from relay.evaluation.metrics import EvalError, paired_cases
 from relay.evaluation.runner import policy_text_hash
-from relay.traces.models import WorkflowTrace
+from relay.traces.models import WorkflowMode, WorkflowTrace
 from relay.traces.store import current_git_sha, new_trace_id
 from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import GateResult, WorkflowAction
@@ -513,13 +513,16 @@ def replay_trace(
     thresholds: Thresholds,
     now: datetime | None = None,
     git_sha: str | None = None,
+    mode: WorkflowMode = "simulated",
+    run_id: str | None = None,
 ) -> WorkflowTrace:
     """The trace's stored decisions re-run through determine_action under `policy`/`thresholds`.
 
-    Returns a new trace: new trace_id, run_id "replay-<original run_id>", replay_of the original
-    trace_id, the given policy (and its current policy_text_hash) and thresholds,
-    mode="simulated". `git_sha` defaults to current_git_sha(); replay_run passes it once for a
-    whole run. Raises ValueError if `case` is not the trace's case or its inputs changed.
+    Returns a new trace: new trace_id, run_id `run_id` (default "replay-<original run_id>"),
+    replay_of the original trace_id, the given policy (and its current policy_text_hash) and
+    thresholds, and `mode` (default "simulated"; relay run --workflow shadow passes "shadow").
+    `git_sha` defaults to current_git_sha(); replay_run passes it once for a whole run. Raises
+    ValueError if `case` is not the trace's case or its inputs changed.
     """
     if case.input.id != trace.case_id:
         raise ValueError(f"case {case.input.id} is not the trace's case {trace.case_id}")
@@ -529,7 +532,7 @@ def replay_trace(
     return trace.model_copy(
         update={
             "trace_id": new_trace_id(),
-            "run_id": f"replay-{trace.run_id}",
+            "run_id": run_id if run_id is not None else f"replay-{trace.run_id}",
             "timestamp": now or datetime.now(UTC),
             "policy_id": policy.id,
             "policy_version": policy.version,
@@ -538,7 +541,7 @@ def replay_trace(
             "action": outcome.action,
             "decision_reasons": outcome.reasons,
             "gate_path": outcome.gate_path,
-            "mode": "simulated",
+            "mode": mode,
             "relay_git_sha": git_sha if git_sha is not None else current_git_sha(),
             "replay_of": trace.trace_id,
         }
@@ -551,14 +554,16 @@ def replay_run(
     *,
     policy_id: str | None,
     auto_process: float | None,
+    mode: WorkflowMode = "simulated",
+    run_id: str | None = None,
 ) -> list[WorkflowTrace]:
-    """Run-level policy replay (for Phase 3B), in trace order.
+    """Run-level policy replay (for Phase 3B and relay run --from-traces), in trace order.
 
     Pairs traces with cases through paired_cases, so every check there applies (one run, no
     duplicates, no unknown or changed cases, full coverage; EvalError otherwise). None keeps each
     trace's own policy / auto_process. Thresholds follow replay_thresholds: a target policy of
     another version brings that version's thresholds (EvalError if none are registered). Every
-    replayed trace shares run_id "replay-<run_id>".
+    replayed trace shares run_id `run_id` (default "replay-<run_id>") and carries `mode`.
     """
     pairs = paired_cases(traces, cases)
     now = datetime.now(UTC)
@@ -580,6 +585,8 @@ def replay_run(
                 thresholds=replay_thresholds(trace, policies[target], auto_process),
                 now=now,
                 git_sha=git_sha,
+                mode=mode,
+                run_id=run_id,
             )
         )
     return replayed

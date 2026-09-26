@@ -264,7 +264,10 @@ def test_write_outputs_writes_the_result_and_the_simulated_runs(tmp_path):
     assert manifest["source_run_id"] == "run_20260925T170857Z_b95be9"
     assert manifest["policy_id"] == "immunara-v0.1"
     assert manifest["thresholds"]["version"] == "v0.1+at0.89"
-    assert find_run_manifest(tmp_path / "candidate.jsonl.gz").case_count == 100
+    loaded = find_run_manifest(tmp_path / "candidate.jsonl.gz")
+    assert loaded.case_count == 100
+    # 3C: mode and source_run_id are typed fields now, so they survive a round-trip (3B M8).
+    assert (loaded.mode, loaded.source_run_id) == ("simulated", "run_20260925T170857Z_b95be9")
     with gzip.open(tmp_path / "baseline.jsonl.gz", "rt") as handle:
         assert len(handle.read().splitlines()) == 100
 

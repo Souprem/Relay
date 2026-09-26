@@ -364,8 +364,9 @@ def _write_simulated_run(
     manifest_path: Path,
 ) -> None:
     """A simulated run that `relay eval --traces`, `compare` and `replay` can read: gzipped
-    traces plus a RunManifest with extra keys mode, source_run_id, policy_id and thresholds.
-    `source` is the baseline's run manifest, if found (its sample_limit/sample_seed carry over)."""
+    traces plus a RunManifest with mode "simulated" and source_run_id (typed fields since 3C),
+    and extra keys policy_id and thresholds. `source` is the baseline's run manifest, if found
+    (its sample_limit/sample_seed carry over)."""
     _write_traces(trace_path, traces)
     first = traces[0]
     manifest = RunManifest(
@@ -381,10 +382,10 @@ def _write_simulated_run(
         relay_git_sha=first.relay_git_sha,
         sample_limit=None if source is None else source.sample_limit,
         sample_seed=None if source is None else source.sample_seed,
+        mode="simulated",
+        source_run_id=first.run_id.removeprefix("replay-"),
     )
     data = manifest.model_dump(mode="json") | {
-        "mode": "simulated",
-        "source_run_id": first.run_id.removeprefix("replay-"),
         "policy_id": first.policy_id,
         "thresholds": first.thresholds.model_dump(mode="json"),
     }

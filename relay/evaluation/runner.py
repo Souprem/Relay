@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from relay.cases.models import PriorAuthCase
 from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import DecisionProvider, PreparingProvider
-from relay.traces.models import WorkflowTrace
+from relay.traces.models import WorkflowMode, WorkflowTrace
 from relay.traces.store import TraceStore, new_trace_id
 from relay.workflow.engine import determine_action
 from relay.workflow.thresholds import load_thresholds
@@ -65,6 +65,7 @@ async def run_dataset(
     run_id: str,
     concurrency: int = 4,
     git_sha: str | None = None,
+    mode: WorkflowMode = "evaluate",
 ) -> list[WorkflowTrace]:
     policies = validate_run_config(cases, policy_version)
     thresholds = load_thresholds(policy_version)
@@ -96,7 +97,7 @@ async def run_dataset(
             action=outcome.action,
             decision_reasons=outcome.reasons,
             gate_path=outcome.gate_path,
-            mode="evaluate",
+            mode=mode,
             relay_git_sha=git_sha,
         )
         store.append(trace)

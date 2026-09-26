@@ -189,3 +189,29 @@ def test_committed_traces_written_before_replay_of_still_load():
     traces = read_traces(GOLD_JEV_TRACES)
     assert len(traces) == 100
     assert all(t.replay_of is None for t in traces)
+
+
+# ---- Phase 3C: the workflow mode on manifests ----
+
+
+def test_run_manifest_mode_defaults_to_evaluate_and_round_trips(tmp_path):
+    assert (manifest().mode, manifest().source_run_id) == ("evaluate", None)
+    shadow = manifest().model_copy(update={"mode": "shadow", "source_run_id": "run_src"})
+    store = TraceStore.create(tmp_path, "run_x")
+    path = store.write_manifest(shadow)
+    loaded = RunManifest.model_validate_json(path.read_text())
+    assert (loaded.mode, loaded.source_run_id) == ("shadow", "run_src")
+
+
+def test_run_manifest_rejects_an_unknown_mode():
+    with pytest.raises(ValueError, match="mode"):
+        RunManifest.model_validate(manifest().model_dump() | {"mode": "live"})
+
+
+def test_every_committed_manifest_loads_as_an_evaluate_run():
+    paths = sorted((REPO / "evals" / "baselines").rglob("*manifest.json"))
+    assert len(paths) == 14
+    for path in paths:
+        assert '"mode"' not in path.read_text()
+        loaded = RunManifest.model_validate_json(path.read_text())
+        assert (loaded.mode, loaded.source_run_id) == ("evaluate", None), path

@@ -42,7 +42,12 @@ def test_run_groundtruth_writes_traces_manifest_and_report(tmp_path):
     assert result.exit_code == 0, result.output
     [trace_file] = (tmp_path / "traces").glob("*.jsonl")
     assert len(trace_file.read_text().splitlines()) == 10
-    assert len(list((tmp_path / "traces").glob("*.manifest.json"))) == 1
+    [manifest_file] = (tmp_path / "traces").glob("*.manifest.json")
+    manifest = json.loads(manifest_file.read_text())
+    assert (manifest["mode"], manifest["source_run_id"]) == ("evaluate", None)
+    assert {json.loads(line)["mode"] for line in trace_file.read_text().splitlines()} == {
+        "evaluate"
+    }
     report = next((tmp_path / "reports").glob("*.md")).read_text()
     for case_id in CASE_IDS:
         assert f"## {case_id} — " in report

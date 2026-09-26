@@ -102,7 +102,7 @@ from relay.reporting import (
     render_run_table,
     render_trace_diff,
 )
-from relay.traces.models import RunManifest, WorkflowTrace
+from relay.traces.models import RunManifest, WorkflowMode, WorkflowTrace
 from relay.traces.store import TraceStore, current_git_sha, new_run_id, read_traces
 
 app = typer.Typer(
@@ -651,6 +651,7 @@ async def _execute(
     sample: tuple[int, int] | None = None,
     claude: ClaudeRun | None = None,
     projected: Decimal = Decimal("0"),
+    mode: WorkflowMode = "evaluate",
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
@@ -677,6 +678,7 @@ async def _execute(
                 run_id=run_id,
                 concurrency=concurrency,
                 git_sha=git_sha,
+                mode=mode,
             )
     except BaseException as error:
         # Account even for a failed run (API error, batch submission failure, Ctrl-C, ...) so its
@@ -715,6 +717,7 @@ async def _execute(
         relay_git_sha=git_sha,
         sample_limit=None if sample is None else sample[0],
         sample_seed=None if sample is None else sample[1],
+        mode=mode,
     )
     store.write_manifest(manifest)
     return manifest, traces
