@@ -7,6 +7,7 @@ from typing import Any
 
 from relay.cases.models import CaseInput
 from relay.decisions.base import DecisionBundle, DecisionId
+from relay.evaluation.budget import SpendLedger, ledger_totals
 from relay.evaluation.calibration import CalibrationReport, RunCalibration
 from relay.evaluation.compare import Comparison
 from relay.evaluation.confusion import ConfusionMatrix
@@ -962,3 +963,36 @@ def render_gate_summary(rows: Sequence[GateRow]) -> str:
             ]
         )
     return "\n".join(["REGRESSION GATES", *_table(table)])
+
+
+# ---- relay budget show ----
+
+
+def render_ledger(ledger: SpendLedger, path: str, budget: Decimal) -> str:
+    """`relay budget show`: every entry, then settled / reserved / total against the budget."""
+    lines = [f"Claude spend ledger — {path}"]
+    if not ledger.entries:
+        lines.append("no entries")
+    else:
+        rows = [["RUN", "DATASET", "MODE", "CASES", "STATUS", "COST", "BATCH", "NOTE"]]
+        for e in ledger.entries:
+            rows.append(
+                [
+                    e.run_id,
+                    e.dataset_id,
+                    e.mode,
+                    str(e.cases),
+                    e.status,
+                    f"${e.cost_usd:.4f}",
+                    e.batch_id or "—",
+                    e.note or "",
+                ]
+            )
+        lines += _table(rows)
+    settled, reserved, total = ledger_totals(ledger)
+    lines += [
+        "",
+        f"Settled ${settled:.4f} · reserved ${reserved:.4f} · total ${total:.4f} of the "
+        f"${budget:.2f} default budget",
+    ]
+    return "\n".join(lines)

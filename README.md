@@ -55,6 +55,9 @@ uv run relay sweep   --dataset <dir> --traces <file>                            
 uv run relay report  --dataset <dir> --traces <file> [--at 0.95]                 # report bundle, no API calls
 uv run relay compare --dataset <dir> --traces <a> --traces <b> [--labels a,b]    # side-by-side runs, no API calls
 uv run relay replay CASE_ID --traces <file> --dataset <dir> [--at 0.9]           # one case beside a candidate (see "Replay")
+uv run relay regression --dataset <dir> --baseline <file> --candidate-at 0.9     # run-level regression gate (see "Regression gate")
+uv run relay regression --config evals/regression/gates.json                    # every committed gate, as CI runs them
+uv run relay budget show --ledger results/claude-spend.json                     # Claude spend ledger entries and totals
 ```
 
 `relay run` writes `traces/<run_id>.jsonl` and `reports/<run_id>.md`, a per-case explanation
@@ -77,6 +80,21 @@ batch run prints its batch id when it submits; if the run is interrupted, re-att
 batch --batch-id <id>` rather than paying for a second batch. Re-attaching to a batch id that is
 already fully settled in the ledger is refused (nothing left to collect); re-attaching to one still
 "reserved" reads its results and settles the real cost.
+
+**Recovering an ambiguous submission.** If a batch submission fails with a connection error, a
+timeout or a server error, the request may or may not have reached Anthropic, so its reservation
+stays counted against the budget. `relay budget show --ledger PATH` lists every entry with its
+status, cost and batch id, and the settled, reserved and total spend. To resolve a stuck
+reservation:
+
+1. Check the Console's Batches page for a batch submitted around the run's start time.
+2. If the batch exists, re-attach with `--mode batch --batch-id <id>`. This collects its results
+   and settles the real cost.
+3. Otherwise, release the reservation: `relay budget release RUN_ID --ledger PATH --reason
+   "why" --yes`. This settles the entry at $0 and stores the reason as the entry's `note`. It
+   first backs the ledger up to `<ledger>.bak-<UTC timestamp>`. It refuses a settled entry, an
+   unknown run, and an entry that carries a batch id (re-attach instead; `--force-batch`
+   overrides this only for a batch you know never ran).
 
 ## Reference smoke run
 

@@ -8,13 +8,17 @@ from relay.evaluation.budget import (
     PRIOR_COST_PER_CASE_USD,
     PROJECTION_SAFETY_MARGIN,
     BudgetExceeded,
+    LedgerRefusal,
     SpendLedger,
     attach_batch,
+    backup_ledger,
     check_budget,
     cost_per_case,
     find_batch,
+    ledger_totals,
     load_ledger,
     project_cost,
+    release,
     reserve,
     settle,
     write_ledger,
@@ -205,3 +209,82 @@ def test_reserve_refuses_duplicate_run_ids():
             cases=20,
             projected=Decimal("10"),
         )
+
+
+# ---- Phase 3B: ledger maintenance (relay budget show / release) ----
+
+
+def ledger_for_release():
+    """settled smoke run, a reserved sync run, a reserved batch with a batch id."""
+    ledger = ledger_with(("smoke", "sync", 10, "0.25"))
+    for run_id, mode in (("stuck", "batch"), ("batched", "batch")):
+        ledger = reserve(
+            ledger,
+            run_id=run_id,
+            dataset_id="d",
+            mode=mode,
+            cases=100,
+            projected=Decimal("1.50"),
+            now=NOW,
+        )
+    return attach_batch(ledger, "batched", "msgbatch_test")
+
+
+def test_ledger_totals_split_settled_and_reserved():
+    assert ledger_totals(ledger_for_release()) == (
+        Decimal("0.25"),
+        Decimal("3.00"),
+        Decimal("3.25"),
+    )
+
+
+def test_release_settles_a_reserved_entry_at_zero_with_a_note():
+    later = datetime(2026, 9, 27, tzinfo=UTC)
+    released = release(ledger_for_release(), "stuck", reason="  never submitted  ", now=later)
+    entry = next(e for e in released.entries if e.run_id == "stuck")
+    assert (entry.status, entry.cost_usd, entry.recorded_at) == ("settled", Decimal("0"), later)
+    assert entry.note == "released by hand at $0 (was reserved at $1.5000): never submitted"
+    assert ledger_totals(released)[1] == Decimal("1.50")  # only the batch is still reserved
+
+
+@pytest.mark.parametrize(
+    "run_id,kwargs,message",
+    [
+        ("nope", {}, "no ledger entry for run nope"),
+        ("smoke", {}, "already settled"),
+        ("batched", {}, "carries Message Batch msgbatch_test"),
+        ("stuck", {"reason": "   "}, "--reason must say why"),
+    ],
+)
+def test_release_refusals(run_id, kwargs, message):
+    with pytest.raises(LedgerRefusal, match=message):
+        release(ledger_for_release(), run_id, **{"reason": "why", **kwargs})
+
+
+def test_force_batch_releases_an_entry_with_a_batch_id():
+    released = release(ledger_for_release(), "batched", reason="batch never ran", force_batch=True)
+    entry = next(e for e in released.entries if e.run_id == "batched")
+    assert (entry.status, entry.cost_usd, entry.batch_id) == (
+        "settled",
+        Decimal("0"),
+        "msgbatch_test",
+    )
+
+
+def test_backup_copies_the_ledger_under_a_timestamped_name(tmp_path):
+    path = tmp_path / "spend.json"
+    write_ledger(path, ledger_for_release())
+    backup = backup_ledger(path, datetime(2026, 9, 27, 8, 30, 5, tzinfo=UTC))
+    assert backup.name == "spend.json.bak-20260927T083005Z"
+    assert backup.read_text() == path.read_text()
+
+
+def test_an_old_ledger_without_notes_still_loads(tmp_path):
+    path = tmp_path / "old.json"
+    path.write_text(
+        '{"entries": [{"run_id": "r", "dataset_id": "d", "mode": "sync", "cases": 1, '
+        '"status": "settled", "cost_usd": "0.01", "recorded_at": "2026-09-25T00:00:00Z", '
+        '"batch_id": null}]}'
+    )
+    [entry] = load_ledger(path).entries
+    assert entry.note is None

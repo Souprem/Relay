@@ -37,13 +37,16 @@ from relay.evaluation.budget import (
     DEFAULT_BUDGET_USD,
     DEFAULT_LEDGER,
     BudgetExceeded,
+    LedgerRefusal,
     SpendEntry,
     SpendLedger,
     attach_batch,
+    backup_ledger,
     check_budget,
     find_batch,
     load_ledger,
     project_cost,
+    release,
     reserve,
     settle,
     write_ledger,
@@ -92,6 +95,7 @@ from relay.reporting import (
     render_eval_summary,
     render_frontier_table,
     render_gate_summary,
+    render_ledger,
     render_regression,
     render_run_report,
     render_run_table,
@@ -1451,3 +1455,59 @@ def regression(
     typer.echo(result.model_dump_json(indent=2) if json_output else rendered)
     if result.exit_code:
         raise typer.Exit(code=result.exit_code)
+
+
+budget_app = typer.Typer(
+    no_args_is_help=True, help="Inspect the Claude spend ledger and release a stuck reservation."
+)
+app.add_typer(budget_app, name="budget")
+
+LedgerPath = Annotated[
+    Path, typer.Option("--ledger", dir_okay=False, help=f"Spend ledger (default {DEFAULT_LEDGER}).")
+]
+
+
+def _read_ledger(path: Path) -> SpendLedger:
+    try:
+        return load_ledger(path)
+    except (ValidationError, OSError) as error:
+        raise _fail(f"{path}: {error}") from error
+
+
+@budget_app.command("show")
+def budget_show(ledger: LedgerPath = DEFAULT_LEDGER) -> None:
+    """Print every ledger entry and the settled / reserved / total spend."""
+    typer.echo(render_ledger(_read_ledger(ledger), str(ledger), DEFAULT_BUDGET_USD))
+
+
+@budget_app.command("release")
+def budget_release(
+    run_id: Annotated[str, typer.Argument(help="The run whose reservation is released.")],
+    reason: Annotated[str, typer.Option(help="Why; stored on the entry as its note.")],
+    ledger: LedgerPath = DEFAULT_LEDGER,
+    yes: Annotated[bool, typer.Option("--yes", help="Confirm rewriting the ledger.")] = False,
+    force_batch: Annotated[
+        bool,
+        typer.Option("--force-batch", help="Release an entry that carries a batch id anyway."),
+    ] = False,
+) -> None:
+    """Settle a reserved entry at $0 (after an ambiguous submission that never ran).
+
+    Backs the ledger up to <ledger>.bak-<UTC timestamp> first. Refuses (exit 2) a settled entry,
+    an unknown run, and an entry with a batch id unless --force-batch.
+    """
+    if not yes:
+        raise _fail("release rewrites the spend ledger; pass --yes to confirm")
+    if not ledger.exists():
+        raise _fail(f"{ledger} does not exist")
+    now = datetime.now(UTC)
+    try:
+        updated = release(
+            _read_ledger(ledger), run_id, reason=reason, force_batch=force_batch, now=now
+        )
+    except LedgerRefusal as error:
+        raise _fail(str(error)) from error
+    backup = backup_ledger(ledger, now)
+    write_ledger(ledger, updated)
+    typer.echo(f"Released run {run_id}: settled at $0. Backup: {backup}")
+    typer.echo(render_ledger(updated, str(ledger), DEFAULT_BUDGET_USD))
