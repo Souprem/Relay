@@ -1,7 +1,9 @@
-"""relay run / eval / generate, and the offline analyses sweep / report / compare."""
+"""relay run / eval / generate, and the offline analyses sweep / report / compare / replay."""
 
 import asyncio
+import contextlib
 import os
+import sys
 from collections.abc import Callable
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
@@ -18,8 +20,9 @@ from dotenv import load_dotenv
 from pydantic import ValidationError
 from typesafe_sdk import AsyncTypeSafeClient
 
-from relay.cases.loader import CaseLoadError, load_dataset
+from relay.cases.loader import CaseLoadError, load_case, load_dataset
 from relay.cases.models import PriorAuthCase
+from relay.cases.policies import AuthorizationPolicy, latest_policy_for, load_policy
 from relay.decisions.base import DecisionProvider
 from relay.decisions.claude import ClaudeProvider, Mode
 from relay.decisions.claude_batch import ClaudeBatchProvider
@@ -48,12 +51,24 @@ from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
+from relay.evaluation.labels import expected_action
 from relay.evaluation.metrics import EvalError, run_identity, score_run
 from relay.evaluation.runner import (
     RunConfigError,
+    policy_text_hash,
     run_dataset,
     sample_cases,
     validate_run_config,
+)
+from relay.evaluation.tracediff import (
+    REPRODUCE_LABEL,
+    candidate_trace_label,
+    diff_traces,
+    live_label,
+    original_label,
+    policy_replay_label,
+    replay_exit_code,
+    replay_trace,
 )
 from relay.generation.generator import generate_dataset, verify_dataset
 from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest, write_manifest
@@ -68,6 +83,7 @@ from relay.reporting import (
     render_frontier_table,
     render_run_report,
     render_run_table,
+    render_trace_diff,
 )
 from relay.traces.models import RunManifest, WorkflowTrace
 from relay.traces.store import TraceStore, current_git_sha, new_run_id, read_traces
@@ -998,3 +1014,239 @@ def generate(
         "Expected actions: "
         + ", ".join(f"{k} {v}" for k, v in manifest.expected_action_counts.items())
     )
+
+
+ReplayQuestions = Annotated[
+    str | None,
+    typer.Option(
+        "--questions",
+        "--question-set",
+        help="Live candidate only: the provider's question set (as for run/eval).",
+    ),
+]
+
+
+def _one_trace(path: Path, case_id: str, flag: str) -> WorkflowTrace:
+    """The single trace for case_id in a trace file; zero or several is a usage error."""
+    matches = [t for t in _read_trace_file(path) if t.case_id == case_id]
+    if len(matches) != 1:
+        raise _fail(
+            f"{flag} {path}: expected exactly one trace for {case_id}, found {len(matches)}"
+        )
+    return matches[0]
+
+
+def _frozen_case(dataset: Path, trace: WorkflowTrace) -> PriorAuthCase:
+    """The trace's case from the dataset, refused unless its inputs hash to the stored hash."""
+    case_dir = dataset / trace.case_id
+    if not case_dir.is_dir():
+        raise _fail(f"{trace.case_id} is not a case folder in {dataset}")
+    try:
+        case = load_case(case_dir)
+    except CaseLoadError as error:
+        raise _fail(str(error)) from error
+    actual = case.input.content_hash()
+    if actual != trace.case_content_hash:
+        raise _fail(
+            f"{trace.case_id}: the case inputs changed since run {trace.run_id} (trace "
+            f"{trace.case_content_hash}, dataset {actual}); replaying altered inputs is not replay"
+        )
+    return case
+
+
+def _policy(policy_id: str) -> AuthorizationPolicy:
+    try:
+        return load_policy(policy_id)
+    except KeyError as error:
+        raise _fail(str(error.args[0])) from error
+
+
+def _live_candidate(
+    case: PriorAuthCase,
+    original: WorkflowTrace,
+    dataset: Path,
+    provider: ProviderName,
+    questions: str | None,
+    mode: ClaudeMode | None,
+    budget_usd: float | None,
+    ledger: Path | None,
+    traces_dir: Path,
+    quiet: bool,
+) -> WorkflowTrace:
+    """A fresh provider call on the frozen input, written as an ordinary one-case run.
+
+    With --json, the run's own messages (budget, notes, spend, run id) go to stderr so stdout
+    stays pure JSON.
+    """
+    if mode is ClaudeMode.batch:
+        raise _fail("replay decides one case; --mode batch is not supported (use --mode sync)")
+    claude = _resolve_claude(provider, mode, budget_usd, ledger)
+    resolved = _resolve_questions(provider, questions)
+    cases = [case]
+    _preflight(cases, provider, original.policy_version)
+    chatter = contextlib.redirect_stdout(sys.stderr) if quiet else contextlib.nullcontext()
+    with chatter:
+        projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
+        if provider in PROVIDER_NOTES:
+            typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
+        manifest, traces = asyncio.run(
+            _execute(
+                cases,
+                provider,
+                original.policy_version,
+                1,
+                traces_dir,
+                dataset,
+                resolved,
+                None,
+                claude,
+                projected,
+            )
+        )
+        typer.echo(f"Live candidate run {manifest.run_id}: {manifest.trace_file}")
+    return traces[0]
+
+
+@app.command()
+def replay(
+    case_id: Annotated[str, typer.Argument(help="The case to replay, e.g. GOLD-TMP-17.")],
+    traces: TraceFile,
+    dataset: Dataset,
+    policy_id: Annotated[
+        str | None,
+        typer.Option("--policy", help="Policy replay: the stored decisions under this policy id."),
+    ] = None,
+    latest_policy: Annotated[
+        bool,
+        typer.Option(
+            "--latest-policy",
+            help="Policy replay: under the newest registered policy for the same medication.",
+        ),
+    ] = False,
+    at: Annotated[
+        float | None,
+        typer.Option(min=0.0, max=1.0, help="Policy replay: override the auto_process threshold."),
+    ] = None,
+    candidate_traces: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True, dir_okay=False, help="Candidate: this case's trace from another run."
+        ),
+    ] = None,
+    provider: Annotated[
+        ProviderName | None,
+        typer.Option(help="Live candidate: a fresh call to this provider on the frozen inputs."),
+    ] = None,
+    questions: ReplayQuestions = None,
+    mode: ModeOption = None,
+    budget_usd: BudgetUsd = None,
+    ledger: LedgerOption = None,
+    traces_dir: Annotated[
+        Path, typer.Option(help="Live candidate only: where its trace file is written.")
+    ] = Path("traces"),
+    all_gates: Annotated[
+        bool, typer.Option("--all-gates", help="Show every gate row, not only changed ones.")
+    ] = False,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Print the TraceDiff as JSON and nothing else.")
+    ] = False,
+) -> None:
+    """Replay one stored trace beside a candidate and call out every difference.
+
+    Exit codes: 0 ok; 2 usage/input error; 3 ENGINE DRIFT (reproduce only); 4 NEWLY UNSAFE.
+    """
+    policy_replay = policy_id is not None or latest_policy or at is not None
+    sources = [
+        name
+        for name, used in (
+            ("policy replay (--policy/--latest-policy/--at)", policy_replay),
+            ("--candidate-traces", candidate_traces is not None),
+            ("--provider", provider is not None),
+        )
+        if used
+    ]
+    if len(sources) > 1:
+        raise _fail("choose one candidate source, not " + " and ".join(sources))
+    if policy_id is not None and latest_policy:
+        raise _fail("--policy and --latest-policy are mutually exclusive")
+    if provider is None:
+        live_only = {
+            "--questions": questions,
+            "--mode": mode,
+            "--budget-usd": budget_usd,
+            "--ledger": ledger,
+        }
+        given = [flag for flag, value in live_only.items() if value is not None]
+        if given:
+            raise _fail(f"{', '.join(given)} applies only to a live candidate (--provider)")
+
+    original = _one_trace(traces, case_id, "--traces")
+    case = _frozen_case(dataset, original)
+    original_policy = _policy(original.policy_id)
+    reproduce = False
+    if candidate_traces is not None:
+        candidate = _one_trace(candidate_traces, case_id, "--candidate-traces")
+        if candidate.case_content_hash != original.case_content_hash:
+            raise _fail(
+                f"--candidate-traces {candidate_traces}: its {case_id} trace was made on "
+                f"different case inputs ({candidate.case_content_hash}, original "
+                f"{original.case_content_hash})"
+            )
+        label = candidate_trace_label(candidate)
+    elif provider is not None:
+        candidate = _live_candidate(
+            case,
+            original,
+            dataset,
+            provider,
+            questions,
+            mode,
+            budget_usd,
+            ledger,
+            traces_dir,
+            json_output,
+        )
+        label = live_label(candidate)
+    elif policy_replay:
+        if latest_policy:
+            try:
+                target_id = latest_policy_for(original.policy_id)
+            except KeyError as error:
+                raise _fail(str(error.args[0])) from error
+        else:
+            target_id = policy_id or original.policy_id
+        target = _policy(target_id)
+        thresholds = (
+            original.thresholds
+            if at is None
+            else original.thresholds.model_copy(update={"auto_process": at})
+        )
+        candidate = replay_trace(original, case, policy=target, thresholds=thresholds)
+        label = policy_replay_label(target, at)
+    else:
+        reproduce = True
+        candidate = replay_trace(
+            original, case, policy=original_policy, thresholds=original.thresholds
+        )
+        label = REPRODUCE_LABEL
+    candidate_policy = (
+        original_policy
+        if candidate.policy_id == original.policy_id
+        else _policy(candidate.policy_id)
+    )
+    diff = diff_traces(
+        original,
+        candidate,
+        expected_original=expected_action(case, original_policy, original.thresholds),
+        expected_candidate=expected_action(case, candidate_policy, candidate.thresholds),
+        original_label=original_label(original),
+        candidate_label=label,
+        current_policy_text_hash=policy_text_hash(original_policy),
+    )
+    if json_output:
+        typer.echo(diff.model_dump_json(indent=2))
+    else:
+        typer.echo(render_trace_diff(diff, all_gates, reproduce=reproduce))
+    code = replay_exit_code(diff, reproduce=reproduce)
+    if code:
+        raise typer.Exit(code=code)
