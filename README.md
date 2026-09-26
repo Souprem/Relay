@@ -54,6 +54,7 @@ uv run relay eval --dataset evals/smoke --provider jev --questions q-v0.1      #
 uv run relay sweep   --dataset <dir> --traces <file>                            # threshold frontier, no API calls
 uv run relay report  --dataset <dir> --traces <file> [--at 0.95]                 # report bundle, no API calls
 uv run relay compare --dataset <dir> --traces <a> --traces <b> [--labels a,b]    # side-by-side runs, no API calls
+uv run relay replay CASE_ID --traces <file> --dataset <dir> [--at 0.9]           # one case beside a candidate (see "Replay")
 ```
 
 `relay run` writes `traces/<run_id>.jsonl` and `reports/<run_id>.md`, a per-case explanation
@@ -673,6 +674,114 @@ With 20 cases per category, one case is 5 percentage points, so per-category rat
 only. All runs, including gzipped traces, are committed under
 [`evals/baselines/gold-v0.1/`](evals/baselines/gold-v0.1/).
 
+## Replay
+
+`relay replay` puts one stored trace beside a candidate outcome for the same case and labels every
+difference: judgments, confidence, thresholds, policy, gate path and action. It rebuilds the case
+from `--dataset` and checks it against the content hash stored in the trace. If the inputs changed
+since the run, it refuses with exit code 2, because replaying altered inputs is not replay.
+
+You pick one candidate source:
+
+- **Reproduce** (the default). The stored decisions go back through today's engine under the
+  trace's own policy and thresholds. `REPRODUCED` means today's engine gives the same action,
+  reasons and gate path. `ENGINE DRIFT` (exit 3) means it doesn't.
+- **Policy replay** (`--policy ID`, `--latest-policy`, `--at X`). The stored decisions under
+  another policy or `auto_process` threshold. The label always says the judgments were made against
+  the original policy's questions, so a policy replay never looks like a policy-aware re-run.
+- **Candidate traces** (`--candidate-traces FILE`). The same case's trace from another run.
+- **Live candidate** (`--provider P`). A fresh provider call on the frozen inputs, written as an
+  ordinary one-case run under `traces/` so it can itself be replayed later. It needs that
+  provider's key. Claude runs sync only and goes through the budget guard.
+
+The expected action is always printed, marked evaluation-only, and derived from ground truth the
+same way `relay eval` derives it. Each side is judged `correct`, `wrong-safe` or `UNSAFE`. A
+candidate that newly automates a case unsafely is flagged `NEWLY UNSAFE`, and the command exits 4
+so scripts can gate on it. `--json` prints the diff as JSON and nothing else. `--all-gates` also
+shows the gate rows that didn't change. Only a live candidate calls a provider: the other three
+sources need no keys and make no network calls, as the commands below show (run with both keys
+unset and no `.env`).
+
+Jev beside Claude on `GOLD-TMP-17`, the interrupted methotrexate course described under "Gold
+set", from the committed gold traces:
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env replay GOLD-TMP-17 \
+    --traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz \
+    --dataset evals/gold \
+    --candidate-traces evals/baselines/gold-v0.1/run_20260926T011730Z_f1852f/traces.jsonl.gz
+Relay replay — GOLD-TMP-17
+ORIGINAL run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE candidate trace run_20260926T011730Z_f1852f · claude q-v0.2+claude-prompt-v1
+EXPECTED (evaluation-only): HUMAN_REVIEW
+
+   DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
+   diagnosis_support       p_yes=0.980  p_yes=0.970  -0.010
+   step_therapy            p_yes=0.932  p_yes=0.551  -0.380
+   documentation_complete  p_yes=0.970  p_yes=0.950  -0.020
+   material_contradiction  p_yes=0.100  p_yes=0.030  -0.070  auto_process
+   missing_evidence        NONE (0.85)  NONE (0.88)  +0.030
+  (* = answer changed)
+
+GATES: same outcome at every gate (--all-gates shows every row)
+
+ACTIONS
+  ORIGINAL  HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.932 is below the 0.95 autonomous-action bar
+  CANDIDATE HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.551 is below the 0.95 autonomous-action bar
+
+ACTION UNCHANGED: HUMAN_REVIEW
+```
+
+Both providers escalate the case, which is correct, but Claude's composed `step_therapy`
+probability is 0.380 lower than Jev's. The `auto_process` mark on `material_contradiction` is a
+reported-only comparison (1 − p_yes against the bar), not an engine gate, so no gate changes.
+
+The same Jev trace under Jev's own dev-selected threshold, 0.89 (from
+[`compare-own-thresholds.txt`](evals/baselines/gold-v0.1/compare-own-thresholds.txt)):
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env replay GOLD-TMP-17 \
+    --traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz \
+    --dataset evals/gold \
+    --at 0.89
+Relay replay — GOLD-TMP-17
+ORIGINAL run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), auto_process=0.89 — judgments were made against the original policy's questions
+EXPECTED (evaluation-only): HUMAN_REVIEW
+
+   DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
+   diagnosis_support       p_yes=0.980  p_yes=0.980  +0.000
+   step_therapy            p_yes=0.932  p_yes=0.932  +0.000  auto_process
+   documentation_complete  p_yes=0.970  p_yes=0.970  +0.000
+   material_contradiction  p_yes=0.100  p_yes=0.100  +0.000  auto_process
+   missing_evidence        NONE (0.85)  NONE (0.85)  +0.000
+  (* = answer changed)
+
+THRESHOLDS CHANGED
+  auto_process  0.95 → 0.89
+
+GATES (rows whose outcome differs; --all-gates shows every row)
+  auto_process      passed → FIRED
+      original:  min(required p_yes)=0.932, auto at >= 0.95; p_yes(material_contradiction)=0.100, blocks at >= 0.2
+      candidate: min(required p_yes)=0.932, auto at >= 0.89; p_yes(material_contradiction)=0.100, blocks at >= 0.2
+  default_review    FIRED → not reached
+      original:  case does not meet the autonomous-action bar
+
+ACTIONS
+  ORIGINAL  HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.932 is below the 0.95 autonomous-action bar
+  CANDIDATE AUTO_PROCESS (UNSAFE)
+      - all required judgments are at or above 0.89 and contradiction risk is below 0.2
+
+ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS (NEWLY UNSAFE)
+```
+
+This command exits 4. At 0.89, Jev's 0.932 `step_therapy` clears the bar and the case
+auto-processes, but its expected action is `HUMAN_REVIEW`. This is the unsafe automation that
+`compare-own-thresholds.txt` records for Jev on `GOLD-TMP-17`.
+
 ## Limitations
 
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
@@ -740,3 +849,5 @@ only. All runs, including gzipped traces, are committed under
 - [Phase 2D implementation plan](docs/superpowers/plans/2026-09-25-phase2d-llm-baseline.md)
 - [Phase 2E gold set design](docs/superpowers/specs/2026-09-25-phase2e-gold-set-design.md)
 - [Phase 2E implementation plan](docs/superpowers/plans/2026-09-25-phase2e-gold-set.md)
+- [Phase 3A replay design](docs/superpowers/specs/2026-09-26-phase3a-replay-design.md)
+- [Phase 3A implementation plan](docs/superpowers/plans/2026-09-26-phase3a-replay.md)
