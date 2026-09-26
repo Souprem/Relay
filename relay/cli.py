@@ -80,6 +80,7 @@ from relay.evaluation.tracediff import (
     original_label,
     policy_replay_label,
     replay_exit_code,
+    replay_run,
     replay_thresholds,
     replay_trace,
 )
@@ -101,9 +102,22 @@ from relay.reporting import (
     render_run_report,
     render_run_table,
     render_trace_diff,
+    shadow_line,
+    shadow_trailer,
+    simulated_line,
+    simulated_summary,
 )
 from relay.traces.models import RunManifest, WorkflowMode, WorkflowTrace
 from relay.traces.store import TraceStore, current_git_sha, new_run_id, read_traces
+from relay.workflow.status import (
+    DEFAULT_STATE,
+    StatusStoreError,
+    apply_transitions,
+    ensure_unclaimed,
+    load_store,
+    reset_state,
+    state_digest,
+)
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -723,6 +737,42 @@ async def _execute(
     return manifest, traces
 
 
+def _run_provider(
+    cases: list[PriorAuthCase],
+    provider: ProviderName,
+    policy: str,
+    concurrency: int,
+    traces_dir: Path,
+    dataset: Path,
+    questions: str | None,
+    sample: tuple[int, int] | None = None,
+    claude: ClaudeRun | None = None,
+    mode: WorkflowMode = "evaluate",
+) -> tuple[RunManifest, list[WorkflowTrace]]:
+    """A provider run with every guard: question set, policy and key preflight, the Claude budget
+    check and ledger, and the provider's NOTE."""
+    resolved = _resolve_questions(provider, questions)
+    _preflight(cases, provider, policy)
+    projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
+    if provider in PROVIDER_NOTES:
+        typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
+    return asyncio.run(
+        _execute(
+            cases,
+            provider,
+            policy,
+            concurrency,
+            traces_dir,
+            dataset,
+            resolved,
+            sample,
+            claude,
+            projected,
+            mode,
+        )
+    )
+
+
 def _run_and_report(
     cases: list[PriorAuthCase],
     provider: ProviderName,
@@ -735,24 +785,8 @@ def _run_and_report(
     sample: tuple[int, int] | None = None,
     claude: ClaudeRun | None = None,
 ) -> list[WorkflowTrace]:
-    resolved = _resolve_questions(provider, questions)
-    _preflight(cases, provider, policy)
-    projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
-    if provider in PROVIDER_NOTES:
-        typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
-    manifest, traces = asyncio.run(
-        _execute(
-            cases,
-            provider,
-            policy,
-            concurrency,
-            traces_dir,
-            dataset,
-            resolved,
-            sample,
-            claude,
-            projected,
-        )
+    manifest, traces = _run_provider(
+        cases, provider, policy, concurrency, traces_dir, dataset, questions, sample, claude
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -765,11 +799,180 @@ def _run_and_report(
     return traces
 
 
+class Workflow(StrEnum):
+    simulated = "simulated"
+    shadow = "shadow"
+
+
+def _reissue(
+    from_traces: Path,
+    cases: list[PriorAuthCase],
+    dataset: Path,
+    traces_dir: Path,
+    mode: WorkflowMode,
+    at: float | None,
+    sample: tuple[int, int] | None,
+) -> tuple[RunManifest, list[WorkflowTrace]]:
+    """--from-traces: the stored run's decisions re-issued as a new run in `mode` (replay_run,
+    re-decided at `at` if given), written like any run. No provider is called."""
+    source = _read_trace_file(from_traces)
+    if not source:
+        raise _fail(f"{from_traces}: no traces")
+    run_id = new_run_id()
+    try:
+        traces = replay_run(
+            source, cases, policy_id=None, auto_process=at, mode=mode, run_id=run_id
+        )
+    except (EvalError, ValueError) as error:
+        raise _fail(f"--from-traces {from_traces}: {error}") from error
+    store = TraceStore.create(traces_dir, run_id)
+    for trace in traces:
+        store.append(trace)
+    first = traces[0]
+    manifest = RunManifest(
+        run_id=run_id,
+        created_at=datetime.now(UTC),
+        dataset_id=first.dataset_id,
+        dataset_path=str(dataset),
+        provider=first.provider,
+        policy_version=first.policy_version,
+        question_set_version=first.question_set_version,
+        case_count=len(traces),
+        trace_file=str(store.path),
+        relay_git_sha=first.relay_git_sha,
+        sample_limit=None if sample is None else sample[0],
+        sample_seed=None if sample is None else sample[1],
+        mode=mode,
+        source_run_id=source[0].run_id,
+    )
+    store.write_manifest(manifest)
+    return manifest, traces
+
+
+@dataclass(frozen=True)
+class WorkflowRequest:
+    """Everything `relay run --workflow` needs beyond the cases (flags already validated)."""
+
+    workflow: Workflow
+    dataset: Path
+    traces_dir: Path
+    state: Path
+    from_traces: Path | None = None
+    at: float | None = None
+    provider: ProviderName = ProviderName.jev
+    policy: str = "v0.1"
+    concurrency: int = 4
+    questions: str | None = None
+    claude: ClaudeRun | None = None
+    reset_state: bool = False
+
+
+def _workflow_traces(
+    request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
+) -> tuple[RunManifest, list[WorkflowTrace]]:
+    mode: WorkflowMode = request.workflow.value
+    if request.from_traces is not None:
+        return _reissue(
+            request.from_traces,
+            cases,
+            request.dataset,
+            request.traces_dir,
+            mode,
+            request.at,
+            sample,
+        )
+    return _run_provider(
+        cases,
+        request.provider,
+        request.policy,
+        request.concurrency,
+        request.traces_dir,
+        request.dataset,
+        request.questions,
+        sample,
+        request.claude,
+        mode,
+    )
+
+
+def _run_paths(manifest: RunManifest) -> list[str]:
+    trace_file = Path(manifest.trace_file)
+    return [f"Traces: {trace_file}", f"Manifest: {trace_file.with_suffix('.manifest.json')}"]
+
+
+def _run_simulated(
+    request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
+) -> None:
+    """The incumbent: every action becomes a simulated case-status transition in --state."""
+    try:
+        if request.reset_state:
+            backup = reset_state(request.state)
+            typer.echo(
+                f"State archived: {backup}"
+                if backup is not None
+                else f"State: nothing to archive at {request.state}"
+            )
+        ensure_unclaimed(load_store(request.state), [c.input.id for c in cases])
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    manifest, traces = _workflow_traces(request, cases, sample)
+    try:
+        _, transitions = apply_transitions(request.state, traces)
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    by_case = {t.trace_id: t.case_id for t in traces}
+    for transition in sorted(transitions, key=lambda t: by_case[t.trace_id]):
+        typer.echo(simulated_line(transition, by_case[transition.trace_id]))
+    typer.echo("")
+    typer.echo(simulated_summary(manifest.run_id, transitions))
+    for line in [*_run_paths(manifest), f"State: {request.state}"]:
+        typer.echo(line)
+
+
+def _run_shadow(
+    request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
+) -> None:
+    """A candidate in shadow: its proposals are recorded and never applied. The state file is
+    read, never written, and hashed before and after to prove it (exit 3 if it changed)."""
+    before = state_digest(request.state)
+    try:
+        store = load_store(request.state)
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    manifest, traces = _workflow_traces(request, cases, sample)
+    after = state_digest(request.state)
+    if after != before:
+        typer.echo(
+            f"SHADOW VIOLATION: {request.state} changed during shadow run {manifest.run_id} "
+            f"({before} → {after})",
+            err=True,
+        )
+        raise typer.Exit(code=3)
+    for trace in sorted(traces, key=lambda t: t.case_id):
+        current = None
+        if before != "absent":
+            last = store.last_transition(trace.case_id)
+            current = (store.status_of(trace.case_id), None if last is None else last.run_id)
+        typer.echo(shadow_line(trace, current))
+    typer.echo("")
+    typer.echo(shadow_trailer(manifest.run_id, len(traces)))
+    for line in _run_paths(manifest):
+        typer.echo(line)
+
+
+RunProvider = Annotated[
+    ProviderName | None, typer.Option("--provider", help="Decision provider (default jev).")
+]
+RunPolicy = Annotated[
+    str | None, typer.Option("--policy", help="Policy/threshold version (default v0.1).")
+]
+
+
 @app.command()
 def run(
     dataset: Dataset,
-    provider: Provider = ProviderName.jev,
-    policy: Policy = "v0.1",
+    provider: RunProvider = None,
+    policy: RunPolicy = None,
     concurrency: Concurrency = 4,
     traces_dir: TracesDir = Path("traces"),
     reports_dir: ReportsDir = Path("reports"),
@@ -780,22 +983,130 @@ def run(
     budget_usd: BudgetUsd = None,
     ledger: LedgerOption = None,
     batch_id: BatchId = None,
+    workflow: Annotated[
+        Workflow | None,
+        typer.Option(
+            help="simulated: the incumbent; its actions become simulated case-status transitions "
+            "in --state. shadow: a candidate; its proposals are recorded and case state is never "
+            "changed. Without it, an ordinary traced run with a Markdown report."
+        ),
+    ] = None,
+    from_traces: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            dir_okay=False,
+            help="--workflow only: re-issue this stored run's decisions instead of calling a "
+            "provider (offline).",
+        ),
+    ] = None,
+    at: Annotated[
+        float | None,
+        typer.Option(
+            help="With --from-traces: re-decide at this auto_process threshold, in (0, 1]."
+        ),
+    ] = None,
+    state: Annotated[
+        Path | None,
+        typer.Option(
+            dir_okay=False,
+            help=f"--workflow only: the case-status store (default {DEFAULT_STATE}).",
+        ),
+    ] = None,
+    reset_state_flag: Annotated[
+        bool,
+        typer.Option(
+            "--reset-state",
+            help="--workflow simulated only: archive the state file to <state>.bak-<UTC "
+            "timestamp> and start from RECEIVED.",
+        ),
+    ] = False,
 ) -> None:
-    """Decide every case in DATASET; write traces and a Markdown report."""
-    claude = _resolve_claude(provider, mode, budget_usd, ledger, batch_id)
-    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
-    _run_and_report(
-        cases,
-        provider,
-        policy,
-        concurrency,
-        traces_dir,
-        reports_dir,
-        dataset,
-        questions,
-        sample,
-        claude,
+    """Decide every case in DATASET; write traces and a Markdown report.
+
+    With --workflow: simulated (the incumbent's actions change simulated case status) or shadow
+    (a candidate's proposals are recorded, never applied). Exit codes: 0 ok; 2 usage/input
+    error; 3 SHADOW VIOLATION.
+    """
+    if workflow is None:
+        given = [
+            flag
+            for flag, value in (
+                ("--from-traces", from_traces),
+                ("--at", at),
+                ("--state", state),
+                ("--reset-state", reset_state_flag or None),
+            )
+            if value is not None
+        ]
+        if given:
+            raise _fail(f"{', '.join(given)} needs --workflow simulated or --workflow shadow")
+        resolved_provider = provider or ProviderName.jev
+        claude = _resolve_claude(resolved_provider, mode, budget_usd, ledger, batch_id)
+        cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
+        _run_and_report(
+            cases,
+            resolved_provider,
+            policy or "v0.1",
+            concurrency,
+            traces_dir,
+            reports_dir,
+            dataset,
+            questions,
+            sample,
+            claude,
+        )
+        return
+    if at is not None and from_traces is None:
+        raise _fail("--at needs --from-traces")
+    if at is not None and not 0.0 < at <= 1.0:
+        raise _fail(f"--at must be in (0, 1], got {at:g}")
+    if from_traces is not None:
+        given = [
+            flag
+            for flag, value in (
+                ("--provider", provider),
+                ("--policy", policy),
+                ("--questions", questions),
+                ("--mode", mode),
+                ("--budget-usd", budget_usd),
+                ("--ledger", ledger),
+                ("--batch-id", batch_id),
+            )
+            if value is not None
+        ]
+        if given:
+            raise _fail(
+                f"{', '.join(given)} cannot be combined with --from-traces (the stored run's "
+                "decisions are re-issued; no provider is called)"
+            )
+    if workflow is Workflow.shadow and reset_state_flag:
+        raise _fail("--reset-state applies only to --workflow simulated")
+    resolved_provider = provider or ProviderName.jev
+    claude = (
+        None
+        if from_traces is not None
+        else _resolve_claude(resolved_provider, mode, budget_usd, ledger, batch_id)
     )
+    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
+    request = WorkflowRequest(
+        workflow=workflow,
+        dataset=dataset,
+        traces_dir=traces_dir,
+        state=DEFAULT_STATE if state is None else state,
+        from_traces=from_traces,
+        at=at,
+        provider=resolved_provider,
+        policy=policy or "v0.1",
+        concurrency=concurrency,
+        questions=questions,
+        claude=claude,
+        reset_state=reset_state_flag,
+    )
+    if workflow is Workflow.simulated:
+        _run_simulated(request, cases, sample)
+    else:
+        _run_shadow(request, cases, sample)
 
 
 @app.command("eval")
