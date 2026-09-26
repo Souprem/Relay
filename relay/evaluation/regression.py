@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator, model_validator
 
 from relay.cases.models import PriorAuthCase
 from relay.evaluation.calibration import calibrate_run
@@ -57,6 +57,22 @@ class WaiverFile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     waivers: list[Waiver]
+
+    @model_validator(mode="after")
+    def _no_duplicate_waivers(self) -> "WaiverFile":
+        """M3: a duplicate (case_id, gate) waiver is rejected rather than silently letting the
+        first one win."""
+        seen: set[tuple[str, str]] = set()
+        duplicates: list[tuple[str, str]] = []
+        for w in self.waivers:
+            key = (w.case_id, w.gate)
+            if key in seen:
+                duplicates.append(key)
+            seen.add(key)
+        if duplicates:
+            shown = ", ".join(f"{case_id!r} (gate {gate!r})" for case_id, gate in duplicates)
+            raise ValueError(f"duplicate waiver(s): {shown}")
+        return self
 
 
 class Interval(BaseModel):
@@ -121,6 +137,7 @@ class RegressionResult(BaseModel):
     not_identical: int
     newly_unsafe: list[CaseEntry]  # without a waiver
     waived: list[WaivedCase]
+    still_unsafe: list[CaseEntry]  # UNSAFE on both sides: the baseline's own unsafe automation
     unsafe_resolved: list[CaseEntry]
     regressed: list[CaseEntry]
     improved: list[CaseEntry]
@@ -324,6 +341,7 @@ def build_result(
         waived=[
             WaivedCase(entry=case_entry(d, command(d.case_id)), waiver=w) for d, w in outcome.waived
         ],
+        still_unsafe=entries([d for d in ordered if d.unsafe_both]),
         unsafe_resolved=entries([d for d in ordered if d.unsafe_resolved]),
         regressed=entries(outcome.regressed),
         improved=entries([d for d in ordered if d.change == "improved"]),

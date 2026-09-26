@@ -62,6 +62,7 @@ from relay.evaluation.regression_run import (
     RegressionInputError,
     RegressionRequest,
     load_gates,
+    load_waivers,
     run_regression,
     write_outputs,
 )
@@ -1290,6 +1291,8 @@ def _gate_row(name: str, result: RegressionResult) -> GateRow:
         newly_unsafe=len(result.newly_unsafe),
         regressed=len(result.regressed),
         exit_code=result.exit_code,
+        still_unsafe=len(result.still_unsafe),
+        waived=len(result.waived),
     )
 
 
@@ -1304,10 +1307,19 @@ def _run_gate(
     return run.result, rendered
 
 
-def _regression_config(config: Path, names: list[str], out: Path | None, show_all: bool) -> int:
+def _regression_config(
+    config: Path,
+    names: list[str],
+    out: Path | None,
+    show_all: bool,
+    *,
+    strict_generated: bool = False,
+) -> int:
     """Config mode: every gate (or the --gate ones), each report, then a summary. Returns the
-    highest exit code. A gate with requires_generated whose dataset is missing is SKIPPED; any
-    other input error is that gate's ERROR (exit 2) and the remaining gates still run."""
+    highest exit code. A gate with requires_generated whose dataset is missing is SKIPPED; with
+    --strict-generated it is an ERROR (exit 2) instead, so a failed or skipped regeneration step
+    cannot leave a holdout drift gate silently green. Any other input error is that gate's ERROR
+    (exit 2) and the remaining gates still run."""
     try:
         gates = load_gates(config).gates
     except RegressionInputError as error:
@@ -1320,6 +1332,10 @@ def _regression_config(config: Path, names: list[str], out: Path | None, show_al
     for spec in selected:
         if spec.requires_generated and not Path(spec.dataset).is_dir():
             note = f"dataset not generated; run relay generate to create {spec.dataset}"
+            if strict_generated:
+                typer.echo(f"Relay regression — gate {spec.name}: ERROR: {note}\n", err=True)
+                rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=note))
+                continue
             typer.echo(f"Relay regression — gate {spec.name}: SKIPPED ({note})\n")
             rows.append(GateRow(spec.name, "SKIPPED", None, None, 0, note=note))
             continue
@@ -1327,6 +1343,12 @@ def _regression_config(config: Path, names: list[str], out: Path | None, show_al
         try:
             result, rendered = _run_gate(RegressionRequest.from_gate(spec), gate_out, show_all)
         except RegressionInputError as error:
+            typer.echo(f"Relay regression — gate {spec.name}: ERROR: {error}\n", err=True)
+            rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=str(error)[:80]))
+            continue
+        except OSError as error:
+            # M10: an unwritable --out (or other filesystem failure) is this gate's ERROR row,
+            # not an uncaught traceback that aborts the remaining gates and writes no summary.
             typer.echo(f"Relay regression — gate {spec.name}: ERROR: {error}\n", err=True)
             rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=str(error)[:80]))
             continue
@@ -1403,6 +1425,14 @@ def regression(
         list[str] | None,
         typer.Option("--gate", help="Config mode: run only this gate (repeatable)."),
     ] = None,
+    strict_generated: Annotated[
+        bool,
+        typer.Option(
+            "--strict-generated",
+            help="Config mode: a requires_generated gate whose dataset is missing is an ERROR "
+            "(exit 2) instead of SKIPPED.",
+        ),
+    ] = False,
 ) -> None:
     """Gate a candidate against an accepted baseline on the same frozen dataset (offline).
 
@@ -1426,12 +1456,16 @@ def regression(
         given = [flag for flag, value in single.items() if value is not None]
         if given:
             raise _fail(f"{', '.join(given)} cannot be combined with --config")
-        code = _regression_config(config, gate or [], out, show_all)
+        code = _regression_config(
+            config, gate or [], out, show_all, strict_generated=strict_generated
+        )
         if code:
             raise typer.Exit(code=code)
         return
     if gate:
         raise _fail("--gate needs --config")
+    if strict_generated:
+        raise _fail("--strict-generated needs --config")
     if dataset is None or baseline is None:
         raise _fail("give --dataset and --baseline, or --config")
     request = RegressionRequest(
@@ -1448,6 +1482,15 @@ def regression(
         waivers=waivers,
         max_regressed=max_regressed,
     )
+    if waivers is not None:
+        # M2: without --config there is no gate name, so only "*" waivers ever apply; a waiver
+        # scoped to a specific gate name is silently out of scope (fails closed) but easy to miss.
+        try:
+            ignored = sum(1 for w in load_waivers(waivers) if w.gate != "*")
+        except RegressionInputError as error:
+            raise _fail(str(error)) from error
+        if ignored:
+            typer.echo(f"{ignored} waiver(s) for other gates ignored (no --config here)\n")
     try:
         result, rendered = _run_gate(request, out, show_all)
     except RegressionInputError as error:

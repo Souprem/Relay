@@ -46,7 +46,7 @@ jobs:
       - name: Regression gate
         run: >-
           uv run relay --env-file .no-such.env regression
-          --config evals/regression/gates.json --out regression-report
+          --config evals/regression/gates.json --strict-generated --out regression-report
 
       - name: Upload the regression report
         if: always()

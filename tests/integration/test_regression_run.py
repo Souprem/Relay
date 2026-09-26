@@ -22,6 +22,7 @@ from relay.evaluation.regression_run import (
     write_outputs,
 )
 from relay.traces.store import read_traces
+from relay.workflow.outcomes import WorkflowAction
 
 REPO = Path(__file__).resolve().parents[2]
 SMOKE = REPO / "evals" / "smoke"
@@ -106,6 +107,22 @@ def test_run_manifests_are_found_for_every_trace_file_layout(smoke, tmp_path):
     assert find_run_manifest(tmp_path / "loose.jsonl") is None
 
 
+def test_a_mismatched_run_manifest_is_an_input_error(smoke, tmp_path):
+    """M9: a run-manifest.json beside a trace file is otherwise trusted without checking it
+    actually describes that trace file, which would subsample against the wrong manifest."""
+    trace = smoke["rules"]
+    manifest_path = trace.with_suffix(".manifest.json")
+    mismatched = tmp_path / trace.name
+    mismatched.write_bytes(trace.read_bytes())
+    bad_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    bad_manifest["run_id"] = "not-the-real-run-id"
+    (tmp_path / manifest_path.name).write_text(json.dumps(bad_manifest), encoding="utf-8")
+    with pytest.raises(RegressionInputError, match="does not match"):
+        run_regression(
+            RegressionRequest(dataset=SMOKE, baseline=mismatched, candidate=CandidateSpec(at=0.9))
+        )
+
+
 def test_a_sampled_baseline_is_paired_with_its_sample(tmp_path):
     sampled = smoke_run(tmp_path, "groundtruth", "--limit", "4", "--sample-seed", "3")
     run = run_regression(
@@ -155,6 +172,15 @@ def test_claude_is_not_an_unsafe_regression_versus_jev_on_gold():
     assert result.candidate.label.endswith("· re-decided at auto_process=0.55")
     # the re-decided baseline exists only with --out, so no replay command without it
     assert result.regressed[0].replay_command is None
+    # I1: both Jev at 0.89 and Claude at 0.55 automate GOLD-TMP-17 unsafely, so it is invisible
+    # to newly_unsafe (the gate is relative to the baseline) but must show up as still_unsafe.
+    assert [e.case_id for e in result.still_unsafe] == ["GOLD-TMP-17"]
+    still = result.still_unsafe[0]
+    assert (still.action_baseline, still.action_candidate) == (
+        WorkflowAction.AUTO_PROCESS,
+        WorkflowAction.AUTO_PROCESS,
+    )
+    assert still.expected == WorkflowAction.HUMAN_REVIEW
 
 
 def test_a_mismatched_candidate_run_is_an_input_error(smoke, tmp_path):

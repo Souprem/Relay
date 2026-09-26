@@ -58,6 +58,13 @@ class CandidateSpec(BaseModel):
     def is_policy_replay(self) -> bool:
         return self.traces is None and not self.reproduce
 
+    @property
+    def redecided(self) -> bool:
+        """True when the candidate's decisions were replayed rather than read as recorded: any
+        policy replay always re-decides; a candidate trace file only when --candidate-at re-runs
+        it. Used wherever a re-decided candidate needs its own written trace file."""
+        return self.is_policy_replay or (self.traces is not None and self.at is not None)
+
 
 class GateSpec(BaseModel):
     """One entry of evals/regression/gates.json. Paths are relative to the working directory
@@ -174,11 +181,27 @@ def load_gates(path: Path) -> GatesConfig:
     duplicates = sorted({n for n in names if names.count(n) > 1})
     if duplicates:
         raise RegressionInputError(f"{path}: duplicate gate names {duplicates}")
+    known = set(names)
     for spec in config.gates:
         try:
             validate_request(spec.candidate, spec.baseline_at)
         except RegressionInputError as error:
             raise RegressionInputError(f"{path}: gate {spec.name}: {error}") from error
+        if spec.waivers is not None:
+            # M2: a waiver scoped to neither "*" nor a real gate name fails closed (applies_to
+            # never matches it), but silently — reject the typo instead of letting it hide.
+            unknown = sorted(
+                {
+                    w.gate
+                    for w in load_waivers(Path(spec.waivers))
+                    if w.gate != "*" and w.gate not in known
+                }
+            )
+            if unknown:
+                raise RegressionInputError(
+                    f"{path}: gate {spec.name}: waiver file {spec.waivers} scopes waiver(s) to "
+                    f"unknown gate(s) {unknown}"
+                )
     return config
 
 
@@ -226,7 +249,7 @@ def _candidate(
     if spec.traces is not None:
         recorded = _read(Path(spec.traces))
         label = candidate_trace_label(recorded[0])
-        if spec.at is None:
+        if not spec.redecided:
             return recorded, label
         replayed = replay_run(recorded, cases, policy_id=None, auto_process=spec.at)
         return replayed, f"{label} · re-decided at auto_process={spec.at:g}"
@@ -251,7 +274,7 @@ def replay_command_for(request: RegressionRequest, out: Path | None) -> Callable
         traces = None if out is None else out / BASELINE_TRACES
     if spec.reproduce:
         extra: str | None = ""
-    elif spec.traces is not None and spec.at is None:
+    elif spec.traces is not None and not spec.redecided:
         extra = f" --candidate-traces {spec.traces}"
     elif spec.is_policy_replay and request.baseline_at is None:
         extra = (
@@ -275,6 +298,13 @@ def run_regression(request: RegressionRequest, *, out: Path | None = None) -> Re
     hash_ = _dataset_hash(request.dataset, cases)
     recorded = _read(request.baseline)
     source = find_run_manifest(request.baseline)
+    if source is not None and source.run_id != recorded[0].run_id:
+        # M9: an untrusted run-manifest.json (e.g. left over from a different run) would
+        # otherwise subsample against the wrong manifest with a confusing downstream error.
+        raise RegressionInputError(
+            f"{request.baseline}: run manifest run_id {source.run_id!r} does not match the "
+            f"trace file's run_id {recorded[0].run_id!r}"
+        )
     if source is not None and source.sample_limit is not None:
         if source.sample_seed is None:
             raise RegressionInputError(f"{request.baseline}: run manifest has no sample_seed")
@@ -327,18 +357,22 @@ def _write_traces(path: Path, traces: Sequence[WorkflowTrace]) -> None:
 
 
 def _write_simulated_run(
-    run: RegressionRun, traces: Sequence[WorkflowTrace], trace_path: Path, manifest_path: Path
+    source: RunManifest | None,
+    dataset: Path,
+    traces: Sequence[WorkflowTrace],
+    trace_path: Path,
+    manifest_path: Path,
 ) -> None:
     """A simulated run that `relay eval --traces`, `compare` and `replay` can read: gzipped
-    traces plus a RunManifest with extra keys mode, source_run_id, policy_id and thresholds."""
+    traces plus a RunManifest with extra keys mode, source_run_id, policy_id and thresholds.
+    `source` is the baseline's run manifest, if found (its sample_limit/sample_seed carry over)."""
     _write_traces(trace_path, traces)
     first = traces[0]
-    source = run.source_manifest
     manifest = RunManifest(
         run_id=first.run_id,
         created_at=datetime.now(UTC),
         dataset_id=first.dataset_id,
-        dataset_path=str(run.dataset),
+        dataset_path=str(dataset),
         provider=first.provider,
         policy_version=first.policy_version,
         question_set_version=first.question_set_version,
@@ -368,12 +402,12 @@ def write_outputs(
     paths[0].write_text(run.result.model_dump_json(indent=2) + "\n", encoding="utf-8")
     paths[1].write_text(rendered + "\n", encoding="utf-8")
     spec = request.candidate
-    if spec.is_policy_replay or (spec.traces is not None and spec.at is not None):
+    if spec.redecided:
         pair = (out / CANDIDATE_TRACES, out / CANDIDATE_MANIFEST)
-        _write_simulated_run(run, run.candidate, *pair)
+        _write_simulated_run(run.source_manifest, run.dataset, run.candidate, *pair)
         paths += pair
     if request.baseline_at is not None:
         pair = (out / BASELINE_TRACES, out / BASELINE_MANIFEST)
-        _write_simulated_run(run, run.baseline, *pair)
+        _write_simulated_run(run.source_manifest, run.dataset, run.baseline, *pair)
         paths += pair
     return paths

@@ -28,7 +28,9 @@ def base_diff():
 BASE = base_diff()
 
 
-def synthetic(case_id, *, change="unchanged", newly_unsafe=False, identical=True):
+def synthetic(
+    case_id, *, change="unchanged", newly_unsafe=False, identical=True, unsafe_both=False
+):
     """A TraceDiff with only the fields the verdict reads set."""
     return BASE.model_copy(
         update={
@@ -36,6 +38,7 @@ def synthetic(case_id, *, change="unchanged", newly_unsafe=False, identical=True
             "change": change,
             "newly_unsafe": newly_unsafe,
             "unsafe_resolved": False,
+            "unsafe_both": unsafe_both,
             "identical": identical,
         }
     )
@@ -149,6 +152,18 @@ def test_a_waiver_file_parses():
     assert parsed.waivers == [waiver("B")]
 
 
+def test_a_duplicate_waiver_is_rejected():
+    """M3: the first one silently winning would be a confusing way to fail closed."""
+    with pytest.raises(ValidationError, match="duplicate waiver"):
+        WaiverFile.model_validate(
+            {"waivers": [waiver("B").model_dump(), waiver("B", reason="different").model_dump()]}
+        )
+    # same case_id, different gate: not a duplicate
+    WaiverFile.model_validate(
+        {"waivers": [waiver("B", gate="g1").model_dump(), waiver("B", gate="g2").model_dump()]}
+    )
+
+
 @pytest.mark.parametrize(
     "overrides",
     [
@@ -244,3 +259,34 @@ def test_build_result_at_a_lower_threshold():
     assert {c.brier_delta for c in result.calibration} == {0.0}
     assert [c.decision for c in result.calibration][0] == "diagnosis_support"
     assert type(result).model_validate_json(result.model_dump_json()) == result
+
+
+def test_still_unsafe_lists_cases_unsafe_on_both_sides_and_never_fails_the_gate():
+    """I1: a case the baseline already automates unsafely is invisible to newly_unsafe (the gate
+    is relative to the baseline, per spec G5), so it must be surfaced separately."""
+    cases, baseline = three_case_run()
+    candidate = replay_run(baseline, cases, policy_id=None, auto_process=0.9)
+    diffs = diff_runs(baseline, candidate, cases, original_label="base", candidate_label="cand")
+    # T-02 and T-03 are genuinely newly unsafe here (see test_build_result_at_a_lower_threshold);
+    # simulate a baseline that was already unsafe on both, so neither is newly unsafe anymore.
+    diffs = [
+        d.model_copy(update={"newly_unsafe": False, "unsafe_both": True})
+        if d.case_id in ("T-02", "T-03")
+        else d
+        for d in diffs
+    ]
+    result = build_result(
+        diffs,
+        baseline,
+        candidate,
+        cases,
+        baseline_label="base",
+        candidate_label="cand",
+        gate="g",
+        reproduce=False,
+        waivers=[],
+        max_regressed=None,
+    )
+    assert [e.case_id for e in result.still_unsafe] == ["T-02", "T-03"]
+    assert result.newly_unsafe == []
+    assert (result.verdict, result.exit_code, result.failures) == ("PASS", 0, [])

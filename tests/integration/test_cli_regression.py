@@ -2,6 +2,7 @@
 committed gold traces. Never builds a network client."""
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -236,6 +237,7 @@ def test_out_writes_artifacts_that_relay_eval_can_read(tmp_path, smoke_runs):
         (["--candidate-at", "0"], "--candidate-at must be in (0, 1]"),
         (["--candidate-at", "1.5"], "--candidate-at must be in (0, 1]"),
         (["--reproduce", "--gate", "g"], "--gate needs --config"),
+        (["--reproduce", "--strict-generated"], "--strict-generated needs --config"),
     ],
 )
 def test_bad_flag_combinations_are_exit_2(tmp_path, smoke_runs, flags, message):
@@ -251,6 +253,27 @@ def test_dataset_and_baseline_are_required_without_config(tmp_path):
     result = regression(tmp_path, "--reproduce")
     assert result.exit_code == 2
     assert "give --dataset and --baseline, or --config" in result.output
+
+
+def test_a_waiver_scoped_to_a_gate_name_is_reported_as_ignored_without_config(tmp_path):
+    """M2: without --config there is no gate name, so a waiver scoped to one is silently out of
+    scope (fails closed already); this should say so rather than being invisible."""
+    result = regression(
+        tmp_path, *GOLD_DEMO, "--waivers", waiver_file(tmp_path, gate="some-other-gate")
+    )
+    assert result.exit_code == 4, result.output  # the waiver never applied; still newly unsafe
+    assert "1 waiver(s) for other gates ignored (no --config here)" in result.output
+
+
+def test_a_gates_file_rejects_a_waiver_scoped_to_an_unknown_gate(tmp_path, smoke_runs):
+    bad_waivers = waiver_file(tmp_path, gate="no-such-gate")
+    path = gates_file(
+        tmp_path, gate("fine", smoke_runs["rules"], {"reproduce": True}, waivers=str(bad_waivers))
+    )
+    result = regression(tmp_path, "--config", path)
+    assert result.exit_code == 2, result.output
+    assert "scopes waiver(s) to unknown gate(s)" in result.output
+    assert "no-such-gate" in result.output
 
 
 def test_a_malformed_waiver_file_is_exit_2(tmp_path):
@@ -317,6 +340,52 @@ def test_config_runs_every_gate_and_exits_with_the_highest_code(tmp_path, three_
     assert "gate not-generated: SKIPPED (dataset not generated; run relay generate" in result.output
     summary = result.output[result.output.index("REGRESSION GATES") :]
     assert "smoke-reproduce" in summary and "gold-demo" in summary and "SKIPPED" in summary
+
+
+def test_strict_generated_turns_a_skip_into_an_error(tmp_path, three_gates):
+    """I2: --strict-generated makes a missing requires_generated dataset an ERROR (exit 2), so a
+    failed or renamed regeneration step cannot leave the gate silently SKIPPED (exit 0)."""
+    lax = regression(tmp_path, "--config", three_gates)
+    assert lax.exit_code == 4, lax.output  # the gold-demo newly-unsafe case, not the skip
+    assert "gate not-generated: SKIPPED" in lax.output
+
+    strict = regression(tmp_path, "--config", three_gates, "--strict-generated")
+    assert strict.exit_code == 4, strict.output  # max(4, 2) from gold-demo and not-generated
+    assert "gate not-generated: ERROR: dataset not generated" in strict.output
+    assert "SKIPPED" not in strict.output
+    summary = strict.output[strict.output.index("REGRESSION GATES") :]
+    [row] = [line for line in summary.splitlines() if line.split()[0] == "not-generated"]
+    assert re.search(r"ERROR\s+—\s+—\s+—\s+—\s+2\s+dataset not generated", row), row
+
+
+def test_strict_generated_alone_still_exits_2_when_nothing_else_fails(tmp_path, smoke_runs):
+    path = gates_file(
+        tmp_path,
+        gate("smoke-reproduce", smoke_runs["rules"], {"reproduce": True}),
+        gate(
+            "not-generated",
+            smoke_runs["rules"],
+            {"reproduce": True},
+            dataset=tmp_path / "evals" / "generated" / "nope",
+            requires_generated=True,
+        ),
+    )
+    result = regression(tmp_path, "--config", path, "--strict-generated")
+    assert result.exit_code == 2, result.output
+
+
+def test_an_unwritable_out_is_an_error_row_and_the_rest_still_run(tmp_path, three_gates):
+    """M10: an OSError from write_outputs (e.g. an unwritable --out) is that gate's ERROR row,
+    not an uncaught traceback that aborts the remaining gates and skips the summary."""
+    out = tmp_path / "regression-report"
+    out.mkdir()
+    (out / "gold-demo").write_text("not a directory")  # write_outputs' mkdir raises OSError here
+    result = regression(tmp_path, "--config", three_gates, "--out", out)
+    assert "gate gold-demo: ERROR:" in result.output
+    assert "Relay regression — gate smoke-reproduce · dataset smoke-v0.1 · n=10" in result.output
+    summary = result.output[result.output.index("REGRESSION GATES") :]
+    assert "gold-demo" in summary and "ERROR" in summary
+    assert (out / "summary.md").exists()
 
 
 def test_config_gate_filter(tmp_path, three_gates):

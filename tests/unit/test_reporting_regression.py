@@ -74,6 +74,40 @@ def test_a_case_without_a_replay_command_says_how_to_get_one():
     assert "      replay: re-run with --out DIR for a replayable command" in text
 
 
+def test_still_unsafe_renders_right_after_newly_unsafe_and_never_fails_the_gate():
+    result = result_for()
+    still = result.newly_unsafe[0].model_copy(update={"case_id": "T-99"})
+    result = result.model_copy(update={"still_unsafe": [still]})
+    text = render_regression(result)
+    lines = text.splitlines()
+    newly_idx = lines.index("NEWLY UNSAFE (2)")
+    still_idx = next(i for i, line in enumerate(lines) if line.startswith("STILL UNSAFE"))
+    assert still_idx > newly_idx
+    other_headers = (
+        "ENGINE DRIFT",
+        "WAIVED NEWLY UNSAFE",
+        "STALE WAIVERS",
+        "UNSAFE RESOLVED",
+        "REGRESSED",
+    )
+    assert not any(
+        line.startswith(header)
+        for header in other_headers
+        for line in lines[newly_idx + 1 : still_idx]
+    )
+    assert lines[still_idx] == "STILL UNSAFE (1) — also unsafe in the baseline; not a gate failure"
+    assert "  T-99  " in lines[still_idx + 1]
+    # still_unsafe is informational: the verdict is unaffected by adding it (G5: relative to baseline)
+    assert (
+        lines[-1] == "REGRESSION GATE: FAIL — 2 newly unsafe case(s) without a waiver: T-02, T-03"
+    )
+
+
+def test_still_unsafe_is_absent_when_empty():
+    text = render_regression(result_for())
+    assert "STILL UNSAFE" not in text
+
+
 def test_waived_and_stale_waivers_are_listed():
     text = render_regression(result_for(waivers=[waiver("T-02"), waiver("T-03"), waiver("OLD")]))
     lines = text.splitlines()
@@ -83,6 +117,17 @@ def test_waived_and_stale_waivers_are_listed():
     assert "STALE WAIVERS (1) — warning: no newly unsafe case" in lines
     assert "  OLD (gate *, approved by rev, 2026-09-26)" in lines
     assert lines[-1] == "REGRESSION GATE: PASS"
+
+
+def test_newly_unsafe_renders_before_engine_drift():
+    """M6/G7: newly unsafe cases come first, even in reproduce mode where ENGINE DRIFT also
+    renders."""
+    result = result_for()
+    drift_entry = result.newly_unsafe[0].model_copy(update={"case_id": "D-01"})
+    result = result.model_copy(update={"reproduce": True, "drifted": [drift_entry]})
+    text = render_regression(result)
+    lines = text.splitlines()
+    assert lines.index("NEWLY UNSAFE (2)") < lines.index("ENGINE DRIFT (1)")
 
 
 def test_reproduce_prints_its_note_and_passes_when_identical():
@@ -107,7 +152,7 @@ def test_regressed_cases_are_capped_at_20_unless_all():
 def test_gate_summary_table():
     text = render_gate_summary(
         [
-            GateRow("gold-reproduce-jev", "PASS", 0, 0, 0),
+            GateRow("gold-reproduce-jev", "PASS", 0, 0, 0, still_unsafe=1, waived=2),
             GateRow(
                 "holdout-reproduce-jev", "SKIPPED", None, None, 0, note="dataset not generated"
             ),
@@ -115,8 +160,10 @@ def test_gate_summary_table():
     )
     lines = text.splitlines()
     assert lines[0] == "REGRESSION GATES"
-    assert re.match(r"GATE\s+VERDICT\s+NEWLY UNSAFE\s+REGRESSED\s+EXIT", lines[1])
-    assert re.match(r"gold-reproduce-jev\s+PASS\s+0\s+0\s+0", lines[2])
     assert re.match(
-        r"holdout-reproduce-jev\s+SKIPPED \(dataset not generated\)\s+—\s+—\s+0", lines[3]
+        r"GATE\s+VERDICT\s+NEWLY UNSAFE\s+STILL UNSAFE\s+WAIVED\s+REGRESSED\s+EXIT\s+NOTE", lines[1]
+    )
+    assert re.match(r"gold-reproduce-jev\s+PASS\s+0\s+1\s+2\s+0\s+0\s+—", lines[2])
+    assert re.match(
+        r"holdout-reproduce-jev\s+SKIPPED\s+—\s+—\s+—\s+—\s+0\s+dataset not generated", lines[3]
     )

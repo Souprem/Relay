@@ -138,13 +138,15 @@ class TraceDiff(BaseModel):
     action_candidate: WorkflowAction
     reasons_original: list[str]
     reasons_candidate: list[str]
-    # Under each side's own policy/thresholds. These four and the next three are None for an
-    # unlabelled diff (no ground truth, e.g. 3C shadow traffic).
+    # Under each side's own policy/thresholds. expected_original/expected_candidate through
+    # unsafe_both below are all None for an unlabelled diff (no ground truth, e.g. 3C shadow
+    # traffic).
     expected_original: WorkflowAction | None
     expected_candidate: WorkflowAction | None
     change: Change | None
     newly_unsafe: bool | None
     unsafe_resolved: bool | None
+    unsafe_both: bool | None  # UNSAFE on both sides: not newly unsafe, invisible to the gate
     identical: bool  # same action, reasons, gate path and decisions (volatile fields ignored)
 
 
@@ -318,12 +320,14 @@ def diff_traces(
     change: Change | None = None
     newly_unsafe: bool | None = None
     unsafe_resolved: bool | None = None
+    unsafe_both: bool | None = None
     if expected_original is not None and expected_candidate is not None:
         unsafe_o = classify(original.action, expected_original) == "UNSAFE"
         unsafe_c = classify(candidate.action, expected_candidate) == "UNSAFE"
         change = _change(original.action, expected_original, candidate.action, expected_candidate)
         newly_unsafe = unsafe_c and not unsafe_o
         unsafe_resolved = unsafe_o and not unsafe_c
+        unsafe_both = unsafe_o and unsafe_c
     return TraceDiff(
         case_id=original.case_id,
         original_label=original_label,
@@ -344,6 +348,7 @@ def diff_traces(
         change=change,
         newly_unsafe=newly_unsafe,
         unsafe_resolved=unsafe_resolved,
+        unsafe_both=unsafe_both,
         identical=(
             original.action == candidate.action
             and original.decision_reasons == candidate.decision_reasons

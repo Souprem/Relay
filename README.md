@@ -805,8 +805,10 @@ auto-processes, but its expected action is `HUMAN_REVIEW`. This is the unsafe au
 ## Regression gate
 
 `relay regression` compares a candidate run against an accepted baseline over the same frozen
-dataset and fails loudly when the candidate automates a case unsafely that nobody has reviewed.
-A candidate can be a new question set, provider, policy or threshold. The command is offline: the
+dataset and fails loudly when the candidate automates a case unsafely that the baseline did not,
+and nobody has reviewed it. The gate is relative to the baseline (see STILL UNSAFE below), so it
+cannot catch an unsafe automation the baseline already makes. A candidate can be a new question
+set, provider, policy or threshold. The command is offline: the
 candidate is either an existing trace file (`--candidate-traces`, for example a run made earlier
 with `relay eval`, which applies its own budget guard) or a policy replay of the baseline's stored
 decisions (`--candidate-policy ID`, `--candidate-latest-policy`, `--candidate-at X`).
@@ -817,8 +819,10 @@ a `--limit/--sample-seed` subsample is paired with the same subsample, read from
 
 The report puts both runs' rates side by side, each with a 95% Clopper-Pearson interval, then the
 change counts. Newly unsafe cases come first, each with a `relay replay` command that reproduces
-that case's diff, followed by resolved and regressed cases and calibration deltas. The gate fails
-when:
+that case's diff, followed by STILL UNSAFE — cases the candidate automates unsafely that the
+baseline already automated unsafely too, so they are not newly unsafe and never fail the gate,
+only visible here — then engine drift (`--reproduce` mode), resolved and regressed cases and
+calibration deltas. The gate fails when:
 
 - a newly unsafe case is not covered by a waiver (exit 4)
 - `--max-regressed N` is given and more than N cases regressed (exit 4)
@@ -922,14 +926,16 @@ REGRESSION GATE: PASS
 **Committed gates.** [`evals/regression/gates.json`](evals/regression/gates.json) holds the gates
 CI runs with `relay regression --config evals/regression/gates.json`. Each gate's report is
 printed, then a summary table; the exit code is the highest across gates, and `--gate NAME` runs
-only the named gates.
+only the named gates. `--strict-generated` turns a `requires_generated` gate whose dataset is
+missing into an ERROR row (exit 2) instead of SKIPPED, so a failed, dropped or misnamed dataset
+regeneration step cannot leave a holdout drift gate silently green; CI passes it.
 
 | Gate | Baseline | Candidate | What it guards |
 |---|---|---|---|
 | `gold-reproduce-groundtruth`, `-rules`, `-jev`, `-claude` | each committed gold run | `--reproduce` | engine drift on gold, all four providers |
 | `smoke-reproduce-jev` | the v0.1 smoke Jev run (its case hashes still match `evals/smoke`) | `--reproduce` | engine drift on the oldest committed trace, which predates policy-text hashes |
-| `gold-jev-vs-claude` | Jev gold, re-decided at 0.89 | Claude gold traces, re-decided at 0.55 | Claude at its own operating point is not an unsafe regression versus Jev: 4 action differences (3 improved, 1 regressed), 0 newly unsafe |
-| `holdout-reproduce-jev`, `-rules`, `-claude-150` | each committed gen-v0.2-holdout run | `--reproduce` | engine drift on the holdout; `requires_generated`, so SKIPPED when `evals/generated/gen-v0.2-holdout` is absent. The Claude gate uses the run's 150-case sample. |
+| `gold-jev-vs-claude` | Jev gold, re-decided at 0.89 | Claude gold traces, re-decided at 0.55 | Claude at its own operating point is not an unsafe regression versus Jev: 4 action differences (3 improved, 1 regressed), 0 newly unsafe. Both Jev at 0.89 and Claude at 0.55 automate `GOLD-TMP-17` unsafely; that is the baseline's own unsafe automation, so it is not newly unsafe — it shows up as 1 STILL UNSAFE instead. |
+| `holdout-reproduce-jev`, `-rules`, `-claude-150` | each committed gen-v0.2-holdout run | `--reproduce` | engine drift on the holdout; `requires_generated`, so SKIPPED when `evals/generated/gen-v0.2-holdout` is absent (ERROR instead with `--strict-generated`, as CI runs it). The Claude gate uses the run's 150-case sample. |
 
 The failing demonstration above is deliberately not a committed gate, so CI stays green.
 
@@ -953,12 +959,17 @@ matches no newly unsafe case is reported as a stale waiver, which is a warning, 
 on ubuntu-latest with uv and Python 3.12. It installs with `uv sync --frozen`, runs `ruff check`,
 `ruff format --check` and `pytest -q` (live tests are deselected by default), regenerates
 gen-v0.2-dev and gen-v0.2-holdout with `relay generate` and checks both against the committed
-manifests with `--verify` (a few seconds locally), then runs the committed gates and uploads
-`regression-report/` as an artifact, even when a step fails. The workflow references no secrets
-and sets no provider keys, and a test checks that it contains no `secrets.` reference.
+manifests with `--verify` (a few seconds locally), then runs the committed gates with
+`--strict-generated` and uploads `regression-report/` as an artifact, even when a step fails. The
+workflow references no secrets and sets no provider keys, and a test checks that it contains no
+`secrets.` reference.
 
 ## Limitations
 
+- The regression gate (G5) is relative to its baseline, so it cannot catch an unsafe automation
+  the baseline already makes: a case that both the baseline and the candidate automate unsafely
+  is not newly unsafe and does not fail the gate. `relay regression` surfaces it as STILL UNSAFE
+  so it is visible, but reviewing it is on the reader, not the gate (see "Regression gate" above).
 - Ten hand-written smoke cases plus template-generated dev and holdout sets. Generated wording
   comes from fixed phrase banks, so it exercises the policy logic and pipeline, not real-world
   document variety. Gold-set results (100 hand-written cases, `gold-v0.1`) are in "Gold set" above.

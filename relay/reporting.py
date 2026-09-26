@@ -897,9 +897,9 @@ def gate_line(result: RegressionResult) -> str:
 
 def render_regression(result: RegressionResult, *, show_all: bool = False) -> str:
     """Terminal output for `relay regression` (and regression.md): header, metrics with 95%
-    Clopper-Pearson intervals, change counts, then NEWLY UNSAFE first, each with a replay
-    command, waived and stale waivers, UNSAFE RESOLVED, REGRESSED (20 unless show_all),
-    calibration deltas and the gate line last."""
+    Clopper-Pearson intervals, change counts, then NEWLY UNSAFE first (G7), STILL UNSAFE, ENGINE
+    DRIFT, waived and stale waivers, UNSAFE RESOLVED, REGRESSED (20 unless show_all), calibration
+    deltas and the gate line last."""
     title = f"Relay regression — dataset {result.dataset_id} · n={result.n}"
     if result.gate is not None:
         title = (
@@ -912,8 +912,16 @@ def render_regression(result: RegressionResult, *, show_all: bool = False) -> st
     counts = " · ".join(f"{name} {result.change_counts[name]}" for name in CHANGE_ORDER)
     lines += ["", f"CHANGES: {counts} · not identical {result.not_identical}"]
     limit = None if show_all else REGRESSED_SHOWN
-    lines += _section("ENGINE DRIFT", result.drifted, limit)
     lines += _section("NEWLY UNSAFE", result.newly_unsafe)
+    if result.still_unsafe:
+        lines += [
+            "",
+            f"STILL UNSAFE ({len(result.still_unsafe)}) — also unsafe in the baseline; "
+            "not a gate failure",
+        ]
+        for entry in result.still_unsafe:
+            lines += _entry_lines(entry)
+    lines += _section("ENGINE DRIFT", result.drifted, limit)
     if result.waived:
         lines += ["", f"WAIVED NEWLY UNSAFE ({len(result.waived)}) — reviewed, not failures"]
         for waived in result.waived:
@@ -947,19 +955,26 @@ class GateRow:
     newly_unsafe: int | None
     regressed: int | None
     exit_code: int
-    note: str | None = None
+    still_unsafe: int | None = None
+    waived: int | None = None  # M1: a gate that only passes because of a waiver looks like PASS 0
+    note: str | None = None  # M11: kept out of VERDICT so a long SKIPPED/ERROR note stays narrow
 
 
 def render_gate_summary(rows: Sequence[GateRow]) -> str:
-    table = [["GATE", "VERDICT", "NEWLY UNSAFE", "REGRESSED", "EXIT"]]
+    table = [
+        ["GATE", "VERDICT", "NEWLY UNSAFE", "STILL UNSAFE", "WAIVED", "REGRESSED", "EXIT", "NOTE"]
+    ]
     for r in rows:
         table.append(
             [
                 r.name,
-                r.verdict if r.note is None else f"{r.verdict} ({r.note})",
+                r.verdict,
                 "—" if r.newly_unsafe is None else str(r.newly_unsafe),
+                "—" if r.still_unsafe is None else str(r.still_unsafe),
+                "—" if r.waived is None else str(r.waived),
                 "—" if r.regressed is None else str(r.regressed),
                 str(r.exit_code),
+                r.note or "—",
             ]
         )
     return "\n".join(["REGRESSION GATES", *_table(table)])
