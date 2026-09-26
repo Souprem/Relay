@@ -51,11 +51,9 @@ from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
-from relay.evaluation.labels import expected_action
 from relay.evaluation.metrics import EvalError, run_identity, score_run
 from relay.evaluation.runner import (
     RunConfigError,
-    policy_text_hash,
     run_dataset,
     sample_cases,
     validate_run_config,
@@ -63,7 +61,7 @@ from relay.evaluation.runner import (
 from relay.evaluation.tracediff import (
     REPRODUCE_LABEL,
     candidate_trace_label,
-    diff_traces,
+    diff_case,
     live_label,
     original_label,
     policy_replay_label,
@@ -1237,19 +1235,16 @@ def replay(
             original, case, policy=original_policy, thresholds=original.thresholds
         )
         label = REPRODUCE_LABEL
-    candidate_policy = (
-        original_policy
-        if candidate.policy_id == original.policy_id
-        else _policy(candidate.policy_id)
-    )
-    diff = diff_traces(
+    policies = {original_policy.id: original_policy}
+    if candidate.policy_id not in policies:
+        policies[candidate.policy_id] = _policy(candidate.policy_id)
+    diff = diff_case(
         original,
         candidate,
-        expected_original=expected_action(case, original_policy, original.thresholds),
-        expected_candidate=expected_action(case, candidate_policy, candidate.thresholds),
+        case,
         original_label=original_label(original),
         candidate_label=label,
-        current_policy_text_hash=policy_text_hash(original_policy),
+        policies=policies,
     )
     if json_output:
         typer.echo(diff.model_dump_json(indent=2))

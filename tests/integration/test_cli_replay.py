@@ -18,10 +18,18 @@ from relay.cases.loader import load_case
 from relay.cases.policies import load_policy
 from relay.cli import app
 from relay.evaluation.budget import load_ledger
-from relay.evaluation.tracediff import TraceDiff, replay_trace
+from relay.evaluation.labels import expected_action
+from relay.evaluation.runner import policy_text_hash
+from relay.evaluation.tracediff import (
+    TraceDiff,
+    diff_traces,
+    original_label,
+    policy_replay_label,
+    replay_trace,
+)
 from relay.reporting import DRIFT_LINE, REPRODUCED_LINE
 from relay.traces.store import read_traces
-from relay.workflow.thresholds import THRESHOLDS_V0_1
+from relay.workflow.thresholds import THRESHOLDS_V0_1, override_auto_process
 from tests.claude_fakes import FakeBatches, FakeMessages, message
 from tests.factories import make_bundle
 
@@ -496,3 +504,25 @@ def test_policy_replay_onto_a_version_without_thresholds_is_exit_2(
     result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], "--policy", "immunara-v0.2")
     assert result.exit_code == 2, result.output
     assert "unknown thresholds version 'v0.2'" in result.output
+
+
+def test_replay_json_matches_a_hand_built_diff(tmp_path, smoke_runs):
+    """F2: routing `relay replay` through diff_case changed nothing: its JSON equals the diff
+    built by hand from diff_traces, as replay built it before."""
+    [original] = [t for t in read_traces(smoke_runs["rules"]) if t.case_id == "AUTO-03"]
+    case = load_case(SMOKE / "AUTO-03")
+    policy = load_policy("immunara-v0.1")
+    thresholds = override_auto_process(original.thresholds, 0.5)
+    candidate = replay_trace(original, case, policy=policy, thresholds=thresholds)
+    by_hand = diff_traces(
+        original,
+        candidate,
+        expected_original=expected_action(case, policy, original.thresholds),
+        expected_candidate=expected_action(case, policy, thresholds),
+        original_label=original_label(original),
+        candidate_label=policy_replay_label(policy, thresholds, 0.5),
+        current_policy_text_hash=policy_text_hash(policy),
+    )
+    result = replay(tmp_path, "AUTO-03", smoke_runs["rules"], "--at", "0.5", "--json")
+    assert result.exit_code == 0, result.output
+    assert as_diff(result) == by_hand

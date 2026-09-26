@@ -26,12 +26,11 @@ import relay.evaluation.tracediff as tracediff
 from relay.cases.loader import CaseLoadError, load_dataset
 from relay.cases.policies import load_policy
 from relay.cli import app
-from relay.evaluation.labels import expected_action
 from relay.evaluation.metrics import score_run
-from relay.evaluation.runner import policy_text_hash, sample_cases
+from relay.evaluation.runner import sample_cases
 from relay.evaluation.tracediff import (
     REPRODUCE_LABEL,
-    diff_traces,
+    diff_case,
     original_label,
     replay_exit_code,
     replay_trace,
@@ -111,15 +110,13 @@ def drifted_cases(trace_path: Path) -> list[str]:
         replayed = replay_trace(
             trace, case, policy=policy, thresholds=trace.thresholds, git_sha="guard"
         )
-        expected = expected_action(case, policy, trace.thresholds)
-        diff = diff_traces(
+        diff = diff_case(
             trace,
             replayed,
-            expected_original=expected,
-            expected_candidate=expected,
+            case,
             original_label=original_label(trace),
             candidate_label=REPRODUCE_LABEL,
-            current_policy_text_hash=policy_text_hash(policy),
+            policies={policy.id: policy},
         )
         if replay_exit_code(diff, reproduce=True) != 0:
             drifted.append(trace.case_id)

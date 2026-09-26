@@ -5,7 +5,7 @@ today's engine. `relay replay` renders one TraceDiff; the Phase 3B regression ga
 same functions over whole runs.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Literal
@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from relay.cases.models import MissingEvidence, PriorAuthCase
 from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import Decision, DecisionBundle, DecisionId
+from relay.evaluation.labels import expected_action
 from relay.evaluation.metrics import EvalError, paired_cases
 from relay.evaluation.runner import policy_text_hash
 from relay.traces.models import WorkflowTrace
@@ -329,6 +330,87 @@ def diff_traces(
             and _comparable(original.decisions) == _comparable(candidate.decisions)
         ),
     )
+
+
+def diff_case(
+    original: WorkflowTrace,
+    candidate: WorkflowTrace,
+    case: PriorAuthCase,
+    *,
+    original_label: str,
+    candidate_label: str,
+    policies: Mapping[str, AuthorizationPolicy] | None = None,
+) -> TraceDiff:
+    """diff_traces with its inputs derived here rather than by every caller.
+
+    Each side's expected action comes from ground truth under that side's own policy and
+    thresholds; the current policy-text hash is that of the original trace's policy id.
+    `policies` is an optional cache by policy id; an id missing from it is loaded with
+    load_policy (KeyError for an unknown id).
+    """
+
+    def policy(policy_id: str) -> AuthorizationPolicy:
+        if policies is not None and policy_id in policies:
+            return policies[policy_id]
+        return load_policy(policy_id)
+
+    policy_o = policy(original.policy_id)
+    policy_c = (
+        policy_o if candidate.policy_id == original.policy_id else policy(candidate.policy_id)
+    )
+    return diff_traces(
+        original,
+        candidate,
+        expected_original=expected_action(case, policy_o, original.thresholds),
+        expected_candidate=expected_action(case, policy_c, candidate.thresholds),
+        original_label=original_label,
+        candidate_label=candidate_label,
+        current_policy_text_hash=policy_text_hash(policy_o),
+    )
+
+
+def diff_runs(
+    originals: Sequence[WorkflowTrace],
+    candidates: Sequence[WorkflowTrace],
+    cases: Sequence[PriorAuthCase],
+    *,
+    original_label: str,
+    candidate_label: str,
+) -> list[TraceDiff]:
+    """One diff_case per case, in the original run's trace order.
+
+    The two runs must cover the same case ids (EvalError naming the missing and extra ids), and
+    each goes through paired_cases (one run, no duplicates, known cases with unchanged content
+    hashes, the whole dataset; EvalError otherwise). Each policy id is loaded once.
+    """
+    original_ids = {t.case_id for t in originals}
+    candidate_ids = {t.case_id for t in candidates}
+    if original_ids != candidate_ids:
+        missing = sorted(original_ids - candidate_ids)
+        extra = sorted(candidate_ids - original_ids)
+        raise EvalError(
+            "the candidate run does not cover the same cases as the original run: "
+            f"missing {missing}, extra {extra}"
+        )
+    pairs = paired_cases(originals, cases)
+    candidate_by_id = {t.case_id: t for t, _ in paired_cases(candidates, cases)}
+    policies: dict[str, AuthorizationPolicy] = {}
+    for policy_id in sorted({t.policy_id for t in [*originals, *candidates]}):
+        try:
+            policies[policy_id] = load_policy(policy_id)
+        except KeyError as error:
+            raise EvalError(str(error.args[0])) from error
+    return [
+        diff_case(
+            original,
+            candidate_by_id[original.case_id],
+            case,
+            original_label=original_label,
+            candidate_label=candidate_label,
+            policies=policies,
+        )
+        for original, case in pairs
+    ]
 
 
 def replay_exit_code(diff: TraceDiff, *, reproduce: bool) -> int:
