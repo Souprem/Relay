@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "clinic_note: methotrexate began 2026-02-03 and stopped in late May, same entry (D3: May 2026; D2: 2026-05-01) = 87 days (D7), inadequate response."
+}

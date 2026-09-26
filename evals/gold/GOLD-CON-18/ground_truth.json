@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter attributes stopping methotrexate 2026-02-02 to 2026-07-20 to inadequate response. medication_history gives the same dates but lists nausea and vomiting as the reason. Both reasons qualify, so the difference does not change the outcome."
+}

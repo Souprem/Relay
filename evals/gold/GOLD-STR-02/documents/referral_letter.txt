@@ -1,0 +1,13 @@
+SYNTHETIC RECORD - Example Harbor Medical Group - Referral Letter - 2026-06-28
+Patient reference SYN-2209.
+
+Dear Colleague,
+
+I am referring my patient, a 39-year-old man, for consideration of Immunara. He carries an established diagnosis of rheumatoid arthritis, confirmed in 2024 with positive rheumatoid factor and erosive changes on hand imaging.
+
+He was treated with oral methotrexate from January 5, 2026 to May 26, 2026 but developed nausea and a rise in his liver enzymes, so the medication was discontinued for intolerance. His joint symptoms have continued to limit his work as a carpenter. He has no other significant medical history apart from well-controlled seasonal allergies.
+
+Please review the enclosed medication history and let me know if you require anything further.
+
+Sincerely,
+The referring primary care physician

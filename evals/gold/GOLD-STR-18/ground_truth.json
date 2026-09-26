@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "problem_list: rheumatoid arthritis is only suspected, with serology pending and workup referred to rheumatology. No DMARD, including methotrexate, has been started yet, so the diagnosis is not established."
+}

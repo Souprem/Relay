@@ -1,0 +1,8 @@
+SYNTHETIC RECORD - Example Foothills Rheumatology - Problem List Update - 2026-08-19
+Patient reference SYN-7734. 61-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed 2021, currently active with synovitis at both wrists and multiple MCPs despite treatment.
+- Methotrexate 20 mg weekly ongoing since 2026-02-02; disease activity remains high and she continues to report morning stiffness lasting over an hour.
+- Hypertension, stable on amlodipine.
+- Vitamin D deficiency, on supplementation.
+- Plan: discuss Immunara given inadequate response to methotrexate; continue folic acid.

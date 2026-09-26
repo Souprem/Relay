@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA diagnosed 2023; methotrexate 2026-02-09 to 2026-07-06 = 147 days, stopped for inadequate response (CDAI 28). lab_report and medication_history agree."
+}

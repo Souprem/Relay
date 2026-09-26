@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Harborview Rheumatology - New Patient Consultation - 2026-06-28
+Patient reference SYN-4408.
+
+Subjective: A 55-year-old woman transfers her care after relocating. She reports a diagnosis of rheumatoid arthritis made several years ago and ongoing hand and wrist symptoms.
+Objective: Symmetric synovitis at the bilateral wrists and MCPs. Rheumatoid factor and anti-CCP drawn today both return positive, confirming a seropositive presentation consistent with her reported history.
+Assessment: Seropositive rheumatoid arthritis, established. Her prior treatment records have not yet arrived from her previous rheumatologist, and she is unable to recall which medications she was given or for how long.
+Plan: Request outside records. Hold on Immunara pending a complete treatment history. She did not bring an insurance card to today's visit.

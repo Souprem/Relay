@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "problem_list (SYN-2201): seropositive RA established 2021; this patient's own treatment records are unavailable. medication_history carries patient reference SYN-9988, a different patient, so its methotrexate course is not evidence about this patient (E2)."
+}

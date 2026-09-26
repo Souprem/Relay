@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Harborview Rheumatology - Laboratory Report - 2026-05-15
+Patient reference SYN-6678.
+Rheumatoid factor: positive, 70 IU/mL (reference <14).
+Anti-CCP antibody: positive, 95 U/mL (reference <20).
+ESR: 40 mm/hr (elevated).

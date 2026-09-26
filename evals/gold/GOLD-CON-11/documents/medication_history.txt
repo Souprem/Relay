@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Bellwood Rheumatology - Medication History - 2026-07-25
+Patient reference SYN-2234. This medication list records dates in MM/DD/YYYY order.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 02/06/2026 - end 07/20/2026 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 02/06/2026
+SERTRALINE 50 MG PO DAILY - status: active

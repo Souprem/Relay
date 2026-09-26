@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Northgate Rheumatology - Follow-up Visit - 2026-08-07
+Patient reference SYN-8843.
+
+Subjective: 33-year-old woman reports ongoing hand stiffness despite her current regimen, unchanged from recent visits.
+Objective: Mild synovitis at bilateral MCPs. Vitals stable.
+Assessment: Seropositive rheumatoid arthritis, an established diagnosis on the chart since 2022. Her DMARD history is per the attached current medication list from her pharmacy.
+Plan: Review the attached list before deciding on next steps toward Immunara. Continue current supportive care.

@@ -1,5 +1,8 @@
+import gzip
 import re
+import subprocess
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
@@ -69,6 +72,30 @@ def test_manifest_is_written_once(tmp_path):
         store.write_manifest(manifest())
 
 
+def test_run_manifest_question_set_version_defaults_to_none():
+    """C4: optional so a pre-C4 manifest (no such key) still validates."""
+    assert manifest().question_set_version is None
+
+
+def test_committed_manifests_without_question_set_version_still_load():
+    for path in (
+        REPO
+        / "evals"
+        / "baselines"
+        / "smoke-v0.1"
+        / "run_20260925T042324Z_eee114"
+        / "run_20260925T042324Z_eee114.manifest.json",
+        REPO
+        / "evals"
+        / "baselines"
+        / "gen-v0.2-dev"
+        / "run_20260925T071157Z_d6b218"
+        / "run-manifest.json",
+    ):
+        assert "question_set_version" not in path.read_text()
+        assert RunManifest.model_validate_json(path.read_text()).question_set_version is None
+
+
 def test_current_git_sha_in_repo():
     sha = current_git_sha()
     assert sha is None or re.fullmatch(r"[0-9a-f]{40}(-dirty)?", sha)
@@ -76,3 +103,64 @@ def test_current_git_sha_in_repo():
 
 def test_current_git_sha_outside_repo(tmp_path):
     assert current_git_sha(tmp_path) is None
+
+
+def _git(cwd, *args):
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
+
+
+def _init_repo(tmp_path):
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "config", "user.email", "test@example.com")
+    _git(tmp_path, "config", "user.name", "Test")
+    (tmp_path / "tracked.txt").write_text("one\n")
+    _git(tmp_path, "add", "tracked.txt")
+    _git(tmp_path, "commit", "-q", "-m", "initial")
+    return current_git_sha(tmp_path)
+
+
+def test_current_git_sha_ignores_untracked_files(tmp_path):
+    """C1: an untracked working file must not mark the sha dirty."""
+    sha = _init_repo(tmp_path)
+    (tmp_path / "untracked.txt").write_text("scratch\n")
+    assert current_git_sha(tmp_path) == sha
+
+
+def test_current_git_sha_flags_modified_tracked_files_as_dirty(tmp_path):
+    sha = _init_repo(tmp_path)
+    (tmp_path / "tracked.txt").write_text("changed\n")
+    assert current_git_sha(tmp_path) == f"{sha}-dirty"
+
+
+REPO = Path(__file__).resolve().parents[2]
+SMOKE_BASELINE = (
+    REPO
+    / "evals"
+    / "baselines"
+    / "smoke-v0.1"
+    / "run_20260925T042324Z_eee114"
+    / "run_20260925T042324Z_eee114.jsonl"
+)
+
+
+def test_gzipped_trace_file_round_trips(tmp_path):
+    traces = [make_trace(make_case("T-01")), make_trace(make_case("T-02"))]
+    path = tmp_path / "traces.jsonl.gz"
+    with gzip.open(path, "wt", encoding="utf-8") as handle:
+        for trace in traces:
+            handle.write(trace.model_dump_json() + "\n")
+    assert read_traces(path) == traces
+
+
+def test_corrupt_gzip_is_a_value_error_naming_the_file(tmp_path):
+    path = tmp_path / "broken.jsonl.gz"
+    path.write_bytes(b"this is not gzip data")
+    with pytest.raises(ValueError, match="broken.jsonl.gz"):
+        read_traces(path)
+
+
+def test_committed_v0_1_baseline_still_loads_without_new_fields():
+    traces = read_traces(SMOKE_BASELINE)
+    assert len(traces) == 10
+    assert all(t.policy_text_hash is None for t in traces)
+    assert all(t.decisions.client_version is None for t in traces)

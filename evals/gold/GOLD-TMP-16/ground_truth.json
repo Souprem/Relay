@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "referral_letter: RA established since 2022 with several regimens since; methotrexate started March 3 and stopped August 28, but neither date carries a year and no other document anchors one, so the course's year cannot be recovered."
+}

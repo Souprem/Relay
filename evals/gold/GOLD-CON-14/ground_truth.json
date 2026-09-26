@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter describes six months of methotrexate, January through June 2026. clinic_note describes only three weeks of methotrexate in January 2026, stopped for nausea. The two sources disagree on how long the course lasted."
+}

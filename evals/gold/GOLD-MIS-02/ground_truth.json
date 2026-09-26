@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "physician_note: documents polyarthralgia with no diagnosis of rheumatoid arthritis and nothing about methotrexate. insurance.member_id is null, but the diagnosis gap takes precedence."
+}

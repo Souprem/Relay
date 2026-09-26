@@ -1,0 +1,10 @@
+SYNTHETIC RECORD - Example Pinecrest Family Medicine - Referral Letter - 2026-06-20
+
+Dear Rheumatology Colleague,
+
+I am referring this 52-year-old woman for evaluation of several months of symmetric inflammatory polyarthritis involving her hands, wrists and knees, with prolonged morning stiffness. Given the persistence of her symptoms, she was started on oral methotrexate 15 mg weekly on 2026-01-12 as an empiric trial. She continued it through 2026-05-18, when it was discontinued because her synovitis had not improved despite an adequate trial and dose escalation.
+
+Serologies drawn at the start of her trial have now resulted and are enclosed. Her joint findings remain most consistent with an inflammatory arthritis of uncertain etiology, and I would appreciate your assessment as to whether a formal rheumatoid arthritis diagnosis is warranted before proceeding further. She works as a bank teller and finds prolonged typing increasingly difficult.
+
+Sincerely,
+The referring primary care physician

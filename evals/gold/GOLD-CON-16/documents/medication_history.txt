@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Redcliff Rheumatology - Medication History - 2026-08-15
+Patient reference SYN-7789.
+METHOTREXATE 20 MG PO WEEKLY - status: inactive - start 2026-03-04 - end 2026-08-11 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-03-04
+CETIRIZINE 10 MG PO DAILY - status: active

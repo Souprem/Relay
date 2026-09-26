@@ -25,6 +25,7 @@ class WorkflowTrace(BaseModel):
     question_set_hash: str
     policy_id: str
     policy_version: str
+    policy_text_hash: str | None = None
     thresholds: Thresholds
     decisions: DecisionBundle
     action: WorkflowAction
@@ -43,6 +44,10 @@ class RunManifest(BaseModel):
     dataset_path: str
     provider: str
     policy_version: str
+    question_set_version: str | None = None
     case_count: int
     trace_file: str
     relay_git_sha: str | None
+    # Set when the run used --limit/--sample-seed (a deterministic subsample of the dataset).
+    sample_limit: int | None = None
+    sample_seed: int | None = None

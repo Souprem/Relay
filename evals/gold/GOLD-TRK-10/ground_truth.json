@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive RA diagnosed 2024. Leflunomide, September 2025 to April 2026, inadequate response, is not methotrexate (E4). 'Prior DMARDs: leflunomide only' is an explicit exhaustive list that documents the methotrexate history as never taken."
+}

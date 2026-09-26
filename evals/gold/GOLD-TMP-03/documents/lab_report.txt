@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Harbor Rheumatology Consultants - Laboratory Report - 2026-01-10
+Patient reference SYN-6003.
+Rheumatoid factor: positive, 71 IU/mL (reference <14).
+Anti-CCP antibody: positive, 94 U/mL (reference <20).
+CBC: within normal limits.

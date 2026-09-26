@@ -1,10 +1,10 @@
 """Typed judgments returned by decision providers. Providers never return workflow actions."""
 
 import math
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any, Literal, Protocol, Self
+from typing import Any, Literal, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -92,10 +92,11 @@ class DecisionBundle(BaseModel):
     provider_version: str
     question_set_version: str
     question_set_hash: str
-    latency_ms: int
+    latency_ms: int | None = None  # None when not measured (batch runs, label fixtures)
     input_tokens: int | None = None
     estimated_cost_usd: Decimal | None = None
     error: str | None = None
+    client_version: str | None = None
 
     def get(self, question_id: DecisionId) -> Decision | None:
         return next((d for d in self.decisions if d.question_id == question_id), None)
@@ -106,6 +107,18 @@ class DecisionBundle(BaseModel):
 
 
 class DecisionProvider(Protocol):
+    """A judgment source. A provider may also implement PreparingProvider.prepare."""
+
     name: str
 
     async def decide(self, case: CaseInput) -> DecisionBundle: ...
+
+
+@runtime_checkable
+class PreparingProvider(Protocol):
+    """The optional batch hook. run_dataset awaits prepare() once, with every case input, before
+    the first decide() call. The Claude batch provider submits and collects its Message Batch
+    there; decide() then returns stored bundles. Providers without prepare() need nothing.
+    """
+
+    async def prepare(self, cases: Sequence[CaseInput]) -> None: ...

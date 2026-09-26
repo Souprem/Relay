@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "problem_list gives methotrexate 2026-01-07 to 2026-06-10 and medication_history gives 2026-01-07 to 2026-06-14, both well over twelve weeks, for inadequate response. The stop dates differ by only four days and no member ID appears anywhere in the packet."
+}

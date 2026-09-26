@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 
 from relay.cases.models import MissingEvidence
-from relay.evaluation.metrics import EvalError, percentile, score_run
+from relay.evaluation.metrics import EvalError, EvalSummary, percentile, score_run
 from relay.workflow.outcomes import WorkflowAction
 from tests.factories import make_bundle, make_case, make_trace, make_truth
 
@@ -132,6 +132,23 @@ def test_cases_are_ordered_by_case_id_regardless_of_trace_order():
     traces = [make_trace(cases[0]), make_trace(cases[1]), make_trace(cases[2])]
     summary = score_run(traces, cases)
     assert [c.case_id for c in summary.cases] == ["A", "B", "C"]
+
+
+def test_question_set_versions_are_sorted_and_distinct():
+    """C4: identity of which question set(s) produced a run's traces, for the results record."""
+    cases = [make_case("A"), make_case("B")]
+    bundle_b = make_bundle("B").model_copy(update={"question_set_version": "q-v0.2"})
+    traces = [make_trace(cases[0]), make_trace(cases[1], bundle_b)]
+    summary = score_run(traces, cases)
+    assert summary.question_set_versions == ["q-test", "q-v0.2"]
+
+
+def test_question_set_versions_defaults_to_empty_list_for_old_results_json():
+    """A pre-C4 results.json has no question_set_versions key; it must still validate."""
+    old = score_run([make_trace(make_case("A"))], [make_case("A")]).model_dump(mode="json")
+    del old["question_set_versions"]
+    summary = EvalSummary.model_validate(old)
+    assert summary.question_set_versions == []
 
 
 def test_incomplete_trace_coverage_is_an_error():

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "physician_note: X-ray findings consistent with rheumatoid arthritis, but the diagnosis is to be confirmed at follow-up and serology is pending, so it does not commit (R1). lab_report shows tests ordered, not results. No DMARD has been started."
+}

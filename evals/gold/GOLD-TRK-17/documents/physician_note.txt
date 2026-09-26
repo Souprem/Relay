@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Briarcliff Rheumatology - New Patient Evaluation - 2026-06-08
+Patient reference SYN-6621.
+Subjective: This 27-year-old woman reports six weeks of symmetric hand and wrist swelling with morning stiffness lasting over an hour.
+Objective: Synovitis at the bilateral wrists and MCPs. Hand X-rays obtained today show periarticular changes consistent with rheumatoid arthritis, but serology is still pending.
+Assessment: Findings consistent with rheumatoid arthritis; the diagnosis is to be confirmed at follow-up once serology results return. No DMARD has been started yet.
+Plan: Order rheumatoid factor and anti-CCP antibody testing. Return in three weeks to review results and finalize the diagnosis.

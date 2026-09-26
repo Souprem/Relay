@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Brookhaven Medical Center - Office Visit - 2026-09-01
+
+Subjective: 58-year-old man with seropositive rheumatoid arthritis, diagnosed at this practice in 2021, reports his hand and wrist swelling has not improved.
+Objective: Synovitis present at bilateral wrists and MCP joints. Grip strength reduced bilaterally. Vitals stable.
+Assessment: Rheumatoid arthritis remains active despite oral methotrexate 20 mg weekly, continuing since 2026-02-01, an inadequate response.
+Plan: Discuss Immunara. Continue folic acid. Recheck in one month.

@@ -1,0 +1,12 @@
+SYNTHETIC RECORD - Example Ashgrove Rheumatology - June 5, 2026
+
+Dear Medical Reviewer,
+
+Patient reference SYN-4409. This 66-year-old man presented in 2024 with symmetric small-joint swelling. His presentation is consistent with rheumatoid arthritis; he meets the 2010 ACR/EULAR classification criteria and has been treated as RA since that visit.
+
+He took oral methotrexate 20 mg weekly from September 1, 2025 to February 15, 2026, discontinued because his hand and wrist synovitis had not improved despite the full trial, an inadequate response.
+
+I am requesting Immunara given his sustained disease activity.
+
+Sincerely,
+The diagnosing rheumatologist

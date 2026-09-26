@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter, dated on as_of_date (2026-09-10): methotrexate started five months before this visit (D4: April 2026, D2: 2026-04-30) and continues (D5) = 133 days (D7), inadequate response."
+}

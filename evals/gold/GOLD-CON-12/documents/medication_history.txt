@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Union Square Medical Partners - Medication History - 2026-06-20
+Patient reference SYN-3345.
+METHOTREXATE 15 MG PO WEEKLY - status: inactive - start 2026-01-10 - end 2026-05-20 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-01-10
+ATORVASTATIN 20 MG PO DAILY - status: active

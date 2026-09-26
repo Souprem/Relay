@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Sierra Rheumatology - Problem List - 2026-08-01
+Patient reference SYN-6019. 55-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed 2020.
+- Methotrexate 20 mg weekly from March 2021 to November 2021, discontinued for inadequate response; several other regimens tried since with variable effect.
+- Hypertension, controlled on amlodipine.
+- Plan: proceed with Immunara given the earlier inadequate response to methotrexate and continued disease activity on subsequent therapies.

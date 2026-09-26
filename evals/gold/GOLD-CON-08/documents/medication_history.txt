@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Ironwood Rheumatology - Medication History - 2026-09-15
+Patient reference SYN-8809.
+METHOTREXATE 20 MG PO WEEKLY - status: active - start 2026-07-14
+FOLIC ACID 1 MG PO DAILY - status: active - start 2026-07-14
+TAMSULOSIN 0.4 MG PO DAILY - status: active

@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Fairview Urgent Care - Problem List - 2026-06-18
+Patient reference SYN-5521. 29-year-old woman.
+
+- Three weeks of swelling and warmth in both wrists and both knees, onset after a mild febrile illness.
+- Differential includes rheumatoid arthritis versus reactive or post-viral arthritis; rheumatoid factor and anti-CCP pending.
+- Whether any arthritis medication has ever been tried is unclear; the patient is not a reliable historian today.
+- Plan: hold on any disease-modifying therapy until serology returns and the diagnosis is clarified.

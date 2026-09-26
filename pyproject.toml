@@ -5,6 +5,7 @@ description = "Evaluation-first, confidence-aware workflow engine for synthetic 
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=1.8.0",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.3",
     "typer>=0.27.2",
@@ -25,7 +26,7 @@ packages = ["relay"]
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
-markers = ["live: calls the real TypeSafe API (requires TYPESAFE_API_KEY)"]
+markers = ["live: calls a real provider API (TypeSafe or Anthropic; requires its key in .env)"]
 addopts = "-m 'not live'"
 
 [tool.ruff]

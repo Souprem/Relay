@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Central Pharmacy - Fill History - 2026-07-30
+Patient reference SYN-8801.
+METHOTREXATE 15 MG TABLET - first fill 2026-01-05, quantity 4
+Refills dispensed monthly through May 2026, last fill 2026-05-04.

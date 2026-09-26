@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "physician_note states methotrexate has never been tried for this patient. medication_history lists methotrexate 2026-01-12 to 2026-06-22, marked inactive. The two sources disagree on whether methotrexate was ever taken, so the course is not established."
+}

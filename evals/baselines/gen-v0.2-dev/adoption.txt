@@ -1,0 +1,5 @@
+Adoption rule (spec §6, dev only): adopt q-v0.2 iff its correct-action rate >= q-v0.1's
+and its unsafe-automation count <= q-v0.1's.
+  q-v0.1: run run_20260925T071157Z_d6b218 correct 257/400 (0.6425), unsafe 0
+  q-v0.2: run run_20260925T071231Z_6f0b73 correct 330/400 (0.8250), unsafe 0
+DECISION: ADOPT q-v0.2

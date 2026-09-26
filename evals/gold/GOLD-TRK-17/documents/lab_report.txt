@@ -1,0 +1,2 @@
+SYNTHETIC RECORD - Example Briarcliff Rheumatology - Laboratory Order - 2026-06-08
+Patient reference SYN-6621. Rheumatoid factor: ordered, pending. Anti-CCP antibody: ordered, pending. Complete blood count and comprehensive metabolic panel: ordered, pending. Results expected within one week.

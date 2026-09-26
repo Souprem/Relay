@@ -1,12 +1,14 @@
 """Run a dataset through a provider and the policy engine, tracing every case."""
 
 import asyncio
+import hashlib
+import random
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
 from relay.cases.models import PriorAuthCase
 from relay.cases.policies import AuthorizationPolicy, load_policy
-from relay.decisions.base import DecisionProvider
+from relay.decisions.base import DecisionProvider, PreparingProvider
 from relay.traces.models import WorkflowTrace
 from relay.traces.store import TraceStore, new_trace_id
 from relay.workflow.engine import determine_action
@@ -15,6 +17,19 @@ from relay.workflow.thresholds import load_thresholds
 
 class RunConfigError(ValueError):
     """The requested policy version or policies cannot be used for these cases."""
+
+
+def policy_text_hash(policy: AuthorizationPolicy) -> str:
+    return "sha256:" + hashlib.sha256(policy.text.encode("utf-8")).hexdigest()
+
+
+def sample_cases(cases: Sequence[PriorAuthCase], limit: int, seed: int) -> list[PriorAuthCase]:
+    """A deterministic subsample: random.Random(seed).sample over the cases sorted by id,
+    returned sorted by id. A limit at or above the case count keeps every case."""
+    ordered = sorted(cases, key=lambda c: c.input.id)
+    if limit >= len(ordered):
+        return ordered
+    return sorted(random.Random(seed).sample(ordered, limit), key=lambda c: c.input.id)
 
 
 def validate_run_config(
@@ -54,6 +69,8 @@ async def run_dataset(
     policies = validate_run_config(cases, policy_version)
     thresholds = load_thresholds(policy_version)
     semaphore = asyncio.Semaphore(concurrency)
+    if isinstance(provider, PreparingProvider):
+        await provider.prepare([case.input for case in cases])
 
     async def run_one(case: PriorAuthCase) -> WorkflowTrace:
         policy = policies[case.input.policy_id]
@@ -73,6 +90,7 @@ async def run_dataset(
             question_set_hash=bundle.question_set_hash,
             policy_id=policy.id,
             policy_version=policy.version,
+            policy_text_hash=policy_text_hash(policy),
             thresholds=thresholds,
             decisions=bundle,
             action=outcome.action,

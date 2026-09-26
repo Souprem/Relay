@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "physician_note: RA diagnosed 2021 at this practice, active on exam. The note requests Immunara but says nothing about methotrexate or any other prior DMARD, so no treatment history is established."
+}

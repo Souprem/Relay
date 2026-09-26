@@ -1,0 +1,12 @@
+{
+  "id": "GOLD-MIS-12",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-09-05",
+  "patient": {"age": 63, "state": "VA"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "ExampleHealth", "plan": "ExampleHealth Gold", "member_id": null},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "referral_letter", "kind": "physician_note", "file": "referral_letter.txt"}
+  ]
+}

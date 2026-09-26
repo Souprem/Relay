@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "referral_letter: RA diagnosed 2024; methotrexate March 2025 (month-only, D2: 2025-03-31) to October 2025 (D2: 2025-10-01) = 184 days, stopped for inadequate response. insurance.member_id is null and fax_cover says the member number will follow."
+}

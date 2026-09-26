@@ -1,7 +1,10 @@
-"""The v0.1 Jev question set: 4 Nouls, 1 missing-evidence Choice, 7 date-part Choices.
+"""Versioned Jev question sets: 4 Nouls, 1 missing-evidence Choice, 7 date-part Choices.
 
 Question ids are for code and are not sent to the model, so every instruction carries its full
 meaning. Yes/no questions are phrased so that a high value means "yes".
+
+q-v0.1 is the v0.1 milestone set. q-v0.2 changes only two criteria so that a record stating that
+the patient never took the required drug counts as documented treatment history.
 """
 
 import hashlib
@@ -15,7 +18,10 @@ from relay.cases.models import CaseInput
 from relay.cases.policies import AuthorizationPolicy
 from relay.decisions.step_therapy import MONTHS
 
-QUESTION_SET_VERSION = "q-v0.1"
+Q_V0_1 = "q-v0.1"
+Q_V0_2 = "q-v0.2"
+QUESTION_SET_VERSIONS: tuple[str, ...] = (Q_V0_1, Q_V0_2)
+DEFAULT_QUESTION_SET_VERSION = Q_V0_2
 QUESTION_IDS: tuple[str, ...] = (
     "diagnosis_support",
     "documentation_complete",
@@ -68,7 +74,36 @@ def _date_part_questions(
     }
 
 
-def build_questions(policy: AuthorizationPolicy, years: Sequence[str]) -> dict[str, Noul | Choice]:
+def validate_question_set_version(version: str) -> None:
+    if version not in QUESTION_SET_VERSIONS:
+        raise ValueError(f"unknown question set {version!r}; known: {list(QUESTION_SET_VERSIONS)}")
+
+
+def _documentation_complete_true(drug: str, version: str) -> str:
+    text = (
+        "The insurance member ID, a clinician note supporting the diagnosis, and the patient's "
+        f"treatment history (including whether and when {drug} was taken) are all present"
+    )
+    if version == Q_V0_2:
+        text += f" (a statement that the patient never took {drug} counts as treatment history)"
+    return text + "."
+
+
+def _treatment_history_option(drug: str, version: str) -> str:
+    if version == Q_V0_2:
+        return (
+            f"The records do not say whether or when the patient took {drug}. A record stating "
+            f"that the patient never took {drug} counts as documented treatment history."
+        )
+    return f"The patient's {drug} treatment history (dates or outcome) is not documented."
+
+
+def build_questions(
+    policy: AuthorizationPolicy,
+    years: Sequence[str],
+    version: str = DEFAULT_QUESTION_SET_VERSION,
+) -> dict[str, Noul | Choice]:
+    validate_question_set_version(version)
     drug = policy.required_therapy
     indication = policy.indication
     questions: dict[str, Noul | Choice] = {
@@ -90,9 +125,7 @@ def build_questions(policy: AuthorizationPolicy, years: Sequence[str]) -> dict[s
                 "documentation?"
             ),
             criteria=NoulCriteria(
-                true="The insurance member ID, a clinician note supporting the diagnosis, and "
-                f"the patient's treatment history (including whether and when {drug} was "
-                "taken) are all present.",
+                true=_documentation_complete_true(drug, version),
                 false="At least one required item is missing, unavailable, or marked as not "
                 "provided.",
             ),
@@ -116,8 +149,7 @@ def build_questions(policy: AuthorizationPolicy, years: Sequence[str]) -> dict[s
             ),
             criteria={
                 "DIAGNOSIS": f"No established diagnosis of {indication} is documented.",
-                "TREATMENT_HISTORY": f"The patient's {drug} treatment history (dates or "
-                "outcome) is not documented.",
+                "TREATMENT_HISTORY": _treatment_history_option(drug, version),
                 "LAB_RESULT": "A lab result that the decision depends on is missing.",
                 "DOSAGE": "The requested dose or regimen is missing.",
                 "INSURANCE_INFORMATION": "The insurance member ID or plan information is missing.",
@@ -152,8 +184,10 @@ def build_questions(policy: AuthorizationPolicy, years: Sequence[str]) -> dict[s
     return questions
 
 
-def question_set_hash(policy: AuthorizationPolicy) -> str:
-    questions = build_questions(policy, [_YEAR_PLACEHOLDER])
+def question_set_hash(
+    policy: AuthorizationPolicy, version: str = DEFAULT_QUESTION_SET_VERSION
+) -> str:
+    questions = build_questions(policy, [_YEAR_PLACEHOLDER], version)
     payload = {qid: q.model_dump(mode="json") for qid, q in questions.items()}
-    blob = json.dumps({"version": QUESTION_SET_VERSION, "questions": payload}, sort_keys=True)
+    blob = json.dumps({"version": version, "questions": payload}, sort_keys=True)
     return "sha256:" + hashlib.sha256(blob.encode("utf-8")).hexdigest()

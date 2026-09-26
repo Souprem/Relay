@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Union Square Medical Partners - Problem List Update - 2026-06-25
+Patient reference SYN-3345. 63-year-old man.
+
+- Seropositive rheumatoid arthritis, diagnosed 2017, followed at this practice since.
+- Methotrexate has never been tried for this patient's joint symptoms; he has relied on acetaminophen alone.
+- Hyperlipidemia, managed with a statin.
+- Plan: discuss Immunara given the extent of untreated joint involvement.

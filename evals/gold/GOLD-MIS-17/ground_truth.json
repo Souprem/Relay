@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive rheumatoid arthritis established 2018; methotrexate 2025-12-01 to 2026-04-25 = 145 days, stopped for inadequate response. fax_cover refers to the enclosed insurance_card, which shows member ID CCP-778821."
+}

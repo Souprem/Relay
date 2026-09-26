@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "referral_letter: inflammatory polyarthritis treated with methotrexate 2026-01-12 to 2026-05-18 = 126 days, stopped for inadequate response. lab_report shows positive RF and anti-CCP, but no clinician states an established rheumatoid arthritis diagnosis."
+}

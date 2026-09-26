@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "physician_note: seropositive rheumatoid arthritis diagnosed 2022 (established); DMARD history is per the attached list. medication_history: a current-medications list (lisinopril, atorvastatin, omeprazole) with no mention of methotrexate, so no DMARD course is documented."
+}

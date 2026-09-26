@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note and medication_history agree: methotrexate 2026-03-02 to 2026-05-24 = 83 days (D7), one day short of twelve weeks, stopped for inadequate response."
+}

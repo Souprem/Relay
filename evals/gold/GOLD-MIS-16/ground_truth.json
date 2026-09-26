@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "referral_letter: seronegative inflammatory arthritis, rheumatoid arthritis not confirmed; methotrexate 2026-01-19 to 2026-06-08 = 140 days, stopped for inadequate response. lab_report shows negative RF and anti-CCP, and no clinician states an established rheumatoid arthritis diagnosis."
+}

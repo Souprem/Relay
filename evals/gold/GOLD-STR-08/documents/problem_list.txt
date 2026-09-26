@@ -1,0 +1,8 @@
+SYNTHETIC RECORD - Example Stonegate Rheumatology - Problem List - 2026-06-05
+Patient reference SYN-9903. 71-year-old woman.
+
+- Rheumatoid arthritis, seropositive, established diagnosis since 2018.
+- Osteoarthritis of both knees, longstanding, managed conservatively.
+- Methotrexate 17.5 mg weekly from 2025-12-01 to 2026-04-20, discontinued due to elevated liver enzymes on routine bloodwork.
+- Hyperlipidemia, on atorvastatin.
+- Plan: proceed with Immunara given intolerance to methotrexate; continue routine liver function monitoring.

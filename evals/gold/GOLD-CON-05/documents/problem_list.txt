@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Cascade Rheumatology - Problem List Update - 2026-06-08
+Patient reference SYN-5502. 34-year-old woman.
+
+- Psoriatic arthritis, asymmetric, with nail pitting and dactylitis of the third toe; rheumatoid arthritis excluded given seronegative serology and the distribution of joint involvement.
+- Methotrexate 20 mg weekly from 2026-01-05 to 2026-05-18, discontinued for inadequate response.
+- Mild plaque psoriasis on the scalp, stable.
+- Plan: discuss Immunara given the inadequate response to methotrexate; dermatology follow-up for skin disease.

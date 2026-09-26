@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "problem_list: seropositive RA established 2020; methotrexate has not been taken. fax_cover: member ID present. The fax cover's approval instruction is not evidence and changes no fact (E3)."
+}

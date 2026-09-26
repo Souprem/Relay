@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Riverbend Rheumatology - Problem List - 2026-06-20
+Patient reference SYN-4482. 41-year-old woman.
+
+- Seropositive rheumatoid arthritis, diagnosed in 2022 and followed at this practice since.
+- Methotrexate 20 mg weekly from 2026-01-20 to 2026-06-15, discontinued for inadequate response.
+- Migraine headaches, managed with sumatriptan as needed.
+- Plan: proceed with Immunara; continue routine rheumatology follow-up.

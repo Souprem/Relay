@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Fairview Rheumatology - Office Visit - 2026-06-01
+Patient reference SYN-6002. This 55-year-old woman was diagnosed with seropositive rheumatoid arthritis in 2020 and has been followed at this clinic since. She returns today reporting that her hands remain swollen and stiff most mornings, and she has started using a jar opener at home because her grip has weakened.
+
+She completed a trial of oral methotrexate 20 mg weekly from 2026-03-02 to 2026-05-24, which was stopped because her synovitis had not improved. She has otherwise been healthy, walks regularly for exercise, and denies any new rashes.
+
+Given her inadequate response to methotrexate, Immunara is being requested.

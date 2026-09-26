@@ -1,0 +1,105 @@
+{
+  "entries": [
+    {
+      "run_id": "live-test-AUTO-01",
+      "dataset_id": "smoke-v0.1",
+      "mode": "sync",
+      "cases": 1,
+      "status": "settled",
+      "cost_usd": "0.040485",
+      "recorded_at": "2026-09-25T13:10:47.389657Z",
+      "batch_id": null
+    },
+    {
+      "run_id": "run_20260925T131052Z_f328de",
+      "dataset_id": "smoke-v0.1",
+      "mode": "sync",
+      "cases": 10,
+      "status": "settled",
+      "cost_usd": "0.254666",
+      "recorded_at": "2026-09-25T13:11:09.006668Z",
+      "batch_id": null
+    },
+    {
+      "run_id": "run_20260925T131130Z_02da15",
+      "dataset_id": "gen-v0.2-dev",
+      "mode": "batch",
+      "cases": 400,
+      "status": "settled",
+      "cost_usd": "0.000000",
+      "recorded_at": "2026-09-25T19:07:21.020752Z",
+      "batch_id": "msgbatch_01SpuLJxsxtaXJ8W2YPps8Tf"
+    },
+    {
+      "run_id": "run_20260925T174036Z_720489",
+      "dataset_id": "gen-v0.2-dev",
+      "mode": "batch",
+      "cases": 400,
+      "status": "settled",
+      "cost_usd": "0.000000",
+      "recorded_at": "2026-09-25T19:05:30.127937Z",
+      "batch_id": null
+    },
+    {
+      "run_id": "run_20260925T190719Z_d65789",
+      "dataset_id": "gen-v0.2-dev",
+      "mode": "batch",
+      "cases": 400,
+      "status": "settled",
+      "cost_usd": "4.123975",
+      "recorded_at": "2026-09-25T19:07:21.020774Z",
+      "batch_id": "msgbatch_01SpuLJxsxtaXJ8W2YPps8Tf"
+    },
+    {
+      "run_id": "run_20260925T190826Z_b1c45c",
+      "dataset_id": "gen-v0.2-dev",
+      "mode": "batch",
+      "cases": 22,
+      "status": "settled",
+      "cost_usd": "0.274699",
+      "recorded_at": "2026-09-25T19:15:29.812659Z",
+      "batch_id": "msgbatch_012TiAgwjfKK8DGZKdvhv5Hm"
+    },
+    {
+      "run_id": "run_20260925T192153Z_f52792",
+      "dataset_id": "gen-v0.2-holdout",
+      "mode": "batch",
+      "cases": 150,
+      "status": "settled",
+      "cost_usd": "0.000000",
+      "recorded_at": "2026-09-25T21:20:35.193972Z",
+      "batch_id": "msgbatch_01K4bLdqx46UxkBBMTx2nDbA"
+    },
+    {
+      "run_id": "run_20260925T212034Z_bbee49",
+      "dataset_id": "gen-v0.2-holdout",
+      "mode": "batch",
+      "cases": 150,
+      "status": "settled",
+      "cost_usd": "2.456215",
+      "recorded_at": "2026-09-25T21:20:35.193987Z",
+      "batch_id": "msgbatch_01K4bLdqx46UxkBBMTx2nDbA"
+    },
+    {
+      "run_id": "run_20260925T222258Z_91d2e1",
+      "dataset_id": "gold-v0.1",
+      "mode": "batch",
+      "cases": 100,
+      "status": "settled",
+      "cost_usd": "0.000000",
+      "recorded_at": "2026-09-26T01:17:24.788355Z",
+      "batch_id": null
+    },
+    {
+      "run_id": "run_20260926T011730Z_f1852f",
+      "dataset_id": "gold-v0.1",
+      "mode": "batch",
+      "cases": 100,
+      "status": "settled",
+      "cost_usd": "1.560455",
+      "recorded_at": "2026-09-26T04:09:28.183731Z",
+      "batch_id": "msgbatch_01UtCjPWjYPN4UvTFvtBtMPd"
+    }
+  ],
+  "spent_usd": "8.710495"
+}

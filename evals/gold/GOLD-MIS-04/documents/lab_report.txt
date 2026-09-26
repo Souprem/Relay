@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Pinecrest Family Medicine - Laboratory Report - 2026-06-10
+Patient reference SYN-9034.
+Rheumatoid factor: positive, 61 IU/mL (reference <14).
+Anti-CCP antibody: positive, 88 U/mL (reference <20).
+Erythrocyte sedimentation rate: 42 mm/hr (elevated).
+Complete blood count and liver function panel: within normal limits.

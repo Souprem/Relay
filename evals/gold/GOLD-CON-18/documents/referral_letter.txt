@@ -1,0 +1,12 @@
+SYNTHETIC RECORD - Example Ashford Family Medicine - Referral Letter - 2026-08-01
+
+Dear Colleague,
+
+I am referring this 44-year-old man, who has an established diagnosis of seropositive rheumatoid arthritis confirmed in 2021, for evaluation for Immunara. His hand and wrist swelling has persisted despite treatment.
+
+He completed oral methotrexate 20 mg weekly from 2026-02-02 to 2026-07-20, which was discontinued for inadequate response; his synovitis had not meaningfully improved over the course. He has no other chronic medical conditions.
+
+Thank you for your review.
+
+Sincerely,
+The referring primary care physician

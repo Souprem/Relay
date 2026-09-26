@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "consult_note documents methotrexate 2025-10-06 to 2026-03-02, stopped for inadequate response. clinic_note, written afterward, states methotrexate has never been tried and starts it that day. The two sources disagree on whether methotrexate was already taken."
+}

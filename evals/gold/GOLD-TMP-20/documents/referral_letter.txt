@@ -1,0 +1,12 @@
+SYNTHETIC RECORD - Example Aspen Grove Rheumatology - May 26, 2026
+
+Dear Care Coordinator,
+
+Patient reference SYN-6020. This patient, a 40-year-old man, was referred for consideration of Immunara after his methotrexate trial ended. He carries a seropositive rheumatoid arthritis diagnosis from 2021.
+
+He took oral methotrexate 20 mg weekly for fourteen weeks, with his last dose on 2026-05-20, before it was stopped because of persistent nausea and low white blood cell counts on routine labs. He tolerated the medication poorly throughout the trial and asked to discontinue it once his labs came back abnormal.
+
+Given his intolerance to methotrexate, we recommend proceeding with Immunara instead.
+
+Sincerely,
+The referring physician

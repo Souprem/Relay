@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Larkspur Rheumatology - Visit Summary - 2026-06-25
+Patient reference SYN-9042. A referral from primary care for worsening hand swelling brought this 49-year-old woman to rheumatology last fall, and she returns today for a treatment update.
+
+Seropositive rheumatoid arthritis was diagnosed in 2024. Prior DMARDs: leflunomide only, taken from September 2025 to April 2026, discontinued because her synovitis and morning stiffness had not improved on the medication, an inadequate response. She has never been prescribed methotrexate. She also takes lisinopril for hypertension and reports no new symptoms today.
+
+Immunara is being requested given her sustained disease activity despite leflunomide.

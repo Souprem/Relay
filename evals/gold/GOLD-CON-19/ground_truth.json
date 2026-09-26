@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "medication_history names Trexall and problem_list names methotrexate (MTX) for the same course, 2026-04-06 to 2026-06-01, fifty-six days, stopped for nausea. Trexall is a brand name for methotrexate, so the course is fifty-six days, short of twelve weeks."
+}

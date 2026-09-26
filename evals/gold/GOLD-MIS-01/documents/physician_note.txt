@@ -1,0 +1,4 @@
+SYNTHETIC RECORD - Example Foothill Family Medicine - Office Visit - 2026-06-15
+Patient reference SYN-3312. A 38-year-old woman presents with six weeks of symmetric swelling in the small joints of both hands and both feet, with morning stiffness lasting well over an hour. She has no prior rheumatology history and has not previously been diagnosed with any form of arthritis.
+
+Exam confirms tender, boggy swelling at the MCPs and MTPs bilaterally, with normal skin and no rash. Given the pattern and duration of her symptoms, probable rheumatoid arthritis is suspected, and she is being referred urgently to rheumatology so the diagnosis can be confirmed with serology and imaging before any disease-modifying therapy is chosen. No DMARD has been started; she is not currently taking methotrexate or any other arthritis medication. She was counseled to avoid NSAIDs on an empty stomach and given information about the referral timeline.

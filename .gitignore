@@ -18,6 +18,10 @@ build/
 /reports/
 /results/
 
+# Generated datasets are reproducible from their committed manifests
+/evals/generated/*/
+!/evals/generated/manifests/
+
 # OS / editor
 .DS_Store
 .idea/

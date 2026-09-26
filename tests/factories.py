@@ -15,6 +15,7 @@ from relay.cases.models import (
 )
 from relay.cases.policies import load_policy
 from relay.decisions.base import Decision, DecisionBundle, DecisionId
+from relay.generation.facts import CaseFacts
 from relay.traces.models import WorkflowTrace
 from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import WorkflowAction
@@ -72,9 +73,10 @@ def make_bundle(
     missing: str = "NONE",
     missing_p: float = 0.9,
     error: str | None = None,
-    latency_ms: int = 100,
+    latency_ms: int | None = 100,
     cost: Decimal | None = Decimal("0.00001"),
     provider: str = "test",
+    derivations: dict | None = None,
 ) -> DecisionBundle:
     decisions = (
         []
@@ -92,6 +94,7 @@ def make_bundle(
     return DecisionBundle(
         case_id=case_id,
         decisions=decisions,
+        derivations=derivations or {},
         provider=provider,
         provider_version="test-v1",
         question_set_version="q-test",
@@ -133,3 +136,39 @@ def make_trace(
         gate_path=outcome.gate_path,
         relay_git_sha="abc123",
     )
+
+
+def make_facts(**overrides: object) -> CaseFacts:
+    """An easy, fully documented generated scenario: 140 days of MTX, inadequate response."""
+    values: dict[str, object] = {
+        "case_id": "GEN-TEST",
+        "difficulty": "easy",
+        "as_of_date": date(2026, 9, 15),
+        "note_date": date(2026, 9, 10),
+        "age": 45,
+        "state": "MA",
+        "payer": "ExampleHealth",
+        "plan": "ExampleHealth Gold",
+        "member_id": "EXH-100001",
+        "diagnosis_status": "established",
+        "diagnosis_year": 2024,
+        "mtx_status": "taken",
+        "mtx_start": date(2026, 1, 12),
+        "mtx_end": date(2026, 6, 1),
+        "start_precision": "day",
+        "end_precision": "day",
+        "split_across_documents": False,
+        "medication_history": False,
+        "mtx_outcome": "inadequate_response",
+        "other_dmards": (),
+        "irrelevant_meds": ("IBUPROFEN 400 MG PO AS NEEDED",),
+        "contradiction": None,
+        "history_start": None,
+        "injection": False,
+        "relative_distractor": False,
+        "stale_note": False,
+        "stale_note_date": None,
+        "noise": 0.0,
+    }
+    values.update(overrides)
+    return CaseFacts(**values)  # type: ignore[arg-type]

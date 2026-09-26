@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "referral_letter: seropositive RA established 2024. The dated methotrexate course, 2019-04-01 to 2019-10-15, belongs to the patient's sister (E2), not this patient, whose own methotrexate history is never stated."
+}

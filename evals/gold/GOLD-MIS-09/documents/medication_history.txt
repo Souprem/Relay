@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Northgate Rheumatology - Current Medication List - 2026-08-07
+Patient reference SYN-8843.
+LISINOPRIL 5 MG PO DAILY - status: active
+ATORVASTATIN 20 MG PO DAILY - status: active
+OMEPRAZOLE 20 MG PO DAILY - status: active

@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Maple Ridge Rheumatology - Problem List - 2026-09-15
+Patient reference SYN-7712. 39-year-old woman.
+
+- Rheumatoid arthritis diagnosis per the referring rheumatologist's letter, enclosed.
+- Methotrexate 2025-11-10 to 2026-04-27, discontinued for inadequate response.
+- Mild seasonal asthma, well controlled.
+- Plan: proceed toward Immunara given persistent disease activity.

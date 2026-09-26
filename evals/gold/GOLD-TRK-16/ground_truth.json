@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "referral_letter: presentation consistent with RA, meets 2010 ACR/EULAR criteria, treated as RA since 2024, which commits to the diagnosis (R1). MTX September 1, 2025 to February 15, 2026 = 167 days, stopped for inadequate response."
+}

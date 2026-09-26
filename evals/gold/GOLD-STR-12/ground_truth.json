@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "INSURANCE_INFORMATION",
+  "notes": "physician_note: RA since 2020; methotrexate January 12, 2026 to June 8, 2026 = 147 days, stopped for low blood counts (intolerance), confirmed by medication_history. insurance.member_id is null and intake_form confirms no insurance card was presented."
+}

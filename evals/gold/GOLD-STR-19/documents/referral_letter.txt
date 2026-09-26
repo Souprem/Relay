@@ -1,0 +1,13 @@
+SYNTHETIC RECORD - Example Countryview Rheumatology - Consultation Letter - 2026-06-01
+Patient reference SYN-4456.
+
+Dear Referring Provider,
+
+I evaluated this 48-year-old woman for inflammatory arthritis affecting her hands, wrists, and several toe joints. The differential includes rheumatoid arthritis versus psoriatic arthritis, and I have ordered additional serology and imaging before committing to either diagnosis.
+
+Empirically, she was treated with oral methotrexate from January 5, 2026 to May 25, 2026, but her joint swelling and pain did not improve, so it was discontinued for inadequate response. She works as a veterinary technician and finds handling animals increasingly difficult because of her hand pain. She has no other chronic medical conditions.
+
+I will finalize the diagnosis once the pending workup returns and will follow up regarding Immunara at that time.
+
+Sincerely,
+The consulting rheumatologist

@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "TREATMENT_HISTORY",
+  "notes": "problem_list: seropositive rheumatoid arthritis diagnosed 2021 (established); DMARD history is per the intake form. intake_form: prior DMARD use marked yes with no drug names or dates given, so no methotrexate course is documented."
+}

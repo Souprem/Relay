@@ -1,0 +1,2 @@
+SYNTHETIC RECORD - Example Kettle Falls Rheumatology - Medication History - 2026-06-15
+Patient reference SYN-2246. Methotrexate 20 mg weekly, oral, 2025-11-17 through 2026-03-23. Discontinued: inadequate response, persistent synovitis. Current medications: folic acid 1 mg daily, lisinopril 10 mg daily for hypertension.

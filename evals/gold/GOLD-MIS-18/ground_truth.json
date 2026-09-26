@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": true,
+  "documentation_complete": true,
+  "contradiction_present": false,
+  "missing_evidence": "NONE",
+  "notes": "physician_note: seropositive rheumatoid arthritis established; methotrexate began at the first pharmacy fill and stopped June 2026 (D2: 2026-06-01) for inadequate response. pharmacy_fills shows the first fill on 2026-01-05, giving a course of 147 days."
+}

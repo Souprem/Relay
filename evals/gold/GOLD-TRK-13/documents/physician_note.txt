@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Cormorant Rheumatology - Visit Note - 2026-07-10
+Patient reference SYN-8825.
+Subjective: This 17-year-old girl, who turns 18 next month, returns for follow-up of hand and knee swelling.
+Objective: Synovitis persists at the bilateral wrists and knees. Growth parameters normal for age.
+Assessment: Seropositive rheumatoid arthritis, established 2023. She took oral methotrexate 15 mg weekly from October 1, 2025 to March 1, 2026, discontinued for inadequate response given ongoing synovitis throughout the trial.
+Plan: Request Immunara given the inadequate response to methotrexate. Continue routine monitoring.

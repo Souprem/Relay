@@ -1,0 +1,7 @@
+SYNTHETIC RECORD - Example Ridge Rheumatology - Follow-up Visit - 2026-07-06
+Patient reference SYN-4471. 44-year-old woman with seropositive rheumatoid arthritis, diagnosed in 2023 by rheumatology after persistently elevated anti-CCP and rheumatoid factor.
+
+Subjective: She reports ongoing pain and stiffness in both wrists and the small joints of her hands, worse in the morning, and has been asking about additional treatment options.
+Objective: Synovitis is present at the bilateral wrists, MCPs, and PIPs. Grip strength is reduced. Vitals are stable, blood pressure 118/76.
+Assessment: Seropositive rheumatoid arthritis with persistent synovitis despite an adequate trial of oral methotrexate 15 mg weekly from 2026-01-12 to 2026-06-29, which was discontinued for inadequate response.
+Plan: Start Immunara. Continue folic acid supplementation. Recheck in eight weeks.

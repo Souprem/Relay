@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": true,
+  "step_therapy_satisfied": false,
+  "documentation_complete": true,
+  "contradiction_present": true,
+  "missing_evidence": "NONE",
+  "notes": "medication_history lists methotrexate 2026-01-06 to 2026-05-26, stopped for nausea. physician_note states methotrexate has not been tried and that leflunomide was started in its place. The two sources disagree on whether methotrexate was ever taken."
+}

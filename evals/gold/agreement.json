@@ -1,0 +1,42 @@
+{
+  "n": 100,
+  "per_fact": {
+    "diagnosis_supported": {
+      "agree": 100,
+      "n": 100,
+      "rate": 1.0
+    },
+    "step_therapy_satisfied": {
+      "agree": 100,
+      "n": 100,
+      "rate": 1.0
+    },
+    "documentation_complete": {
+      "agree": 100,
+      "n": 100,
+      "rate": 1.0
+    },
+    "contradiction_present": {
+      "agree": 100,
+      "n": 100,
+      "rate": 1.0
+    },
+    "missing_evidence": {
+      "agree": 100,
+      "n": 100,
+      "rate": 1.0
+    }
+  },
+  "all_five": {
+    "agree": 100,
+    "n": 100,
+    "rate": 1.0
+  },
+  "action": {
+    "agree": 100,
+    "n": 100,
+    "rate": 1.0
+  },
+  "disagreements": [],
+  "action_disagreements": []
+}

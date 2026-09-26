@@ -1,0 +1,8 @@
+{
+  "diagnosis_supported": false,
+  "step_therapy_satisfied": false,
+  "documentation_complete": false,
+  "contradiction_present": false,
+  "missing_evidence": "DIAGNOSIS",
+  "notes": "problem_list: joint pain of two months' duration referred to rheumatology, with no diagnosis made yet. Methotrexate 2026-05-04 to 2026-06-15 = 42 days was started empirically by primary care but the diagnosis remains unestablished."
+}

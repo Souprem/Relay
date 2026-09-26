@@ -1,0 +1,5 @@
+SYNTHETIC RECORD - Example Redwood Rheumatology - Medication History - 2026-06-24
+Patient reference SYN-6004.
+METHOTREXATE 17.5 MG PO WEEKLY - status: inactive - start 2026-04-06 - end 2026-06-22 - reason: inadequate response
+FOLIC ACID 1 MG PO DAILY - status: inactive - start 2026-04-06
+FERROUS SULFATE 325 MG PO DAILY - status: active

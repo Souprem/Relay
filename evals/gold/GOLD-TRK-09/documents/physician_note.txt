@@ -1,0 +1,6 @@
+SYNTHETIC RECORD - Example Granger Rheumatology - Follow-up Visit - 2026-06-12
+Patient reference SYN-1873.
+Subjective: This 60-year-old man reports persistent hand and shoulder stiffness despite over a year of DMARD therapy.
+Objective: Synovitis remains at the wrists and shoulders. Grip strength reduced bilaterally. Vitals stable.
+Assessment: Seropositive rheumatoid arthritis, diagnosed 2019. He was treated with hydroxychloroquine 400 mg daily and sulfasalazine 1 g twice daily from January 2025 to January 2026, with an inadequate response despite the combination. Methotrexate has not been taken; he has repeatedly declined it out of concern for the required blood monitoring.
+Plan: Discuss Immunara given the inadequate response to hydroxychloroquine and sulfasalazine. Continue current supportive measures.

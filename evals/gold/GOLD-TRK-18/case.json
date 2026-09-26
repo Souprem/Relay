@@ -1,0 +1,12 @@
+{
+  "id": "GOLD-TRK-18",
+  "dataset_id": "gold-v0.1",
+  "as_of_date": "2026-07-01",
+  "patient": {"age": 44, "state": "KS"},
+  "medication": {"name": "Immunara", "indication": "rheumatoid arthritis"},
+  "insurance": {"payer": "CivicCare", "plan": "CivicCare Plus", "member_id": "CCP-407638"},
+  "policy_id": "immunara-v0.1",
+  "documents": [
+    {"id": "physician_note", "kind": "physician_note", "file": "physician_note.txt"}
+  ]
+}

@@ -4,6 +4,7 @@ from decimal import Decimal
 from relay.evaluation.metrics import score_run
 from relay.reporting import (
     DISCLAIMER,
+    RULES_NOTE,
     render_eval_summary,
     render_run_report,
     render_run_table,
@@ -95,3 +96,86 @@ def test_cost_is_formatted():
     case = make_case("A")
     trace = make_trace(case, make_bundle("A", cost=Decimal("0.0000756")))
     assert "$0.0000756" in render_eval_summary(score_run([trace], [case]))
+
+
+def test_run_report_shows_trace_identity():
+    cases, traces = sample()
+    bundle = make_bundle("T-01").model_copy(update={"client_version": "typesafe-sdk==0.7.1"})
+    stamped = [
+        make_trace(cases[0], bundle).model_copy(update={"policy_text_hash": "sha256:abc"}),
+        traces[1].model_copy(update={"policy_text_hash": "sha256:abc"}),
+    ]
+    report = render_run_report(run_manifest(), stamped, {c.input.id: c.input for c in cases})
+    assert "- Policy text hash: `sha256:abc`" in report
+    assert "- Question set: `q-test`" in report
+    assert "- Client: `typesafe-sdk==0.7.1`" in report
+
+
+def test_run_report_marks_missing_identity_fields():
+    cases, traces = sample()
+    report = render_run_report(run_manifest(), traces, {c.input.id: c.input for c in cases})
+    assert "- Policy text hash: `unknown`" in report
+    assert "- Client: `n/a`" in report
+
+
+def test_run_report_lists_the_rules_that_fired():
+    case = make_case("T-01")
+    fired = [
+        {
+            "rule": "member_missing",
+            "document_id": None,
+            "line": None,
+            "match": "insurance.member_id is None",
+        },
+        {
+            "rule": "mtx_start",
+            "document_id": "physician_note",
+            "line": 3,
+            "match": "started 2026-01-12",
+        },
+    ]
+    bundle = make_bundle("T-01", provider="rules").model_copy(
+        update={"derivations": {"rules": fired}}
+    )
+    report = render_run_report(
+        run_manifest("rules"), [make_trace(case, bundle)], {"T-01": case.input}
+    )
+    assert RULES_NOTE in report
+    assert "**Rules fired:**" in report
+    assert "- `member_missing` (structured field): insurance.member_id is None" in report
+    assert "- `mtx_start` (physician_note:3): started 2026-01-12" in report
+
+
+def test_run_report_shows_the_rules_step_therapy_duration_next_to_rules_fired():
+    """C3: derivations["duration"] (start, end, days, min_days) is rendered for rules bundles."""
+    case = make_case("T-01")
+    fired = [
+        {
+            "rule": "mtx_start",
+            "document_id": "physician_note",
+            "line": 3,
+            "match": "started 2026-01-12",
+        }
+    ]
+    duration = {"start": "2026-01-12", "end": "2026-06-01", "days": 140, "min_days": 84}
+    bundle = make_bundle("T-01", provider="rules").model_copy(
+        update={"derivations": {"rules": fired, "duration": duration}}
+    )
+    report = render_run_report(
+        run_manifest("rules"), [make_trace(case, bundle)], {"T-01": case.input}
+    )
+    assert "**Rules fired:**" in report
+    fired_index = report.index("**Rules fired:**")
+    duration_index = report.index("Duration:")
+    assert duration_index > fired_index
+    assert "2026-01-12" in report and "2026-06-01" in report
+    assert "140" in report and ">= 84" in report
+
+
+def test_run_report_omits_duration_when_absent():
+    case = make_case("T-01")
+    bundle = make_bundle("T-01", provider="rules").model_copy(update={"derivations": {"rules": []}})
+    report = render_run_report(
+        run_manifest("rules"), [make_trace(case, bundle)], {"T-01": case.input}
+    )
+    assert "Duration:" not in report

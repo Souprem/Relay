@@ -1,5 +1,6 @@
 """Append-only JSONL trace files, one per run, plus a write-once run manifest."""
 
+import gzip
 import secrets
 import subprocess
 import uuid
@@ -24,7 +25,11 @@ def current_git_sha(cwd: Path | None = None) -> str | None:
             ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True, cwd=cwd
         ).stdout.strip()
         dirty = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, check=True, cwd=cwd
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=cwd,
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         return None
@@ -57,5 +62,13 @@ class TraceStore:
 
 
 def read_traces(path: Path) -> list[WorkflowTrace]:
-    lines = path.read_text(encoding="utf-8").splitlines()
-    return [WorkflowTrace.model_validate_json(line) for line in lines if line.strip()]
+    """Read a .jsonl trace file, or a gzipped .jsonl.gz one (committed baselines)."""
+    if path.suffix == ".gz":
+        try:
+            with gzip.open(path, "rt", encoding="utf-8") as handle:
+                text = handle.read()
+        except (OSError, EOFError) as error:
+            raise ValueError(f"{path.name}: {error}") from error
+    else:
+        text = path.read_text(encoding="utf-8")
+    return [WorkflowTrace.model_validate_json(line) for line in text.splitlines() if line.strip()]
