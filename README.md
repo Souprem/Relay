@@ -379,8 +379,8 @@ Claude run. Nothing was tuned after seeing results.
 fallback model for refused requests. It is not used here for two reasons: the Batches API rejects
 the `fallbacks` parameter, and a silent switch to another model would change what this baseline
 measures. A refusal (or a reply cut off at `max_tokens`) becomes an invalid bundle, which the
-engine routes to `HUMAN_REVIEW`, and refusals are counted below: zero, across all 560 Claude cases
-run (10 smoke, 400 dev, 150 holdout sample).
+engine routes to `HUMAN_REVIEW`, and refusals are counted below: zero, across all 660 Claude cases
+run (10 smoke, 400 dev, 150 holdout sample, and 100 gold).
 
 **Budget.** All of Phase 2D and 2E's Claude spend is capped at $10 (tightened mid-run from the
 sub-project's original $60 guard by an explicit user decision), tracked in
@@ -498,13 +498,15 @@ batch has no latency at all; cost at list prices as of 2026-09-25, batch at half
 | dev (`run_20260925T191752Z_288946`) | batch | 400 | unavailable (batch) | $0.01100 | $11.00 | 0 | 0 | 65.5% |
 | holdout sample (150, seed 7) (`run_20260925T212034Z_bbee49`) | batch | 150 | unavailable (batch) | $0.01637 | $16.37 | 0 | 0 | 29.6% |
 
-Total Claude spend (ledger): $7.1500 across 8 entries (two are $0 bookkeeping entries from
-recovering the interrupted dev batch — one settles the original, superseded reservation to zero,
-one settles a stray $0 reservation left by a killed re-attach; neither reflects real spend);
-unsettled reservations: none. Remaining headroom under the $10 cap after this task: $2.8500,
-against an estimated gold-set (Phase 2E, 100 cases) reserve of roughly $1.36 (100 × the measured
-dev batch cost/case of $0.01091 × a 1.25 safety margin). The gold run has since happened: it
-actually cost $1.560455 (see "Gold set" below), bringing total Claude spend to $8.710495 of the
+Total Claude spend (ledger): $7.1500 across the first 8 entries (three are $0 bookkeeping entries:
+two from recovering the interrupted dev batch — one settles the original, superseded reservation to
+zero, one settles a stray $0 reservation left by a killed re-attach — and one a superseded holdout
+reservation; none reflects real spend); unsettled reservations: none. Remaining headroom under the
+$10 cap after this task: $2.8500, against an estimated gold-set (Phase 2E, 100 cases) reserve of
+roughly $1.36 (100 × the measured dev batch cost/case of $0.01091 × a 1.25 safety margin). The gold
+run has since happened (10 ledger entries after the gold run): it actually cost $1.560455, about
+14% above that $1.36 estimate though still well under the printed $2.0468 projection (see "Gold
+set" below), bringing total Claude spend to $8.710495 of the
 $10 cap.
 
 Claude's sync latency (smoke, n=10, low-sample) is far higher than Jev's: 5169/6781 ms p50/p95
@@ -546,7 +548,11 @@ generator, so they test generalization beyond its templates.
 > [`AUTHORING_GUIDE.md`](evals/gold/AUTHORING_GUIDE.md), checked by a blind second labelling pass
 > by a separate agent, and adjudicated by a third agent
 > ([`ADJUDICATION.md`](evals/gold/ADJUDICATION.md)). They were not written or reviewed by a human
-> domain expert. Have a qualified human review them before making any external claim.
+> domain expert. The authors, blind reviewer and adjudicator are all Claude agents, and Claude
+> (`claude-opus-5`) is also an evaluated provider below. The 100% agreement reflects one model
+> family applying one guide, not independent validation. Claude's gold results may benefit from
+> shared interpretation, so a human review matters most for comparisons involving Claude. Have a
+> qualified human review them before making any external claim.
 
 Blind second-pass agreement before adjudication: `diagnosis_supported` 100/100 (100.0%),
 `step_therapy_satisfied` 100/100 (100.0%), `documentation_complete` 100/100 (100.0%),
@@ -554,19 +560,20 @@ Blind second-pass agreement before adjudication: `diagnosis_supported` 100/100 (
 100/100 (100.0%), derived action 100/100 (100.0%). Adjudication summary: 0 disagreements; no
 labels or documents were changed.
 
-**Never tune on gold.** Every provider ran on gold exactly once, after all other Phase 2 work was
-final, with the configuration chosen on `gen-v0.2-dev`: Jev with question set `q-v0.2`, rules
+**Never tune on gold.** Every provider ran on gold exactly once, after each provider's configuration
+was frozen on `gen-v0.2-dev` (Jev and rules ran before 2D's final fixes, which do not touch their
+code paths), with the configuration chosen on `gen-v0.2-dev`: Jev with question set `q-v0.2`, rules
 `rules-v0.1`, and Claude `claude-opus-5` in batch. Each report's `--at` row uses that provider's
 dev-selected threshold (Jev 0.89, rules 0.99, Claude 0.55). The ground-truth run is a pipeline
 check, not a model result.
 
-**Two spend events on the Claude gold run, disclosed honestly.** A first submission
-(`run_20260925T222258Z_91d2e1`) failed with a connection error during batch upload; the user
-confirmed in the Anthropic console that no batch was ever created, so its reservation was released
-at $0 (the $0.000000 `gold-v0.1` ledger entry) and the run was resubmitted once, succeeding as
-`run_20260926T011730Z_f1852f`. The batch cost projection the CLI prints is now conservative — the
-maximum observed per-case cost times 1.25, not a mean — which is why the actual cost ($1.560455)
-came in well under the printed projection ($2.0468) for 100 cases.
+**Spend disclosure.** A first submission (`run_20260925T222258Z_91d2e1`) failed with a connection
+error during batch upload; the user confirmed in the Anthropic console that no batch was ever
+created, so its reservation was released at $0 (the $0.000000 `gold-v0.1` ledger entry) and the run
+was resubmitted once, succeeding as `run_20260926T011730Z_f1852f`. The batch cost projection the
+CLI prints is now conservative — the maximum observed per-case cost times 1.25, not a mean — which
+is why the actual cost ($1.560455) came in well under the printed projection ($2.0468) for 100
+cases, albeit about 14% above the Budget section's earlier $1.36 gold-set estimate above.
 
 | Provider | Run | Correct action | Automation | Unsafe / auto | Request info | Review | Invalid | At dev t* (`--at`) | Cost |
 |---|---|---|---|---|---|---|---|---|---|
@@ -574,6 +581,12 @@ came in well under the printed projection ($2.0468) for 100 cases.
 | Jev `q-v0.2` | `run_20260925T170857Z_b95be9` | 82/100 (82.0%) | 18/100 (18.0%) | 0/18 | 32/100 (32.0%) | 50/100 (50.0%) | 0 | 0.89: correct 91/100 (91.0%), auto 29/100 (29.0%), unsafe 1 | $0.0115 |
 | Rules `rules-v0.1` | `run_20260925T170839Z_d3b427` | 61/100 (61.0%) | 20/100 (20.0%) | 6/20 | 66/100 (66.0%) | 14/100 (14.0%) | 0 | 0.99: correct 61/100 (61.0%), auto 20/100 (20.0%), unsafe 6 | $0.0000 |
 | Claude `claude-opus-5` (batch) | `run_20260926T011730Z_f1852f` | 65/100 (65.0%) | 0/100 (0.0%) | 0/0 | 33/100 (33.0%) | 67/100 (67.0%) | 0 | 0.55: correct 93/100 (93.0%), auto 30/100 (30.0%), unsafe 1 | $1.5605 |
+
+Each committed `report/report.md` also prints its own in-sample "Selected operating point" line
+(Jev 0.94, Claude 0.56, GT 0.99, from that run's own frontier sweep over gold) and `compare`'s
+`Selected` row does the same; these are gold diagnostics only, computed after seeing gold, and are
+never used as an operating point. The "At dev t*" column above, from each provider's `gen-v0.2-dev`
+sweep, is the only operating point used anywhere in this report.
 
 **Claude's 0% headline automation is the raw run's default threshold, not its dev-selected
 operating point.** Every one of Claude's gold `step_therapy` values falls below that bar, for the
@@ -615,20 +628,46 @@ new failure mode.
 | Claude claude-opus-5 | ALL | 65/100 (65%) | 0/100 (0%) | 0/0 | 33/100 (33%) | 67/100 (67%) | 0 |
 
 Rules had by far the most unsafe automations on gold: all 6 (30% UAR at its own dev-selected
-`0.99` threshold) are in CON, with 0% UAR in every other category; Jev and Claude have 0 unsafe
-automations in this raw per-category view and 1 each at their own dev-selected `--at` points (Jev
-0.89: 1/29; Claude 0.55: 1/30). TMP is the weakest category by correct-action rate for every model
-provider — rules 7/20 (35%), Jev 12/20 (60%), Claude 8/20 (40%) — while ground truth is 100% in
-every category by construction. Of the five TMP cases that hinge on relative or inferable-year
-dates (`GOLD-TMP-12/13/14/15/16`, Q3a/b), ground truth calls three (12, 14, 15) `AUTO_PROCESS`;
-Jev auto-processes only one of those (14) and Claude auto-processes none of them, both sending the
-rest to human review rather than acting unsafely — the date arithmetic depresses automation, it
-does not produce a wrong ground-truth call. `compare` finds 6 new unsafe automations across the 47
-cases where jev-q-v0.2 and rules-v0.1 differ, 0 new unsafe automations across the 19 cases where
-jev-q-v0.2 and claude-opus-5 differ, and 0 new unsafe automations across the 53 cases where
-rules-v0.1 and claude-opus-5 differ (mostly rules' 6 CON unsafe automations resolving to
-`HUMAN_REVIEW` under Claude). Claude had 0 refusals and 0 invalid outputs on the 100-case gold
-batch, at a cost of $1.560455 (total ledger spend $8.710495 of the $10 Phase 2 cap).
+`0.99` threshold; exact 95% Clopper-Pearson interval 11.9%-54.3%) are in CON (6/9 there,
+29.9%-92.5%), with 0% UAR in every other category. Jev and Claude have 0 unsafe automations in
+this raw (0.95) per-category view but 1 each at their own dev-selected `--at` points (Jev 0.89:
+1/29, 0.1%-17.8%; Claude 0.55: 1/30, 0.1%-17.2%) — **and it is the same case for both**:
+`GOLD-TMP-17`, an interrupted methotrexate course (2026-01-05 to 2026-02-23 = 49 days, held for
+infection, then 2026-03-23 to 2026-05-18 = 56 days; neither segment reaches the policy's twelve
+consecutive weeks, so the correct action is `HUMAN_REVIEW`). Both providers reported a single start
+and end date (2026-01-05 to 2026-05-18, 133 days) instead, because the `q-v0.2` question set has
+one start date and one end date and cannot represent a gap — a shared, structural limitation of the
+question set, not two independent mistakes. Claude's composed `step_therapy` probability there was
+0.5513, just 0.0013 above its 0.55 threshold; Jev's was 0.9316.
+
+TMP is the weakest category by correct-action rate for every model provider — rules 7/20 (35%),
+Jev 12/20 (60%), Claude 8/20 (40%) — while ground truth is 100% in every category by construction.
+Jev's 91/100 (83.6%-95.8%) and Claude's 93/100 (86.1%-97.1%) correct-action rates at their own
+`--at`, and their 29 vs. 30 automations, are not distinguishable at n=100.
+
+On the five TMP cases that hinge on relative or inferable-year dates (`GOLD-TMP-12/13/14/15/16`,
+Q3a/b), ground truth calls three (12, 14, 15) `AUTO_PROCESS`. At the recorded 0.95 bar, Jev
+auto-processes only TMP-14 and Claude automates none of the five — but Claude automates nothing at
+all at 0.95 on this dataset (see "Claude's 0% headline automation" above), so that comparison
+reflects the threshold, not the dates specifically. At each provider's own dev threshold, Jev still auto-processes only TMP-14; Claude
+auto-processes both TMP-14 and TMP-15. TMP-12 goes to `HUMAN_REVIEW` under both providers at every
+threshold shown here, and TMP-16 (truth `REQUEST_INFO`) also goes to `HUMAN_REVIEW` under both —
+wrong relative to ground truth, but safe, not an unsafe automation.
+
+`compare-jev-rules-claude.txt` computes action differences at each run's recorded 0.95 threshold,
+where Claude has 0 `AUTO_PROCESS` actions at all: 6 new unsafe automations across the 47 cases
+where jev-q-v0.2 and rules-v0.1 differ; 0 new unsafe automations (trivially, since Claude never
+automates at 0.95) across the 19 cases where jev-q-v0.2 and claude-opus-5 differ; and 0 new unsafe
+automations across the 53 cases where rules-v0.1 and claude-opus-5 differ, including rules' 6 CON
+unsafe automations resolving to `HUMAN_REVIEW` under Claude (6 of those 53 differing cases; the
+other 47 are unrelated to those unsafe cases). Computed offline instead from the committed traces
+at each provider's own dev-selected `--at`
+([`compare-own-thresholds.txt`](evals/baselines/gold-v0.1/compare-own-thresholds.txt)): jev→rules
+44 differing cases (6 new unsafe automations), jev→claude 4 differing cases (0 new unsafe
+automations), rules→claude 42 differing cases (1 new unsafe automation, `GOLD-TMP-17`, described
+above). Claude had 0 refusals and 0 invalid outputs on the 100-case gold batch (refusal fallbacks
+are disabled — see Baselines above), at a cost of $1.560455 (total ledger spend $8.710495 of the
+$10 Phase 2 cap).
 
 With 20 cases per category, one case is 5 percentage points, so per-category rates are indicative
 only. All runs, including gzipped traces, are committed under
@@ -641,7 +680,7 @@ only. All runs, including gzipped traces, are committed under
   document variety. Gold-set results (100 hand-written cases, `gold-v0.1`) are in "Gold set" above.
 - Date parts are treated as independent when composing step therapy, which is an approximation.
 - Dates without a stated year count as unknown in the pipeline, so they reduce automation instead of
-  being guessed. The generator doesn't produce them.
+  being guessed. The generator doesn't produce them; gold-v0.1 does (TMP-14/15/16); see Gold set.
 - gen-v0.2 has a residual contradiction tell: a day-precision, non-split MTX medication-history
   line predicts a contradiction roughly 81% of the time (never 100%), and the
   `NEVER_TAKEN_OTHER_DMARD` distractor wording has a weak base-rate skew of its own. Both bear on
@@ -674,6 +713,16 @@ only. All runs, including gzipped traces, are committed under
   dev-selected `--at 0.55` (1/30 unsafe), as detailed in "Gold set" above.
 - The gold set (`gold-v0.1`, 100 cases) was authored and labelled by AI agents, not human domain
   experts, and has 20 cases per category, so per-category rates carry wide uncertainty.
+- The `q-v0.2` question set asks for one treatment start date and one end date, so it cannot
+  represent an interrupted course with a gap (two segments). `GOLD-TMP-17` is exactly this case,
+  and it is the only unsafe automation either Jev or Claude has on gold at its own threshold (see
+  "Gold set" above). This is a finding for a future gold or question-set version (Phase 3), not a
+  gold-motivated change to `q-v0.2` itself.
+- The authors, blind reviewer and adjudicator of `gold-v0.1` are all Claude agents, and
+  `claude-opus-5` is also an evaluated provider on that same set (see "Gold set" above). The 100%
+  blind agreement reflects one model family applying one guide consistently, not independent human
+  validation. Claude's gold results may benefit from shared interpretation with its own labels, so
+  a human review matters most for comparisons involving Claude.
 - Actions are simulated. Relay never submits anything anywhere.
 
 ## Project docs

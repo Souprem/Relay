@@ -6,7 +6,11 @@
 **Provenance.** These 100 cases were written by AI agents (Claude) following
 [`AUTHORING_GUIDE.md`](AUTHORING_GUIDE.md). They were **not** written or reviewed by a human
 clinical or prior-authorization expert. The labels come from the same guide, a blind second
-labelling pass by a separate agent, and adjudication by a third agent. Treat results on this set as
+labelling pass by a separate agent, and adjudication by a third agent. The authors, blind reviewer
+and adjudicator are all Claude agents, and Claude (`claude-opus-5`) is also an evaluated provider on
+this set (see the repository README's "Gold set" section). The 100% blind agreement reflects one
+model family applying one guide consistently, not independent validation, and Claude's results here
+may benefit from shared interpretation with its own labels. Treat results on this set as
 engineering evidence about Relay's pipeline, not as clinical validation. Have a qualified human
 review the cases and labels before making any external claim based on them.
 
