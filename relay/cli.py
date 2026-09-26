@@ -55,7 +55,7 @@ from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
-from relay.evaluation.metrics import EvalError, run_identity, score_run
+from relay.evaluation.metrics import EvalError, paired_cases, run_identity, score_run
 from relay.evaluation.regression import RegressionResult
 from relay.evaluation.regression_run import (
     CandidateSpec,
@@ -72,6 +72,7 @@ from relay.evaluation.runner import (
     sample_cases,
     validate_run_config,
 )
+from relay.evaluation.shadow import build_shadow_report
 from relay.evaluation.tracediff import (
     REPRODUCE_LABEL,
     candidate_trace_label,
@@ -101,6 +102,7 @@ from relay.reporting import (
     render_regression,
     render_run_report,
     render_run_table,
+    render_shadow_report,
     render_trace_diff,
     shadow_line,
     shadow_trailer,
@@ -865,6 +867,10 @@ class WorkflowRequest:
     questions: str | None = None
     claude: ClaudeRun | None = None
     reset_state: bool = False
+    incumbent: Path | None = None
+    waivers: Path | None = None
+    max_regressed: int | None = None
+    out: Path | None = None
 
 
 def _workflow_traces(
@@ -929,6 +935,21 @@ def _run_simulated(
         typer.echo(line)
 
 
+def _load_incumbent(path: Path, cases: list[PriorAuthCase]) -> list[WorkflowTrace]:
+    """The run a shadow candidate is compared with: a simulated or evaluate run covering the same
+    cases. Checked before the shadow run starts, so a bad incumbent costs no provider call."""
+    traces = _read_trace_file(path)
+    if traces and traces[0].mode == "shadow":
+        raise _fail(
+            f"--incumbent {path} is a shadow run; the incumbent must be a simulated or evaluate run"
+        )
+    try:
+        paired_cases(traces, cases)
+    except EvalError as error:
+        raise _fail(f"--incumbent {path}: {error}") from error
+    return traces
+
+
 def _run_shadow(
     request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
 ) -> None:
@@ -938,6 +959,11 @@ def _run_shadow(
     try:
         store = load_store(request.state)
     except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    incumbent = None if request.incumbent is None else _load_incumbent(request.incumbent, cases)
+    try:
+        waivers = [] if request.waivers is None else load_waivers(request.waivers)
+    except RegressionInputError as error:
         raise _fail(str(error)) from error
     manifest, traces = _workflow_traces(request, cases, sample)
     after = state_digest(request.state)
@@ -958,6 +984,37 @@ def _run_shadow(
     typer.echo(shadow_trailer(manifest.run_id, len(traces)))
     for line in _run_paths(manifest):
         typer.echo(line)
+    if incumbent is None:
+        return
+    try:
+        report = build_shadow_report(
+            incumbent,
+            traces,
+            cases,
+            incumbent_label=f"{incumbent[0].mode} {original_label(incumbent[0])}",
+            candidate_label=f"shadow {original_label(traces[0])}",
+            waivers=waivers,
+            max_regressed=request.max_regressed,
+            dataset_hash=_manifest_hash(request.dataset, cases),
+            replay_command=lambda case_id: (
+                f"relay replay {case_id} --traces {request.incumbent} --dataset "
+                f"{request.dataset} --candidate-traces {manifest.trace_file}"
+            ),
+        )
+    except EvalError as error:
+        raise _fail(str(error)) from error
+    rendered = render_shadow_report(report)
+    if request.out is not None:
+        request.out.mkdir(parents=True, exist_ok=True)
+        (request.out / "shadow.json").write_text(
+            report.model_dump_json(indent=2) + "\n", encoding="utf-8"
+        )
+        (request.out / "shadow.md").write_text(rendered + "\n", encoding="utf-8")
+        typer.echo(f"Shadow report: {request.out / 'shadow.json'}, {request.out / 'shadow.md'}")
+    typer.echo("")
+    typer.echo(rendered)
+    if report.exit_code:
+        raise typer.Exit(code=report.exit_code)
 
 
 RunProvider = Annotated[
@@ -1021,12 +1078,33 @@ def run(
             "timestamp> and start from RECEIVED.",
         ),
     ] = False,
+    incumbent: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            dir_okay=False,
+            help="--workflow shadow only: compare with this simulated or evaluate run.",
+        ),
+    ] = None,
+    waivers: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True, dir_okay=False, help="With --incumbent: waivers for the promotion check."
+        ),
+    ] = None,
+    max_regressed: Annotated[
+        int | None,
+        typer.Option(min=0, help="With --incumbent: HOLD when more cases than this regress."),
+    ] = None,
+    out: Annotated[
+        Path | None, typer.Option(help="With --incumbent: write shadow.json and shadow.md here.")
+    ] = None,
 ) -> None:
     """Decide every case in DATASET; write traces and a Markdown report.
 
     With --workflow: simulated (the incumbent's actions change simulated case status) or shadow
-    (a candidate's proposals are recorded, never applied). Exit codes: 0 ok; 2 usage/input
-    error; 3 SHADOW VIOLATION.
+    (a candidate's proposals are recorded, never applied, optionally compared with --incumbent).
+    Exit codes: 0 ok / PROMOTE; 2 usage/input error; 3 SHADOW VIOLATION; 4 HOLD.
     """
     if workflow is None:
         given = [
@@ -1036,6 +1114,10 @@ def run(
                 ("--at", at),
                 ("--state", state),
                 ("--reset-state", reset_state_flag or None),
+                ("--incumbent", incumbent),
+                ("--waivers", waivers),
+                ("--max-regressed", max_regressed),
+                ("--out", out),
             )
             if value is not None
         ]
@@ -1080,8 +1162,23 @@ def run(
                 f"{', '.join(given)} cannot be combined with --from-traces (the stored run's "
                 "decisions are re-issued; no provider is called)"
             )
-    if workflow is Workflow.shadow and reset_state_flag:
-        raise _fail("--reset-state applies only to --workflow simulated")
+    shadow_only = [
+        flag
+        for flag, value in (
+            ("--incumbent", incumbent),
+            ("--waivers", waivers),
+            ("--max-regressed", max_regressed),
+            ("--out", out),
+        )
+        if value is not None
+    ]
+    if workflow is Workflow.simulated and shadow_only:
+        raise _fail(f"{', '.join(shadow_only)} applies only to --workflow shadow")
+    if workflow is Workflow.shadow:
+        if reset_state_flag:
+            raise _fail("--reset-state applies only to --workflow simulated")
+        if incumbent is None and shadow_only:
+            raise _fail(f"{', '.join(shadow_only)} needs --incumbent")
     resolved_provider = provider or ProviderName.jev
     claude = (
         None
@@ -1102,6 +1199,10 @@ def run(
         questions=questions,
         claude=claude,
         reset_state=reset_state_flag,
+        incumbent=incumbent,
+        waivers=waivers,
+        max_regressed=max_regressed,
+        out=out,
     )
     if workflow is Workflow.simulated:
         _run_simulated(request, cases, sample)
