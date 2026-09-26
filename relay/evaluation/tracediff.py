@@ -15,13 +15,13 @@ from pydantic import BaseModel
 from relay.cases.models import MissingEvidence, PriorAuthCase
 from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import Decision, DecisionBundle, DecisionId
-from relay.evaluation.metrics import paired_cases
+from relay.evaluation.metrics import EvalError, paired_cases
 from relay.evaluation.runner import policy_text_hash
 from relay.traces.models import WorkflowTrace
 from relay.traces.store import current_git_sha, new_trace_id
 from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import GateResult, WorkflowAction
-from relay.workflow.thresholds import Thresholds
+from relay.workflow.thresholds import Thresholds, load_thresholds, override_auto_process
 
 EXIT_ENGINE_DRIFT = 3
 EXIT_NEWLY_UNSAFE = 4
@@ -349,12 +349,34 @@ def original_label(trace: WorkflowTrace) -> str:
     )
 
 
-def policy_replay_label(policy: AuthorizationPolicy, auto_process: float | None) -> str:
+def policy_replay_label(
+    policy: AuthorizationPolicy, thresholds: Thresholds, auto_process: float | None
+) -> str:
     at = "" if auto_process is None else f", auto_process={auto_process:g}"
     return (
-        f"policy replay: STORED DECISIONS under policy {policy.id} ({policy.version}){at} — "
-        "judgments were made against the original policy's questions"
+        f"policy replay: STORED DECISIONS under policy {policy.id} ({policy.version}){at}, "
+        f"thresholds {thresholds.version} — judgments were made against the original policy's "
+        "questions"
     )
+
+
+def replay_thresholds(
+    trace: WorkflowTrace, target: AuthorizationPolicy, auto_process: float | None
+) -> Thresholds:
+    """The thresholds a policy replay of `trace` onto `target` runs under (F1).
+
+    Same policy version as the trace: the trace's own thresholds. A different version: the
+    thresholds registered for `target.version` (an unknown version raises EvalError). An
+    `auto_process` override is then applied with override_auto_process.
+    """
+    if target.version == trace.policy_version:
+        base = trace.thresholds
+    else:
+        try:
+            base = load_thresholds(target.version)
+        except KeyError as error:
+            raise EvalError(str(error.args[0])) from error
+    return base if auto_process is None else override_auto_process(base, auto_process)
 
 
 def candidate_trace_label(trace: WorkflowTrace) -> str:
@@ -418,7 +440,9 @@ def replay_run(
 
     Pairs traces with cases through paired_cases, so every check there applies (one run, no
     duplicates, no unknown or changed cases, full coverage; EvalError otherwise). None keeps each
-    trace's own policy / auto_process. Every replayed trace shares run_id "replay-<run_id>".
+    trace's own policy / auto_process. Thresholds follow replay_thresholds: a target policy of
+    another version brings that version's thresholds (EvalError if none are registered). Every
+    replayed trace shares run_id "replay-<run_id>".
     """
     pairs = paired_cases(traces, cases)
     now = datetime.now(UTC)
@@ -428,18 +452,16 @@ def replay_run(
     for trace, case in pairs:
         target = policy_id or trace.policy_id
         if target not in policies:
-            policies[target] = load_policy(target)
-        thresholds = (
-            trace.thresholds
-            if auto_process is None
-            else trace.thresholds.model_copy(update={"auto_process": auto_process})
-        )
+            try:
+                policies[target] = load_policy(target)
+            except KeyError as error:
+                raise EvalError(str(error.args[0])) from error
         replayed.append(
             replay_trace(
                 trace,
                 case,
                 policy=policies[target],
-                thresholds=thresholds,
+                thresholds=replay_thresholds(trace, policies[target], auto_process),
                 now=now,
                 git_sha=git_sha,
             )

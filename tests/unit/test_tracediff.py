@@ -26,7 +26,7 @@ from relay.evaluation.tracediff import (
 from relay.traces.models import WorkflowTrace
 from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import WorkflowAction
-from relay.workflow.thresholds import THRESHOLDS_V0_1
+from relay.workflow.thresholds import THRESHOLDS_V0_1, override_auto_process
 from tests.factories import make_bundle, make_case
 
 POLICY = load_policy("immunara-v0.1")
@@ -410,13 +410,13 @@ def test_labels():
         "thresholds auto_process=0.95"
     )
     assert REPRODUCE_LABEL == "reproduce: stored decisions, current engine, original policy"
-    assert policy_replay_label(POLICY, None) == (
-        "policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1) — judgments were "
-        "made against the original policy's questions"
+    assert policy_replay_label(POLICY, T, None) == (
+        "policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), thresholds v0.1 — "
+        "judgments were made against the original policy's questions"
     )
-    assert policy_replay_label(POLICY_V2, 0.89) == (
-        "policy replay: STORED DECISIONS under policy immunara-v0.2 (v0.2), auto_process=0.89 "
-        "— judgments were made against the original policy's questions"
+    assert policy_replay_label(POLICY_V2, override_auto_process(T, 0.89), 0.89) == (
+        "policy replay: STORED DECISIONS under policy immunara-v0.2 (v0.2), auto_process=0.89, "
+        "thresholds v0.1+at0.89 — judgments were made against the original policy's questions"
     )
     assert candidate_trace_label(t) == "candidate trace run_20260925T170857Z_b95be9 · test q-test"
     assert live_label(t) == ("live run run_20260925T170857Z_b95be9 · test q-test on frozen inputs")

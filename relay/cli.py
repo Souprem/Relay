@@ -68,6 +68,7 @@ from relay.evaluation.tracediff import (
     original_label,
     policy_replay_label,
     replay_exit_code,
+    replay_thresholds,
     replay_trace,
 )
 from relay.generation.generator import generate_dataset, verify_dataset
@@ -1222,13 +1223,12 @@ def replay(
         else:
             target_id = policy_id or original.policy_id
         target = _policy(target_id)
-        thresholds = (
-            original.thresholds
-            if at is None
-            else original.thresholds.model_copy(update={"auto_process": at})
-        )
+        try:
+            thresholds = replay_thresholds(original, target, at)
+        except EvalError as error:
+            raise _fail(str(error)) from error
         candidate = replay_trace(original, case, policy=target, thresholds=thresholds)
-        label = policy_replay_label(target, at)
+        label = policy_replay_label(target, thresholds, at)
         if latest_policy and target_id == original.policy_id:
             label += " (already the trace's policy)"
     else:

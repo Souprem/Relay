@@ -4,18 +4,21 @@ from datetime import UTC, datetime
 
 import pytest
 
+import relay.cases.policies as policies_module
 import relay.evaluation.tracediff as tracediff
+import relay.workflow.thresholds as thresholds_module
 from relay.cases.policies import load_policy
 from relay.evaluation.metrics import EvalError
 from relay.evaluation.runner import policy_text_hash
-from relay.evaluation.tracediff import replay_run, replay_trace
+from relay.evaluation.tracediff import replay_run, replay_thresholds, replay_trace
 from relay.workflow.outcomes import WorkflowAction
-from relay.workflow.thresholds import THRESHOLDS_V0_1
+from relay.workflow.thresholds import THRESHOLDS_V0_1, override_auto_process
 from tests.factories import make_bundle, make_case, make_trace
 
 POLICY = load_policy("immunara-v0.1")
 POLICY_V2 = POLICY.model_copy(update={"id": "immunara-v0.2", "version": "v0.2", "text": "v2"})
 NOW = datetime(2026, 9, 26, 12, tzinfo=UTC)
+THRESHOLDS_V2 = THRESHOLDS_V0_1.model_copy(update={"version": "v0.2", "auto_process": 0.9})
 
 
 def test_replay_trace_marks_the_new_trace_as_a_simulated_replay():
@@ -93,6 +96,8 @@ def test_replay_run_with_no_overrides_keeps_each_traces_policy_and_threshold():
 
 
 def test_replay_run_loads_the_named_policy(monkeypatch):
+    # F1: a v0.2 target brings v0.2 thresholds, so they must be registered for this replay.
+    monkeypatch.setitem(thresholds_module._BY_VERSION, "v0.2", THRESHOLDS_V2)
     loaded = []
 
     def fake_load(policy_id):
@@ -126,3 +131,63 @@ def test_replay_run_enforces_paired_cases(mutate, message):
     cases, traces = mutate(cases, traces)
     with pytest.raises(EvalError, match=message):
         replay_run(traces, cases, policy_id=None, auto_process=None)
+
+
+# ---- F1: thresholds follow the target policy version ----
+
+
+def register_v0_2(monkeypatch, *, with_thresholds: bool = True):
+    """Register a second policy version (reusing the v0.1 text file) and, optionally, its
+    thresholds, for the length of one test."""
+    spec = dict(policies_module._POLICIES["immunara-v0.1"], version="v0.2")
+    monkeypatch.setitem(policies_module._POLICIES, "immunara-v0.2", spec)
+    if with_thresholds:
+        monkeypatch.setitem(thresholds_module._BY_VERSION, "v0.2", THRESHOLDS_V2)
+
+
+def test_same_version_keeps_the_traces_own_thresholds_even_when_overridden():
+    case = make_case("T-01")
+    trace = make_trace(case)
+    assert replay_thresholds(trace, POLICY, None) is trace.thresholds
+    earlier = trace.model_copy(update={"thresholds": override_auto_process(THRESHOLDS_V0_1, 0.9)})
+    assert replay_thresholds(earlier, POLICY, None).version == "v0.1+at0.9"
+    assert replay_thresholds(earlier, POLICY, 0.8).version == "v0.1+at0.8"
+
+
+def test_another_version_brings_its_own_thresholds_then_the_override(monkeypatch):
+    register_v0_2(monkeypatch)
+    trace = make_trace(make_case("T-01"))
+    v2 = load_policy("immunara-v0.2")
+    assert replay_thresholds(trace, v2, None) == THRESHOLDS_V2
+    at = replay_thresholds(trace, v2, 0.85)
+    assert (at.version, at.auto_process) == ("v0.2+at0.85", 0.85)
+
+
+def test_another_version_without_thresholds_is_an_eval_error(monkeypatch):
+    register_v0_2(monkeypatch, with_thresholds=False)
+    trace = make_trace(make_case("T-01"))
+    with pytest.raises(EvalError, match="unknown thresholds version 'v0.2'"):
+        replay_thresholds(trace, load_policy("immunara-v0.2"), None)
+
+
+def test_replay_run_onto_another_version_uses_that_versions_thresholds(monkeypatch):
+    register_v0_2(monkeypatch)
+    cases, traces = run_of("T-01", "T-02")  # step=0.93: HUMAN_REVIEW at 0.95, AUTO at 0.9
+    replayed = replay_run(traces, cases, policy_id="immunara-v0.2", auto_process=None)
+    assert {t.thresholds.version for t in replayed} == {"v0.2"}
+    assert {t.action for t in replayed} == {WorkflowAction.AUTO_PROCESS}
+
+
+def test_replay_run_onto_an_unregistered_version_or_policy_is_an_eval_error(monkeypatch):
+    register_v0_2(monkeypatch, with_thresholds=False)
+    cases, traces = run_of("T-01")
+    with pytest.raises(EvalError, match="unknown thresholds version 'v0.2'"):
+        replay_run(traces, cases, policy_id="immunara-v0.2", auto_process=None)
+    with pytest.raises(EvalError, match="unknown policy 'nope-v1'"):
+        replay_run(traces, cases, policy_id="nope-v1", auto_process=None)
+
+
+def test_replay_run_labels_an_auto_process_override_in_the_thresholds_version():
+    cases, traces = run_of("T-01")
+    [replayed] = replay_run(traces, cases, policy_id=None, auto_process=0.9)
+    assert replayed.thresholds.version == "v0.1+at0.9"

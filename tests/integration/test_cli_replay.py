@@ -10,8 +10,10 @@ import pytest
 from typer.testing import CliRunner
 from typesafe_sdk import SystemOneResponse
 
+import relay.cases.policies as policies_module
 import relay.cli as cli_module
 import relay.evaluation.tracediff as tracediff
+import relay.workflow.thresholds as thresholds_module
 from relay.cases.loader import load_case
 from relay.cases.policies import load_policy
 from relay.cli import app
@@ -19,6 +21,7 @@ from relay.evaluation.budget import load_ledger
 from relay.evaluation.tracediff import TraceDiff, replay_trace
 from relay.reporting import DRIFT_LINE, REPRODUCED_LINE
 from relay.traces.store import read_traces
+from relay.workflow.thresholds import THRESHOLDS_V0_1
 from tests.claude_fakes import FakeBatches, FakeMessages, message
 from tests.factories import make_bundle
 
@@ -109,7 +112,8 @@ def test_at_shows_the_crossed_threshold(tmp_path, smoke_runs):
     assert result.exit_code == 0, result.output
     assert (
         "CANDIDATE policy replay: STORED DECISIONS under policy immunara-v0.1 (v0.1), "
-        "auto_process=0.5 — judgments were made against the original policy's questions"
+        "auto_process=0.5, thresholds v0.1+at0.5 — judgments were made against the original "
+        "policy's questions"
     ) in result.output
     assert "  auto_process  0.95 → 0.5" in result.output
     assert "ACTION UNCHANGED: REQUEST_INFO" in result.output  # the documentation gate still fires
@@ -124,7 +128,9 @@ def test_latest_policy_and_explicit_policy_resolve_today_to_immunara_v0_1(tmp_pa
     for flags in (["--latest-policy"], ["--policy", "immunara-v0.1"]):
         result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], *flags)
         assert result.exit_code == 0, result.output
-        assert "STORED DECISIONS under policy immunara-v0.1 (v0.1) — judgments" in result.output
+        assert (
+            "STORED DECISIONS under policy immunara-v0.1 (v0.1), thresholds v0.1 — judgments"
+        ) in result.output
         assert "ACTION UNCHANGED: AUTO_PROCESS" in result.output
         assert REPRODUCED_LINE not in result.output  # policy replay never claims reproduction
 
@@ -457,3 +463,36 @@ def test_live_json_keeps_stdout_pure(tmp_path, smoke_runs, monkeypatch):
     diff = as_diff(result)
     assert diff.candidate_label.startswith("live run ")
     assert "Claude budget:" in result.stderr
+
+
+# ---- F1: a policy replay onto another policy version brings that version's thresholds ----
+
+
+def register_v0_2(monkeypatch, *, with_thresholds: bool = True):
+    spec = dict(policies_module._POLICIES["immunara-v0.1"], version="v0.2")
+    monkeypatch.setitem(policies_module._POLICIES, "immunara-v0.2", spec)
+    if with_thresholds:
+        v2 = THRESHOLDS_V0_1.model_copy(update={"version": "v0.2", "auto_process": 0.9})
+        monkeypatch.setitem(thresholds_module._BY_VERSION, "v0.2", v2)
+
+
+def test_policy_replay_onto_another_version_uses_its_thresholds(tmp_path, smoke_runs, monkeypatch):
+    register_v0_2(monkeypatch)
+    result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], "--latest-policy")
+    assert result.exit_code == 0, result.output
+    assert "under policy immunara-v0.2 (v0.2), thresholds v0.2 — judgments" in result.output
+    assert "  auto_process  0.95 → 0.9" in result.output
+    at = replay(
+        tmp_path, "AUTO-01", smoke_runs["groundtruth"], "--policy", "immunara-v0.2", "--at", "0.8"
+    )
+    assert at.exit_code == 0, at.output
+    assert "auto_process=0.8, thresholds v0.2+at0.8 — judgments" in at.output
+
+
+def test_policy_replay_onto_a_version_without_thresholds_is_exit_2(
+    tmp_path, smoke_runs, monkeypatch
+):
+    register_v0_2(monkeypatch, with_thresholds=False)
+    result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], "--policy", "immunara-v0.2")
+    assert result.exit_code == 2, result.output
+    assert "unknown thresholds version 'v0.2'" in result.output
