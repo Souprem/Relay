@@ -390,7 +390,8 @@ the smoke run, under the original $60 guard, before the cap was tightened) is in
 cases, the full set) and a deterministic 150-case sample of holdout (`--limit 150 --sample-seed
 7`) were run; the full 1,000-case holdout and a dedicated sync latency sample were not run, so
 latency below comes from the 10-case smoke sync run only (already a low-sample figure). The gold
-set (Phase 2E) is unaffected and keeps its own reserved headroom; see below for the final numbers.
+set (`gold-v0.1`) ran separately, after this task, against its own reserved headroom; see below and
+"Gold set" further down for the actual numbers.
 
 ```bash
 uv run relay eval --dataset evals/generated/gen-v0.2-dev --provider claude --mode batch --budget-usd 10
@@ -502,7 +503,9 @@ recovering the interrupted dev batch — one settles the original, superseded re
 one settles a stray $0 reservation left by a killed re-attach; neither reflects real spend);
 unsettled reservations: none. Remaining headroom under the $10 cap after this task: $2.8500,
 against an estimated gold-set (Phase 2E, 100 cases) reserve of roughly $1.36 (100 × the measured
-dev batch cost/case of $0.01091 × a 1.25 safety margin).
+dev batch cost/case of $0.01091 × a 1.25 safety margin). The gold run has since happened: it
+actually cost $1.560455 (see "Gold set" below), bringing total Claude spend to $8.710495 of the
+$10 cap.
 
 Claude's sync latency (smoke, n=10, low-sample) is far higher than Jev's: 5169/6781 ms p50/p95
 against Jev's 163/198 ms on the holdout sample — Jev runs locally with no network round trip, so
@@ -646,10 +649,11 @@ only. All runs, including gzipped traces, are committed under
   phrasing rather than genuine reasoning. The rules baseline is tested not to key on the tell
   (`tests/unit/test_rules_anti_shortcut.py`).
 - rules-v0.1 is frozen (no pattern/logic changes) and reported above exactly as it runs on
-  gen-v0.2; that decision was made before any gold-set results exist, and rules-v0.1 will be run
-  on the future gold set (Phase 2E) as-is and reported honestly. Its patterns have demonstrated
-  out-of-template failure modes on hand-written text — none of which occur on gen-v0.2's fixed
-  templates — that would produce an unsafe `AUTO_PROCESS`: a response cue with no negation counts
+  gen-v0.2; that decision was made before any gold-set results existed, and rules-v0.1 was run on
+  the gold set (`gold-v0.1`) as-is and reported honestly (see "Gold set" above: 6/20 unsafe
+  automations, all in category CON). Its patterns have demonstrated out-of-template failure modes
+  on hand-written text — none of which occur on gen-v0.2's fixed templates — that would produce an
+  unsafe `AUTO_PROCESS`: a response cue with no negation counts
   as a response (e.g. "tolerating it well without nausea or side effects"); a response cue on a
   neighbouring line about a different, non-MTX medication counts; the nearest date-role keyword
   has no distance bound, so a later, unrelated visit date can become the stop date; "since"
@@ -660,13 +664,14 @@ only. All runs, including gzipped traces, are committed under
   matched as a real date.
 - The Claude baseline is one run per dataset of a nondeterministic model (adaptive thinking at
   effort `low`), and its probabilities are self-reported, so a re-run would give somewhat different
-  numbers. Like the other providers it has only seen gen-v0.2's templated text; the Phase 2E gold
-  set will be its first test on hand-written documents. Its holdout evidence is a 150-case
-  deterministic sample (`--limit 150 --sample-seed 7`), not the full 1,000-case set, because of a
-  $10 API budget cap set mid-project; the dev evidence (400 cases) is complete. `step_therapy`'s
-  multiplicative composition (see Baselines above) is a structural property of the shared
-  composition code, not something specific to gen-v0.2, so it will also depress Claude's automation
-  rate on the gold set.
+  numbers. It ran on gen-v0.2's templated text first; `gold-v0.1` (100 hand-written cases) was its
+  first test on hand-written documents (see "Gold set" above). Its holdout evidence is a 150-case
+  deterministic sample (`--limit 150 --sample-seed 7`), not the full
+  1,000-case set, because of a $10 API budget cap set mid-project; the dev evidence (400 cases) is
+  complete. `step_therapy`'s multiplicative composition (see Baselines above) is a structural
+  property of the shared composition code, not something specific to gen-v0.2, so it also
+  depressed Claude's automation rate on gold: 0% at the raw run's default threshold and 30% at its
+  dev-selected `--at 0.55` (1/30 unsafe), as detailed in "Gold set" above.
 - The gold set (`gold-v0.1`, 100 cases) was authored and labelled by AI agents, not human domain
   experts, and has 20 cases per category, so per-category rates carry wide uncertainty.
 - Actions are simulated. Relay never submits anything anywhere.
