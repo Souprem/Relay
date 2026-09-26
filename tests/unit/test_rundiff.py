@@ -9,7 +9,14 @@ from relay.cases.policies import load_policy
 from relay.evaluation.labels import expected_action
 from relay.evaluation.metrics import EvalError
 from relay.evaluation.runner import policy_text_hash
-from relay.evaluation.tracediff import diff_case, diff_runs, diff_traces, replay_trace
+from relay.evaluation.tracediff import (
+    TraceDiff,
+    diff_case,
+    diff_runs,
+    diff_traces,
+    replay_exit_code,
+    replay_trace,
+)
 from relay.workflow.outcomes import WorkflowAction
 from relay.workflow.thresholds import THRESHOLDS_V0_1, override_auto_process
 from tests.factories import make_bundle, make_case, make_trace
@@ -144,3 +151,66 @@ def test_diff_runs_turns_an_unknown_policy_into_an_eval_error():
     ghost = [originals[0].model_copy(update={"policy_id": "nope-v1"})]
     with pytest.raises(EvalError, match="unknown policy 'nope-v1'"):
         diff_runs(originals, ghost, cases, original_label="o", candidate_label="c")
+
+
+# ---- F3: unlabelled diffs (no expected action) ----
+
+
+def test_an_unlabelled_diff_has_no_expected_change_or_unsafe_flags():
+    [case], [original] = run_of("T-01")
+    [candidate] = at([original], [case], 0.9)
+    d = diff_traces(
+        original,
+        candidate,
+        expected_original=None,
+        expected_candidate=None,
+        original_label="o",
+        candidate_label="c",
+        current_policy_text_hash=policy_text_hash(POLICY),
+    )
+    assert (d.expected_original, d.expected_candidate) == (None, None)
+    assert (d.change, d.newly_unsafe, d.unsafe_resolved) == (None, None, None)
+    assert (d.action_original, d.action_candidate) == (
+        WorkflowAction.HUMAN_REVIEW,
+        WorkflowAction.AUTO_PROCESS,
+    )
+    assert d.identical is False
+    assert d.thresholds == {"auto_process": (0.95, 0.9)}
+    assert replay_exit_code(d, reproduce=False) == 0
+    assert TraceDiff.model_validate_json(d.model_dump_json()) == d
+
+
+def test_exactly_one_expected_action_is_a_value_error():
+    [case], [original] = run_of("T-01")
+    with pytest.raises(ValueError, match="both expected actions, or neither"):
+        diff_traces(
+            original,
+            original,
+            expected_original=WorkflowAction.HUMAN_REVIEW,
+            expected_candidate=None,
+            original_label="o",
+            candidate_label="c",
+            current_policy_text_hash=None,
+        )
+
+
+def test_unlabelled_diff_case_and_diff_runs_never_derive_an_expected_action(monkeypatch):
+    def no_labels(*args):
+        raise AssertionError("an unlabelled diff derived an expected action")
+
+    monkeypatch.setattr(tracediff, "expected_action", no_labels)
+    cases, originals = run_of("T-01", "T-02")
+    candidates = at(originals, cases, 0.9)
+    one = diff_case(
+        originals[0],
+        candidates[0],
+        cases[0],
+        original_label="o",
+        candidate_label="c",
+        labelled=False,
+    )
+    assert one.change is None and one.policy_text_hash_current == policy_text_hash(POLICY)
+    many = diff_runs(
+        originals, candidates, cases, original_label="o", candidate_label="c", labelled=False
+    )
+    assert [d.newly_unsafe for d in many] == [None, None]

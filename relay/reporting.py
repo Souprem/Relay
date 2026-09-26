@@ -636,7 +636,12 @@ def _short_hash(value: str | None) -> str:
     return "unknown" if value is None else value.split(":", 1)[-1][:8]
 
 
+UNLABELLED_LINE = "EXPECTED: not available (unlabelled)"
+
+
 def _expected_line(diff: TraceDiff) -> str:
+    if diff.expected_original is None:
+        return UNLABELLED_LINE
     if diff.expected_original == diff.expected_candidate:
         return f"EXPECTED (evaluation-only): {diff.expected_original}"
     if diff.policy is not None:
@@ -694,10 +699,10 @@ def _gate_lines(gates: list[GateDelta], all_gates: bool) -> list[str]:
 
 
 def _action_lines(
-    side: str, action: WorkflowAction, expected: WorkflowAction, reasons: list[str]
+    side: str, action: WorkflowAction, expected: WorkflowAction | None, reasons: list[str]
 ) -> list[str]:
-    verdict = classify(action, expected)
-    return [f"  {side:<10}{action} ({verdict})"] + [f"      - {reason}" for reason in reasons]
+    verdict = "" if expected is None else f" ({classify(action, expected)})"
+    return [f"  {side:<10}{action}{verdict}"] + [f"      - {reason}" for reason in reasons]
 
 
 def replay_summary(diff: TraceDiff) -> str:
@@ -713,7 +718,7 @@ def replay_summary(diff: TraceDiff) -> str:
         flag = "NEWLY UNSAFE"
     elif diff.unsafe_resolved:
         flag = "UNSAFE RESOLVED"
-    elif unchanged:
+    elif unchanged or diff.change is None:
         flag = None
     elif diff.change == "unchanged":
         flag = "both correct"

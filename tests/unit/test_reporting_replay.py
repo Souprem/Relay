@@ -185,3 +185,16 @@ def test_policy_text_lines():
     assert f"POLICY TEXT CHANGED since the original run (01234567 → {CURRENT[7:15]})" in text
     unrecorded = a.model_copy(update={"policy_text_hash": None})
     assert "policy text hash not recorded" in render_trace_diff(diff(unrecorded, a))
+
+
+def test_an_unlabelled_diff_renders_without_expected_actions_or_verdicts():  # F3
+    a = original(step=0.93)
+    b = at(a, 0.9)
+    text = render_trace_diff(diff(a, b, expected=(None, None)))
+    lines = text.splitlines()
+    assert "EXPECTED: not available (unlabelled)" in lines
+    assert "  ORIGINAL  HUMAN_REVIEW" in lines
+    assert "  CANDIDATE AUTO_PROCESS" in lines
+    assert lines[-1] == "ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS"
+    assert "(correct)" not in text and "(UNSAFE)" not in text
+    assert replay_summary(diff(a, a, expected=(None, None))) == "ACTION UNCHANGED: HUMAN_REVIEW"

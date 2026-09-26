@@ -135,11 +135,13 @@ class TraceDiff(BaseModel):
     action_candidate: WorkflowAction
     reasons_original: list[str]
     reasons_candidate: list[str]
-    expected_original: WorkflowAction  # under the original side's policy/thresholds
-    expected_candidate: WorkflowAction  # under the candidate side's policy/thresholds
-    change: Change
-    newly_unsafe: bool
-    unsafe_resolved: bool
+    # Under each side's own policy/thresholds. These four and the next three are None for an
+    # unlabelled diff (no ground truth, e.g. 3C shadow traffic).
+    expected_original: WorkflowAction | None
+    expected_candidate: WorkflowAction | None
+    change: Change | None
+    newly_unsafe: bool | None
+    unsafe_resolved: bool | None
     identical: bool  # same action, reasons, gate path and decisions (volatile fields ignored)
 
 
@@ -278,8 +280,8 @@ def diff_traces(
     original: WorkflowTrace,
     candidate: WorkflowTrace,
     *,
-    expected_original: WorkflowAction,
-    expected_candidate: WorkflowAction,
+    expected_original: WorkflowAction | None,
+    expected_candidate: WorkflowAction | None,
     original_label: str,
     candidate_label: str,
     current_policy_text_hash: str | None,
@@ -288,11 +290,15 @@ def diff_traces(
 
     `current_policy_text_hash` is the hash of the current text of the ORIGINAL trace's policy id
     (relay.evaluation.runner.policy_text_hash), computed by the caller to keep this function pure.
+    Both expected actions None makes an unlabelled diff: expected_*, change, newly_unsafe and
+    unsafe_resolved are then None. Exactly one None is a ValueError.
     """
     if original.case_id != candidate.case_id:
         raise ValueError(
             f"cannot diff traces of different cases: {original.case_id} vs {candidate.case_id}"
         )
+    if (expected_original is None) != (expected_candidate is None):
+        raise ValueError("give both expected actions, or neither for an unlabelled diff")
     thresholds = {
         name: (getattr(original.thresholds, name), getattr(candidate.thresholds, name))
         for name in THRESHOLD_NAMES
@@ -301,8 +307,15 @@ def diff_traces(
     policy_o = f"{original.policy_id} {original.policy_version}"
     policy_c = f"{candidate.policy_id} {candidate.policy_version}"
     text_hash = original.policy_text_hash
-    unsafe_o = classify(original.action, expected_original) == "UNSAFE"
-    unsafe_c = classify(candidate.action, expected_candidate) == "UNSAFE"
+    change: Change | None = None
+    newly_unsafe: bool | None = None
+    unsafe_resolved: bool | None = None
+    if expected_original is not None and expected_candidate is not None:
+        unsafe_o = classify(original.action, expected_original) == "UNSAFE"
+        unsafe_c = classify(candidate.action, expected_candidate) == "UNSAFE"
+        change = _change(original.action, expected_original, candidate.action, expected_candidate)
+        newly_unsafe = unsafe_c and not unsafe_o
+        unsafe_resolved = unsafe_o and not unsafe_c
     return TraceDiff(
         case_id=original.case_id,
         original_label=original_label,
@@ -320,9 +333,9 @@ def diff_traces(
         reasons_candidate=list(candidate.decision_reasons),
         expected_original=expected_original,
         expected_candidate=expected_candidate,
-        change=_change(original.action, expected_original, candidate.action, expected_candidate),
-        newly_unsafe=unsafe_c and not unsafe_o,
-        unsafe_resolved=unsafe_o and not unsafe_c,
+        change=change,
+        newly_unsafe=newly_unsafe,
+        unsafe_resolved=unsafe_resolved,
         identical=(
             original.action == candidate.action
             and original.decision_reasons == candidate.decision_reasons
@@ -340,13 +353,15 @@ def diff_case(
     original_label: str,
     candidate_label: str,
     policies: Mapping[str, AuthorizationPolicy] | None = None,
+    labelled: bool = True,
 ) -> TraceDiff:
     """diff_traces with its inputs derived here rather than by every caller.
 
     Each side's expected action comes from ground truth under that side's own policy and
     thresholds; the current policy-text hash is that of the original trace's policy id.
     `policies` is an optional cache by policy id; an id missing from it is loaded with
-    load_policy (KeyError for an unknown id).
+    load_policy (KeyError for an unknown id). labelled=False makes an unlabelled diff (no
+    expected actions; see diff_traces).
     """
 
     def policy(policy_id: str) -> AuthorizationPolicy:
@@ -361,8 +376,12 @@ def diff_case(
     return diff_traces(
         original,
         candidate,
-        expected_original=expected_action(case, policy_o, original.thresholds),
-        expected_candidate=expected_action(case, policy_c, candidate.thresholds),
+        expected_original=(
+            expected_action(case, policy_o, original.thresholds) if labelled else None
+        ),
+        expected_candidate=(
+            expected_action(case, policy_c, candidate.thresholds) if labelled else None
+        ),
         original_label=original_label,
         candidate_label=candidate_label,
         current_policy_text_hash=policy_text_hash(policy_o),
@@ -376,8 +395,9 @@ def diff_runs(
     *,
     original_label: str,
     candidate_label: str,
+    labelled: bool = True,
 ) -> list[TraceDiff]:
-    """One diff_case per case, in the original run's trace order.
+    """One diff_case per case, in the original run's trace order (labelled as diff_case).
 
     The two runs must cover the same case ids (EvalError naming the missing and extra ids), and
     each goes through paired_cases (one run, no duplicates, known cases with unchanged content
@@ -408,6 +428,7 @@ def diff_runs(
             original_label=original_label,
             candidate_label=candidate_label,
             policies=policies,
+            labelled=labelled,
         )
         for original, case in pairs
     ]
