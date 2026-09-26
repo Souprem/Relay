@@ -638,6 +638,8 @@ def _short_hash(value: str | None) -> str:
 
 UNLABELLED_LINE = "EXPECTED: not available (unlabelled)"
 
+REPORTED_ONLY_LEGEND = "  ((name) = reported-only comparison: no engine gate acts on it)"
+
 
 def _expected_line(diff: TraceDiff) -> str:
     if diff.expected_original is None:
@@ -671,10 +673,14 @@ def _decision_lines(diff: TraceDiff) -> list[str]:
                 d.original,
                 d.candidate,
                 "—" if d.delta is None else f"{d.delta:+.3f}",
-                ", ".join(d.crossed),
+                ", ".join(n if n in d.crossed_gated else f"({n})" for n in d.crossed),
             ]
         )
-    legend = ["  (* = answer changed)"] if any(d.answer_changed for d in diff.decisions) else []
+    legend = []
+    if any(d.answer_changed for d in diff.decisions):
+        legend.append("  (* = answer changed)")
+    if any(set(d.crossed) - set(d.crossed_gated) for d in diff.decisions):
+        legend.append(REPORTED_ONLY_LEGEND)
     return [" " + line for line in _table(rows)] + legend
 
 

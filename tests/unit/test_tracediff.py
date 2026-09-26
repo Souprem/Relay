@@ -18,6 +18,7 @@ from relay.evaluation.tracediff import (
     candidate_trace_label,
     classify,
     diff_traces,
+    gated_only,
     live_label,
     original_label,
     policy_replay_label,
@@ -420,3 +421,35 @@ def test_labels():
     )
     assert candidate_trace_label(t) == "candidate trace run_20260925T170857Z_b95be9 · test q-test"
     assert live_label(t) == ("live run run_20260925T170857Z_b95be9 · test q-test on frozen inputs")
+
+
+# ---- F4: gated crossings ----
+
+
+@pytest.mark.parametrize("key", list(ENGINE_CASES), ids=lambda k: f"{k[0]}-{k[1]}")
+def test_a_gated_crossing_is_in_crossed_gated(key):
+    question_id, name = key
+    true_side, false_side = ENGINE_CASES[key](getattr(T, name))
+    d = diff(
+        trace_for(make_bundle("T-01", **true_side)), trace_for(make_bundle("T-01", **false_side))
+    )
+    assert row(d, question_id).crossed_gated == [name]
+
+
+def test_a_reported_only_crossing_is_not_in_crossed_gated():
+    d = diff(
+        trace_for(make_bundle("T-01", contra=0.04)), trace_for(make_bundle("T-01", contra=0.06))
+    )
+    assert row(d, CONTRA).crossed == ["auto_process"]
+    assert row(d, CONTRA).crossed_gated == []
+    e = diff(
+        trace_for(make_bundle("T-01", missing="NONE", missing_p=0.96)),
+        trace_for(make_bundle("T-01", missing="NONE", missing_p=0.90)),
+    )
+    assert row(e, MISSING).crossed == ["auto_process"]
+    assert row(e, MISSING).crossed_gated == []
+
+
+def test_gated_only_follows_the_crossings_table():
+    for (question_id, name), crossing in CROSSINGS.items():
+        assert gated_only(question_id, [name]) == ([name] if crossing.gate else [])

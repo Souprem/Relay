@@ -110,6 +110,9 @@ class DecisionDelta(BaseModel):
     answer_changed: bool  # yes/no side of 0.5, choice label, or presence changed
     delta: float | None  # yes_no: p_yes change; choice: change in the ORIGINAL answer's probability
     crossed: list[str]  # threshold names whose comparison flipped for this decision
+    # The subset of `crossed` whose CROSSINGS row feeds a real engine gate (F4); the rest are
+    # reported-only comparisons. Regression counts use this, never raw `crossed`.
+    crossed_gated: list[str]
 
 
 class GateDelta(BaseModel):
@@ -221,12 +224,18 @@ def crossed_thresholds(
     return crossed
 
 
+def gated_only(question_id: DecisionId, crossed: Sequence[str]) -> list[str]:
+    """The names in `crossed` whose (question_id, name) CROSSINGS row has an engine gate."""
+    return [name for name in crossed if CROSSINGS[(question_id, name)].gate is not None]
+
+
 def _decision_deltas(original: WorkflowTrace, candidate: WorkflowTrace) -> list[DecisionDelta]:
     deltas = []
     for question_id in DecisionId:
         o = original.decisions.get(question_id)
         c = candidate.decisions.get(question_id)
         kind = o.kind if o is not None else (c.kind if c is not None else None)
+        crossed = crossed_thresholds(question_id, o, c, original.thresholds, candidate.thresholds)
         deltas.append(
             DecisionDelta(
                 question_id=question_id,
@@ -235,9 +244,8 @@ def _decision_deltas(original: WorkflowTrace, candidate: WorkflowTrace) -> list[
                 candidate=render_decision(c),
                 answer_changed=_answer_changed(o, c),
                 delta=_delta(o, c),
-                crossed=crossed_thresholds(
-                    question_id, o, c, original.thresholds, candidate.thresholds
-                ),
+                crossed=crossed,
+                crossed_gated=gated_only(question_id, crossed),
             )
         )
     return deltas

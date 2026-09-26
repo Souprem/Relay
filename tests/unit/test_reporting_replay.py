@@ -198,3 +198,21 @@ def test_an_unlabelled_diff_renders_without_expected_actions_or_verdicts():  # F
     assert lines[-1] == "ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS"
     assert "(correct)" not in text and "(UNSAFE)" not in text
     assert replay_summary(diff(a, a, expected=(None, None))) == "ACTION UNCHANGED: HUMAN_REVIEW"
+
+
+def test_reported_only_crossings_are_parenthesised_with_a_legend():  # F4
+    # material_contradiction vs auto_process (1 - p_yes against the bar) is reported only;
+    # step_therapy vs auto_process feeds the auto_process gate.
+    a = original(step=0.96, contra=0.04)
+    b = original(step=0.94, contra=0.06)
+    text = render_trace_diff(diff(a, b))
+    contra = next(line for line in text.splitlines() if "material_contradiction" in line)
+    step = next(line for line in text.splitlines() if "step_therapy" in line)
+    assert contra.rstrip().endswith("(auto_process)")
+    assert step.rstrip().endswith("auto_process") and "(auto_process)" not in step
+    assert "  ((name) = reported-only comparison: no engine gate acts on it)" in text
+
+
+def test_no_legend_without_a_reported_only_crossing():
+    text = render_trace_diff(diff(original(step=0.96), original(step=0.94)))
+    assert re.search(r"step_therapy.*auto_process", text) and "reported-only" not in text
