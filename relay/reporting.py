@@ -14,9 +14,11 @@ from relay.evaluation.confusion import ConfusionMatrix
 from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
 from relay.evaluation.metrics import EvalSummary, RunIdentity
 from relay.evaluation.regression import CHANGE_ORDER, CaseEntry, Rate, RegressionResult
+from relay.evaluation.shadow import ShadowReport
 from relay.evaluation.tracediff import GateDelta, TraceDiff, classify
 from relay.traces.models import RunManifest, WorkflowTrace
 from relay.workflow.outcomes import WorkflowAction
+from relay.workflow.status import ACTION_STATUS, CaseStatus, Transition
 
 DISCLAIMER = (
     "Relay uses synthetic data only and is an engineering/evaluation prototype. "
@@ -1009,5 +1011,85 @@ def render_ledger(ledger: SpendLedger, path: str, budget: Decimal) -> str:
         "",
         f"Settled ${settled:.4f} · reserved ${reserved:.4f} · total ${total:.4f} of the "
         f"${budget:.2f} default budget",
+    ]
+    return "\n".join(lines)
+
+
+# ---- relay run --workflow simulated | shadow (Phase 3C) ----
+
+# The handoff's exact wording for a shadow proposal, per action.
+SHADOW_PROPOSALS: dict[WorkflowAction, str] = {
+    WorkflowAction.AUTO_PROCESS: "Would auto-process {case_id}",
+    WorkflowAction.REQUEST_INFO: "Would request information for {case_id}",
+    WorkflowAction.HUMAN_REVIEW: "Would send {case_id} to human review",
+}
+EVALUATION_ONLY_HEADER = (
+    "EVALUATION-ONLY (uses ground truth; not available in a real shadow deployment)"
+)
+
+
+def simulated_line(transition: Transition, case_id: str) -> str:
+    """`SIMULATED: CASE-ID RECEIVED → AUTO_APPROVED (AUTO_PROCESS)`."""
+    return f"SIMULATED: {case_id} {transition.from_status} → {transition.to} ({transition.action})"
+
+
+def simulated_summary(run_id: str, transitions: Sequence[Transition]) -> str:
+    counts = " · ".join(
+        f"{status} {sum(t.to == status for t in transitions)}" for status in ACTION_STATUS.values()
+    )
+    return f"SIMULATED RUN {run_id}: {len(transitions)} transitions applied — {counts}"
+
+
+def shadow_line(trace: WorkflowTrace, current: tuple[CaseStatus, str | None] | None = None) -> str:
+    """`SHADOW: Would auto-process CASE-ID; no action was taken.`, plus
+    ` (current status: <STATUS> by <run_id>)` when a state file exists (`current` is the case's
+    status there and the run that set it, None for a case still RECEIVED)."""
+    proposal = SHADOW_PROPOSALS[trace.action].format(case_id=trace.case_id)
+    line = f"SHADOW: {proposal}; no action was taken."
+    if current is not None:
+        status, run_id = current
+        line += f" (current status: {status}" + ("" if run_id is None else f" by {run_id}") + ")"
+    return line
+
+
+def shadow_trailer(run_id: str, proposals: int) -> str:
+    return f"SHADOW RUN {run_id}: {proposals} proposals recorded; case state unchanged (verified)."
+
+
+def promotion_line(report: ShadowReport) -> str:
+    if report.decision == "PROMOTE":
+        return "PROMOTION CHECK: PROMOTE"
+    return "PROMOTION CHECK: HOLD — " + "; ".join(report.promotion.failures)
+
+
+def _case_list(title: str, case_ids: Sequence[str]) -> list[str]:
+    return [f"  {title} ({len(case_ids)}): " + (", ".join(case_ids) if case_ids else "none")]
+
+
+def render_shadow_report(report: ShadowReport) -> str:
+    """The shadow comparison (and shadow.md): the unlabelled agreement section, then the
+    evaluation-only promotion check (the full 3B regression report) and the PROMOTION CHECK
+    line last."""
+    a = report.agreement
+    rows = [["INCUMBENT \\ CANDIDATE", *[str(action) for action in a.matrix]]]
+    for before, row in a.matrix.items():
+        rows.append([str(before), *[str(count) for count in row.values()]])
+    lines = [
+        f"Relay shadow comparison — dataset {report.dataset_id} · n={report.n}",
+        f"INCUMBENT {report.incumbent_label}",
+        f"CANDIDATE {report.candidate_label}",
+        "",
+        "AGREEMENT (unlabelled; what a real shadow deployment sees)",
+        f"  Action agreement: {_rate_cell(a.agreed)}  95% CI {_ci_cell(a.agreed)}",
+        "",
+        *["  " + line for line in _table(rows)],
+        "",
+        *_case_list("Would newly auto-process", a.newly_auto),
+        *_case_list("Would stop auto-processing", a.stopped_auto),
+        "",
+        EVALUATION_ONLY_HEADER,
+        render_regression(report.promotion),
+        "",
+        promotion_line(report),
     ]
     return "\n".join(lines)
