@@ -1,0 +1,11 @@
+{
+  "waivers": [
+    {
+      "case_id": "GOLD-TMP-17",
+      "gate": "*",
+      "reason": "EXAMPLE ONLY, not a real review: shows how a reviewed waiver lets the README's gold demo (Jev at auto_process 0.89) pass despite automating the interrupted methotrexate course",
+      "approved_by": "example (README demonstration)",
+      "date": "2026-09-26"
+    }
+  ]
+}

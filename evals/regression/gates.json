@@ -1,0 +1,65 @@
+{
+  "gates": [
+    {
+      "name": "gold-reproduce-groundtruth",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/gold-v0.1/run_20260925T170825Z_440df0/traces.jsonl.gz",
+      "candidate": {"reproduce": true}
+    },
+    {
+      "name": "gold-reproduce-rules",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/gold-v0.1/run_20260925T170839Z_d3b427/traces.jsonl.gz",
+      "candidate": {"reproduce": true}
+    },
+    {
+      "name": "gold-reproduce-jev",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz",
+      "candidate": {"reproduce": true}
+    },
+    {
+      "name": "gold-reproduce-claude",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/gold-v0.1/run_20260926T011730Z_f1852f/traces.jsonl.gz",
+      "candidate": {"reproduce": true}
+    },
+    {
+      "name": "smoke-reproduce-jev",
+      "dataset": "evals/smoke",
+      "baseline": "evals/baselines/smoke-v0.1/run_20260925T042324Z_eee114/run_20260925T042324Z_eee114.jsonl",
+      "candidate": {"reproduce": true}
+    },
+    {
+      "name": "gold-jev-vs-claude",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz",
+      "baseline_at": 0.89,
+      "candidate": {
+        "traces": "evals/baselines/gold-v0.1/run_20260926T011730Z_f1852f/traces.jsonl.gz",
+        "at": 0.55
+      }
+    },
+    {
+      "name": "holdout-reproduce-jev",
+      "dataset": "evals/generated/gen-v0.2-holdout",
+      "baseline": "evals/baselines/gen-v0.2-holdout/run_20260925T075242Z_fd455f/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "holdout-reproduce-rules",
+      "dataset": "evals/generated/gen-v0.2-holdout",
+      "baseline": "evals/baselines/gen-v0.2-holdout/run_20260925T092425Z_0aee97/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "holdout-reproduce-claude-150",
+      "dataset": "evals/generated/gen-v0.2-holdout",
+      "baseline": "evals/baselines/gen-v0.2-holdout/run_20260925T212034Z_bbee49/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    }
+  ]
+}
