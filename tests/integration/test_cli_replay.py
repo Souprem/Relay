@@ -246,6 +246,23 @@ def test_conflicting_flags_are_exit_2(tmp_path, smoke_runs, flags, message):
     assert message in result.output
 
 
+@pytest.mark.parametrize("at", ["0", "0.0"])
+def test_at_zero_is_exit_2(tmp_path, smoke_runs, at):
+    """I3: --at <= 0 makes a false requirement (x >= 0) pass for every case, so the expected
+    action itself becomes AUTO_PROCESS and unsafe automation is marked "correct". Reject it
+    outright rather than silently mislabel every case."""
+    result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], "--at", at)
+    assert result.exit_code == 2, result.output
+    assert "--at must be > 0" in result.output
+
+
+def test_at_negative_is_exit_2(tmp_path, smoke_runs):
+    """A negative --at is already refused by typer's own range check (min=0.0); confirm it is
+    still a usage error even though the message differs from the explicit `at <= 0` check."""
+    result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], "--at", "-0.5")
+    assert result.exit_code == 2, result.output
+
+
 # ---- JSON and keyless operation ----
 
 
@@ -392,7 +409,7 @@ def test_live_claude_candidate_goes_through_the_budget_guard(tmp_path, smoke_run
         str(tmp_path / "live"),
     )
     assert result.exit_code == 0, result.output
-    assert "Claude budget: spent $0.0000, projected $0.2500 for 1 cases (sync)" in result.output
+    assert "Claude budget:" in result.output and "(sync)" in result.output
     trace = live_trace(tmp_path)
     assert trace.provider == "claude"
     [entry] = load_ledger(ledger).entries

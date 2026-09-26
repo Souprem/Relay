@@ -1077,6 +1077,10 @@ def _live_candidate(
 
     With --json, the run's own messages (budget, notes, spend, run id) go to stderr so stdout
     stays pure JSON.
+
+    Uses `load_thresholds(original.policy_version)` (an ordinary run, via `_execute`/`run_dataset`),
+    not `original.thresholds` (Minor 4). This only differs when `original` is itself an overridden
+    or replayed trace, in which case the diff will show a thresholds change the user didn't ask for.
     """
     if mode is ClaudeMode.batch:
         raise _fail("replay decides one case; --mode batch is not supported (use --mode sync)")
@@ -1169,6 +1173,8 @@ def replay(
         raise _fail("choose one candidate source, not " + " and ".join(sources))
     if policy_id is not None and latest_policy:
         raise _fail("--policy and --latest-policy are mutually exclusive")
+    if at is not None and at <= 0.0:
+        raise _fail("--at must be > 0 (auto_process must be > 0)")
     if provider is None:
         live_only = {
             "--questions": questions,
@@ -1223,6 +1229,8 @@ def replay(
         )
         candidate = replay_trace(original, case, policy=target, thresholds=thresholds)
         label = policy_replay_label(target, at)
+        if latest_policy and target_id == original.policy_id:
+            label += " (already the trace's policy)"
     else:
         reproduce = True
         candidate = replay_trace(

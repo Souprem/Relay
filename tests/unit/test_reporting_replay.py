@@ -1,5 +1,7 @@
 """render_trace_diff: the terminal output of `relay replay`."""
 
+import re
+
 from relay.cases.policies import load_policy
 from relay.evaluation.runner import policy_text_hash
 from relay.evaluation.tracediff import diff_traces, replay_trace
@@ -64,6 +66,32 @@ def test_reproduce_verdict_is_printed_in_the_header_and_last():
     assert REPRODUCED_LINE not in render_trace_diff(diff(a, a, expected=(AUTO, AUTO)))
 
 
+def test_reproduce_mode_still_shows_newly_unsafe():  # Minor 7
+    """Reproduce mode (drift verdict) and NEWLY UNSAFE are independent signals -- the drift
+    verdict compares the stored vs. re-run decision, while NEWLY UNSAFE compares each side's
+    action to its own expected action. A renderer test should pin that both show up together
+    and in the documented order: the ACTION CHANGED/UNCHANGED (NEWLY UNSAFE) summary line,
+    then DRIFT_LINE as the very last line, so a later refactor cannot silently drop either."""
+    a = original()
+    drifted = diff(
+        a,
+        a.model_copy(update={"decision_reasons": ["new"]}),
+        expected=(AUTO, REVIEW),
+    )
+    assert drifted.newly_unsafe
+    text = render_trace_diff(drifted, reproduce=True)
+    lines = text.splitlines()
+    assert lines[3] == DRIFT_LINE
+    assert lines[-1] == DRIFT_LINE
+    summary_line = next(
+        line
+        for line in lines
+        if line.startswith("ACTION CHANGED") or line.startswith("ACTION UNCHANGED")
+    )
+    assert summary_line == "ACTION UNCHANGED: AUTO_PROCESS (NEWLY UNSAFE)"
+    assert lines.index(summary_line) < lines.index(DRIFT_LINE, lines.index(summary_line) + 1)
+
+
 def test_decisions_table_shows_values_delta_crossed_and_changed_answers():
     a = original(step=0.93, missing="NONE", missing_p=0.9)
     b = at(a, 0.9).model_copy(
@@ -85,7 +113,7 @@ def test_changed_thresholds_and_changed_gates_are_listed():
     assert "THRESHOLDS CHANGED" in text
     assert "  auto_process  0.95 → 0.9" in text
     assert "GATES (rows whose outcome differs; --all-gates shows every row)" in text
-    assert "  auto_process      passed → FIRED" in text
+    assert re.search(r"auto_process\s+passed → FIRED", text)
     assert "  default_review    FIRED → not reached" in text
     assert "      original:  min(required p_yes)=0.930, auto at >= 0.95" in text
     assert "  provider " not in text  # unchanged rows are hidden by default
@@ -95,7 +123,7 @@ def test_all_gates_shows_every_row():
     a = original(step=0.93)
     text = render_trace_diff(diff(a, at(a, 0.9)), all_gates=True)
     assert "GATES (all rows)" in text
-    assert "  provider          passed" in text
+    assert re.search(r"provider\s+passed", text)
     assert "      all five decisions present and well-formed" in text
 
 

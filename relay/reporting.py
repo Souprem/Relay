@@ -669,7 +669,8 @@ def _decision_lines(diff: TraceDiff) -> list[str]:
                 ", ".join(d.crossed),
             ]
         )
-    return [" " + line for line in _table(rows)] + ["  (* = answer changed)"]
+    legend = ["  (* = answer changed)"] if any(d.answer_changed for d in diff.decisions) else []
+    return [" " + line for line in _table(rows)] + legend
 
 
 def _gate_lines(gates: list[GateDelta], all_gates: bool) -> list[str]:
@@ -700,16 +701,29 @@ def _action_lines(
 
 
 def replay_summary(diff: TraceDiff) -> str:
-    """ACTION CHANGED: A → B (flag), or ACTION UNCHANGED: A."""
-    if diff.action_original == diff.action_candidate:
-        return f"ACTION UNCHANGED: {diff.action_original}"
+    """ACTION CHANGED: A → B (flag), or ACTION UNCHANGED: A (flag).
+
+    NEWLY UNSAFE / UNSAFE RESOLVED can happen even when the action itself is unchanged (for
+    example different policies on the two sides), so both forms carry the flag rather than only
+    the changed one (Minor 1). "(unchanged)" is never shown for two differing actions that are
+    each correct under their own side's expectation; that prints "(both correct)" instead.
+    """
+    unchanged = diff.action_original == diff.action_candidate
     if diff.newly_unsafe:
         flag = "NEWLY UNSAFE"
     elif diff.unsafe_resolved:
         flag = "UNSAFE RESOLVED"
+    elif unchanged:
+        flag = None
+    elif diff.change == "unchanged":
+        flag = "both correct"
     else:
         flag = diff.change
-    return f"ACTION CHANGED: {diff.action_original} → {diff.action_candidate} ({flag})"
+    if unchanged:
+        base = f"ACTION UNCHANGED: {diff.action_original}"
+    else:
+        base = f"ACTION CHANGED: {diff.action_original} → {diff.action_candidate}"
+    return base if flag is None else f"{base} ({flag})"
 
 
 def render_trace_diff(diff: TraceDiff, all_gates: bool = False, *, reproduce: bool = False) -> str:
