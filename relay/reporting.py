@@ -11,7 +11,9 @@ from relay.evaluation.compare import Comparison
 from relay.evaluation.confusion import ConfusionMatrix
 from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
 from relay.evaluation.metrics import EvalSummary, RunIdentity
+from relay.evaluation.tracediff import GateDelta, TraceDiff, classify
 from relay.traces.models import RunManifest, WorkflowTrace
+from relay.workflow.outcomes import WorkflowAction
 
 DISCLAIMER = (
     "Relay uses synthetic data only and is an engineering/evaluation prototype. "
@@ -623,4 +625,131 @@ def render_comparison(c: Comparison) -> str:
                 f"  {d.case_id:<14}{d.expected:<14}{d.action_a:<{a_width}}"
                 f"{d.action_b:<{b_width}}{flag}".rstrip()
             )
+    return "\n".join(lines)
+
+
+REPRODUCED_LINE = "REPRODUCED: identical action, reasons and gate path"
+DRIFT_LINE = "ENGINE DRIFT: today's policy engine no longer reproduces this trace"
+
+
+def _short_hash(value: str | None) -> str:
+    return "unknown" if value is None else value.split(":", 1)[-1][:8]
+
+
+def _expected_line(diff: TraceDiff) -> str:
+    if diff.expected_original == diff.expected_candidate:
+        return f"EXPECTED (evaluation-only): {diff.expected_original}"
+    if diff.policy is not None:
+        before, after = diff.policy
+    else:
+        before, after = "original thresholds", "candidate thresholds"
+    return (
+        f"EXPECTED (evaluation-only) under {before}: {diff.expected_original} · "
+        f"under {after}: {diff.expected_candidate}"
+    )
+
+
+def _table(rows: list[list[str]]) -> list[str]:
+    widths = [max(len(r[i]) for r in rows) + 2 for i in range(len(rows[0]))]
+    return [
+        "".join(cell.ljust(w) for cell, w in zip(r, widths, strict=True)).rstrip() for r in rows
+    ]
+
+
+def _decision_lines(diff: TraceDiff) -> list[str]:
+    rows = [["", "DECISION", "ORIGINAL", "CANDIDATE", "Δ", "CROSSED"]]
+    for d in diff.decisions:
+        rows.append(
+            [
+                "*" if d.answer_changed else "",
+                d.question_id.value,
+                d.original,
+                d.candidate,
+                "—" if d.delta is None else f"{d.delta:+.3f}",
+                ", ".join(d.crossed),
+            ]
+        )
+    return [" " + line for line in _table(rows)] + ["  (* = answer changed)"]
+
+
+def _gate_lines(gates: list[GateDelta], all_gates: bool) -> list[str]:
+    shown = gates if all_gates else [g for g in gates if g.original != g.candidate]
+    if not all_gates and not shown:
+        return ["GATES: same outcome at every gate (--all-gates shows every row)"]
+    title = "all rows" if all_gates else "rows whose outcome differs; --all-gates shows every row"
+    lines = [f"GATES ({title})"]
+    for g in shown:
+        status = g.original if g.original == g.candidate else f"{g.original} → {g.candidate}"
+        lines.append(f"  {g.gate:<18}{status}")
+        if g.detail_original == g.detail_candidate:
+            if g.detail_original is not None:
+                lines.append(f"      {g.detail_original}")
+            continue
+        if g.detail_original is not None:
+            lines.append(f"      original:  {g.detail_original}")
+        if g.detail_candidate is not None:
+            lines.append(f"      candidate: {g.detail_candidate}")
+    return lines
+
+
+def _action_lines(
+    side: str, action: WorkflowAction, expected: WorkflowAction, reasons: list[str]
+) -> list[str]:
+    verdict = classify(action, expected)
+    return [f"  {side:<10}{action} ({verdict})"] + [f"      - {reason}" for reason in reasons]
+
+
+def replay_summary(diff: TraceDiff) -> str:
+    """ACTION CHANGED: A → B (flag), or ACTION UNCHANGED: A."""
+    if diff.action_original == diff.action_candidate:
+        return f"ACTION UNCHANGED: {diff.action_original}"
+    if diff.newly_unsafe:
+        flag = "NEWLY UNSAFE"
+    elif diff.unsafe_resolved:
+        flag = "UNSAFE RESOLVED"
+    else:
+        flag = diff.change
+    return f"ACTION CHANGED: {diff.action_original} → {diff.action_candidate} ({flag})"
+
+
+def render_trace_diff(diff: TraceDiff, all_gates: bool = False, *, reproduce: bool = False) -> str:
+    """Terminal output for `relay replay`: header, expected action, decisions, thresholds,
+    gates, actions and a summary line. In reproduce mode the REPRODUCED / ENGINE DRIFT verdict
+    is printed under the header and again as the last line."""
+    verdict = (REPRODUCED_LINE if diff.identical else DRIFT_LINE) if reproduce else None
+    lines = [
+        f"Relay replay — {diff.case_id}",
+        f"ORIGINAL {diff.original_label}",
+        f"CANDIDATE {diff.candidate_label}",
+    ]
+    if verdict is not None:
+        lines.append(verdict)
+    if diff.policy_text_changed is None:
+        lines.append("policy text hash not recorded")
+    elif diff.policy_text_changed:
+        lines.append(
+            "POLICY TEXT CHANGED since the original run "
+            f"({_short_hash(diff.policy_text_hash_original)} → "
+            f"{_short_hash(diff.policy_text_hash_current)})"
+        )
+    lines += [_expected_line(diff), ""]
+    lines += _decision_lines(diff)
+    if diff.thresholds:
+        lines += ["", "THRESHOLDS CHANGED"]
+        lines += [
+            f"  {name}  {before:g} → {after:g}" for name, (before, after) in diff.thresholds.items()
+        ]
+    if diff.policy is not None:
+        lines += ["", f"POLICY CHANGED: {diff.policy[0]} → {diff.policy[1]}"]
+    lines += [""] + _gate_lines(diff.gates, all_gates)
+    lines += ["", "ACTIONS"]
+    lines += _action_lines(
+        "ORIGINAL", diff.action_original, diff.expected_original, diff.reasons_original
+    )
+    lines += _action_lines(
+        "CANDIDATE", diff.action_candidate, diff.expected_candidate, diff.reasons_candidate
+    )
+    lines += ["", replay_summary(diff)]
+    if verdict is not None:
+        lines.append(verdict)
     return "\n".join(lines)
