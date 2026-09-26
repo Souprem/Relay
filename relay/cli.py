@@ -1,4 +1,5 @@
-"""relay run / eval / generate, and the offline analyses sweep / report / compare / replay."""
+"""relay run / eval / generate, and the offline analyses sweep / report / compare / replay /
+regression."""
 
 import asyncio
 import contextlib
@@ -52,6 +53,15 @@ from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
 from relay.evaluation.metrics import EvalError, run_identity, score_run
+from relay.evaluation.regression import RegressionResult
+from relay.evaluation.regression_run import (
+    CandidateSpec,
+    RegressionInputError,
+    RegressionRequest,
+    load_gates,
+    run_regression,
+    write_outputs,
+)
 from relay.evaluation.runner import (
     RunConfigError,
     run_dataset,
@@ -76,10 +86,13 @@ from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
     RULES_NOTE,
+    GateRow,
     describe_selection,
     render_comparison,
     render_eval_summary,
     render_frontier_table,
+    render_gate_summary,
+    render_regression,
     render_run_report,
     render_run_table,
     render_trace_diff,
@@ -1253,3 +1266,188 @@ def replay(
     code = replay_exit_code(diff, reproduce=reproduce)
     if code:
         raise typer.Exit(code=code)
+
+
+GatesFile = Annotated[
+    Path | None,
+    typer.Option(
+        "--config",
+        exists=True,
+        dir_okay=False,
+        help="Run every gate in this gates file (e.g. evals/regression/gates.json).",
+    ),
+]
+
+
+def _gate_row(name: str, result: RegressionResult) -> GateRow:
+    return GateRow(
+        name=name,
+        verdict=result.verdict,
+        newly_unsafe=len(result.newly_unsafe),
+        regressed=len(result.regressed),
+        exit_code=result.exit_code,
+    )
+
+
+def _run_gate(
+    request: RegressionRequest, out: Path | None, show_all: bool
+) -> tuple[RegressionResult, str]:
+    """Run one gate, write its --out files, return the result and its rendered report."""
+    run = run_regression(request, out=out)
+    rendered = render_regression(run.result, show_all=show_all)
+    if out is not None:
+        write_outputs(out, run, request, rendered)
+    return run.result, rendered
+
+
+def _regression_config(config: Path, names: list[str], out: Path | None, show_all: bool) -> int:
+    """Config mode: every gate (or the --gate ones), each report, then a summary. Returns the
+    highest exit code. A gate with requires_generated whose dataset is missing is SKIPPED; any
+    other input error is that gate's ERROR (exit 2) and the remaining gates still run."""
+    try:
+        gates = load_gates(config).gates
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    unknown = sorted(set(names) - {g.name for g in gates})
+    if unknown:
+        raise _fail(f"no gate named {', '.join(unknown)} in {config}")
+    selected = [g for g in gates if not names or g.name in names]
+    rows: list[GateRow] = []
+    for spec in selected:
+        if spec.requires_generated and not Path(spec.dataset).is_dir():
+            note = f"dataset not generated; run relay generate to create {spec.dataset}"
+            typer.echo(f"Relay regression — gate {spec.name}: SKIPPED ({note})\n")
+            rows.append(GateRow(spec.name, "SKIPPED", None, None, 0, note=note))
+            continue
+        gate_out = None if out is None else out / spec.name
+        try:
+            result, rendered = _run_gate(RegressionRequest.from_gate(spec), gate_out, show_all)
+        except RegressionInputError as error:
+            typer.echo(f"Relay regression — gate {spec.name}: ERROR: {error}\n", err=True)
+            rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=str(error)[:80]))
+            continue
+        typer.echo(rendered + "\n")
+        rows.append(_gate_row(spec.name, result))
+    summary = render_gate_summary(rows)
+    typer.echo(summary)
+    if out is not None:
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "summary.md").write_text(summary + "\n", encoding="utf-8")
+    return max((r.exit_code for r in rows), default=0)
+
+
+@app.command()
+def regression(
+    dataset: Annotated[
+        Path | None, typer.Option(file_okay=False, help="Directory of case folders.")
+    ] = None,
+    baseline: Annotated[
+        Path | None, typer.Option(dir_okay=False, help="The accepted baseline's trace file.")
+    ] = None,
+    candidate_traces: Annotated[
+        Path | None, typer.Option(dir_okay=False, help="Candidate: another run's trace file.")
+    ] = None,
+    candidate_policy: Annotated[
+        str | None,
+        typer.Option(help="Candidate: the baseline's stored decisions under this policy id."),
+    ] = None,
+    candidate_latest_policy: Annotated[
+        bool,
+        typer.Option(
+            "--candidate-latest-policy",
+            help="Candidate: the stored decisions under the newest policy for the medication.",
+        ),
+    ] = False,
+    candidate_at: Annotated[
+        float | None,
+        typer.Option(
+            help="Candidate auto_process threshold, in (0, 1]. Alone: a policy replay of the "
+            "baseline under its own policy at this threshold."
+        ),
+    ] = None,
+    reproduce: Annotated[
+        bool,
+        typer.Option(
+            "--reproduce",
+            help="Engine-drift gate: the stored decisions under today's engine; any "
+            "difference fails with exit 3.",
+        ),
+    ] = False,
+    baseline_at: Annotated[
+        float | None,
+        typer.Option(help="Re-decide the baseline at this auto_process threshold, in (0, 1]."),
+    ] = None,
+    waivers: Annotated[
+        Path | None,
+        typer.Option(exists=True, dir_okay=False, help="Waiver file for newly unsafe cases."),
+    ] = None,
+    max_regressed: Annotated[
+        int | None, typer.Option(min=0, help="Fail when more cases than this regress.")
+    ] = None,
+    out: Annotated[
+        Path | None,
+        typer.Option(help="Write regression.json, regression.md and any replayed runs here."),
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Print the RegressionResult as JSON and nothing else.")
+    ] = False,
+    show_all: Annotated[
+        bool, typer.Option("--all", help="List every regressed case, not only the first 20.")
+    ] = False,
+    config: GatesFile = None,
+    gate: Annotated[
+        list[str] | None,
+        typer.Option("--gate", help="Config mode: run only this gate (repeatable)."),
+    ] = None,
+) -> None:
+    """Gate a candidate against an accepted baseline on the same frozen dataset (offline).
+
+    Exit codes: 0 PASS; 2 usage/input error; 3 ENGINE DRIFT (--reproduce); 4 FAIL (a newly
+    unsafe case without a waiver, or more regressions than --max-regressed).
+    """
+    if config is not None:
+        single = {
+            "--dataset": dataset,
+            "--baseline": baseline,
+            "--candidate-traces": candidate_traces,
+            "--candidate-policy": candidate_policy,
+            "--candidate-latest-policy": candidate_latest_policy or None,
+            "--candidate-at": candidate_at,
+            "--reproduce": reproduce or None,
+            "--baseline-at": baseline_at,
+            "--waivers": waivers,
+            "--max-regressed": max_regressed,
+            "--json": json_output or None,
+        }
+        given = [flag for flag, value in single.items() if value is not None]
+        if given:
+            raise _fail(f"{', '.join(given)} cannot be combined with --config")
+        code = _regression_config(config, gate or [], out, show_all)
+        if code:
+            raise typer.Exit(code=code)
+        return
+    if gate:
+        raise _fail("--gate needs --config")
+    if dataset is None or baseline is None:
+        raise _fail("give --dataset and --baseline, or --config")
+    request = RegressionRequest(
+        dataset=dataset,
+        baseline=baseline,
+        candidate=CandidateSpec(
+            traces=None if candidate_traces is None else str(candidate_traces),
+            policy=candidate_policy,
+            latest_policy=candidate_latest_policy,
+            at=candidate_at,
+            reproduce=reproduce,
+        ),
+        baseline_at=baseline_at,
+        waivers=waivers,
+        max_regressed=max_regressed,
+    )
+    try:
+        result, rendered = _run_gate(request, out, show_all)
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    typer.echo(result.model_dump_json(indent=2) if json_output else rendered)
+    if result.exit_code:
+        raise typer.Exit(code=result.exit_code)
