@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260927T072144Z_12e1e4",
+  "created_at": "2026-09-27T07:22:35.014928Z",
+  "dataset_id": "gen-v0.3-holdout",
+  "dataset_path": "evals/generated/gen-v0.3-holdout",
+  "provider": "jev",
+  "policy_version": "v0.1",
+  "question_set_version": "q-v0.3",
+  "case_count": 1000,
+  "trace_file": "traces/run_20260927T072144Z_12e1e4.jsonl",
+  "relay_git_sha": "01db05f27b983f5ab19b106eb905ecbe31e1deb2",
+  "sample_limit": null,
+  "sample_seed": null,
+  "mode": "evaluate",
+  "source_run_id": null
+}

@@ -1,0 +1,4059 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gen-v0.3-holdout",
+  "n": 1000,
+  "baseline": {
+    "label": "replay-run_20260927T072249Z_204814 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.97",
+    "identity": {
+      "run_id": "replay-run_20260927T072249Z_204814",
+      "dataset_id": "gen-v0.3-holdout",
+      "dataset_hash": "sha256:2aefa63d082a957ea035a9b21ae9ca283ba5e47eb3ceeedc342250118c1d99e5",
+      "provider": "jev",
+      "provider_versions": [
+        "jev-1.13.0"
+      ],
+      "client_versions": [
+        "typesafe-sdk==0.7.1"
+      ],
+      "question_set_versions": [
+        "q-v0.2"
+      ],
+      "question_set_hashes": [
+        "sha256:89717c795a2dfea7efe30e038fb483c6d4ed72d343bfbfcefeabfc6483d7a4aa"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.97"
+      ],
+      "relay_git_shas": [
+        "01db05f27b983f5ab19b106eb905ecbe31e1deb2"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 694,
+      "n": 1000,
+      "rate": 0.694,
+      "ci95": {
+        "low": 0.6643971343161457,
+        "high": 0.7224557016271418
+      }
+    },
+    "automation": {
+      "count": 17,
+      "n": 1000,
+      "rate": 0.017,
+      "ci95": {
+        "low": 0.009933512592717325,
+        "high": 0.027079496864851463
+      }
+    },
+    "request_info": {
+      "count": 323,
+      "n": 1000,
+      "rate": 0.323,
+      "ci95": {
+        "low": 0.2940739367479607,
+        "high": 0.35297236476383764
+      }
+    },
+    "human_review": {
+      "count": 660,
+      "n": 1000,
+      "rate": 0.66,
+      "ci95": {
+        "low": 0.6297017794976769,
+        "high": 0.6893526774990266
+      }
+    },
+    "uar": {
+      "count": 1,
+      "n": 17,
+      "rate": 0.058823529411764705,
+      "ci95": {
+        "low": 0.0014881743912666316,
+        "high": 0.2868893966672207
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T072144Z_12e1e4 · jev q-v0.3 · re-decided at auto_process=0.81",
+    "identity": {
+      "run_id": "replay-run_20260927T072144Z_12e1e4",
+      "dataset_id": "gen-v0.3-holdout",
+      "dataset_hash": "sha256:2aefa63d082a957ea035a9b21ae9ca283ba5e47eb3ceeedc342250118c1d99e5",
+      "provider": "jev",
+      "provider_versions": [
+        "jev-1.13.0"
+      ],
+      "client_versions": [
+        "typesafe-sdk==0.7.1"
+      ],
+      "question_set_versions": [
+        "q-v0.3"
+      ],
+      "question_set_hashes": [
+        "sha256:4589d78b40d2be56216766beec111882b7f96c761be99d1f6ba218e3bfd2979c"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.81"
+      ],
+      "relay_git_shas": [
+        "01db05f27b983f5ab19b106eb905ecbe31e1deb2"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 921,
+      "n": 1000,
+      "rate": 0.921,
+      "ci95": {
+        "low": 0.9025129050931011,
+        "high": 0.9369587971905382
+      }
+    },
+    "automation": {
+      "count": 244,
+      "n": 1000,
+      "rate": 0.244,
+      "ci95": {
+        "low": 0.21766588926155328,
+        "high": 0.27185034598601354
+      }
+    },
+    "request_info": {
+      "count": 327,
+      "n": 1000,
+      "rate": 0.327,
+      "ci95": {
+        "low": 0.29796968761860676,
+        "high": 0.3570528972764221
+      }
+    },
+    "human_review": {
+      "count": 429,
+      "n": 1000,
+      "rate": 0.429,
+      "ci95": {
+        "low": 0.3980720117863803,
+        "high": 0.4603471833389431
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 244,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.01500464978834844
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.0011764000000000013,
+      "brier_candidate": 0.0011546000000000013,
+      "brier_delta": -0.000021799999999999988,
+      "ece_baseline": 0.02939999999999994,
+      "ece_candidate": 0.029100000000000032,
+      "ece_delta": -0.000299999999999908
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.04474311267951369,
+      "brier_candidate": 0.014135286099583253,
+      "brier_delta": -0.030607826579930435,
+      "ece_baseline": 0.020450568161934798,
+      "ece_candidate": 0.03831172014281095,
+      "ece_delta": 0.017861151980876153
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.035710900000000004,
+      "brier_candidate": 0.0362446,
+      "brier_delta": 0.0005336999999999981,
+      "ece_baseline": 0.07332999999999998,
+      "ece_candidate": 0.07245999999999996,
+      "ece_delta": -0.0008700000000000235
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.03204,
+      "brier_candidate": 0.0318429,
+      "brier_delta": -0.00019709999999999867,
+      "ece_baseline": 0.11839999999999998,
+      "ece_candidate": 0.11625000000000005,
+      "ece_delta": -0.0021499999999999297
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.1922106,
+      "brier_candidate": 0.19558799999999998,
+      "brier_delta": 0.003377399999999975,
+      "ece_baseline": 0.06836,
+      "ece_candidate": 0.07161999999999999,
+      "ece_delta": 0.003259999999999985
+    }
+  ],
+  "change_counts": {
+    "improved": 237,
+    "unchanged": 753,
+    "regressed": 10,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 1000,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [],
+  "unsafe_resolved": [
+    {
+      "case_id": "GEN-04000653",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [
+        "step_therapy"
+      ],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000653 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    }
+  ],
+  "regressed": [
+    {
+      "case_id": "GEN-04000114",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000114 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000195",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000195 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000459",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000459 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000479",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000479 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000556",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000556 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000583",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000583 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000771",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000771 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000839",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000839 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000847",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000847 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000999",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "material_contradiction": [
+          "contradiction_auto_block"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000999 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    }
+  ],
+  "improved": [
+    {
+      "case_id": "GEN-04000005",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000005 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000013",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000013 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000017",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000017 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000020",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000020 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000024",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000024 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000029",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000029 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000040",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000040 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000049",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000049 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000060",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000060 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000061",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000061 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000064",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000064 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000068",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000068 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000069",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000069 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000072",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000072 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000077",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000077 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000080",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000080 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000089",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000089 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000092",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000092 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000096",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000096 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000108",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000108 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000112",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000112 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000113",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000113 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000123",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000123 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000126",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000126 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000129",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000129 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000136",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000136 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000137",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000137 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000140",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000140 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000145",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000145 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000148",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000148 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000152",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000152 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000153",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000153 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000160",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000160 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000161",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000161 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000165",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000165 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000169",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000169 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000176",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000176 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000189",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000189 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000194",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000194 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000196",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000196 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000197",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000197 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000200",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000200 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000212",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000212 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000213",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000213 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000216",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000216 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000220",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000220 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000221",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000221 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000230",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000230 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000240",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000240 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000244",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000244 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000247",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000247 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000249",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000249 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000252",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000252 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000253",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000253 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000264",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000264 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000265",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000265 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000267",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000267 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000275",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000275 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000276",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000276 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000279",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000279 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000280",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000280 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000285",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000285 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000287",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000287 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000289",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000289 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000296",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000296 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000301",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000301 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000304",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000304 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000305",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000305 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000306",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000306 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000317",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000317 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000326",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000326 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000328",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000328 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000332",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000332 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000333",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000333 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000336",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000336 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000338",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000338 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000339",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000339 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000340",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000340 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000348",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000348 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000349",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000349 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000354",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000354 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000360",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000360 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000365",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000365 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000366",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000366 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000368",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000368 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000376",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000376 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000377",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000377 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000381",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000381 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000388",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000388 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000392",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000392 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000394",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000394 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000409",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000409 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000410",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000410 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000417",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000417 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000420",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000420 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000429",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000429 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000433",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000433 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000435",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000435 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000440",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000440 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000444",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000444 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000452",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000452 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000457",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000457 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000460",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000460 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000461",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000461 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000471",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000471 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000472",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000472 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000488",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000488 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000490",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000490 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000493",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000493 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000494",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000494 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000496",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000496 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000504",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000504 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000505",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000505 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000511",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000511 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000516",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000516 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000517",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000517 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000524",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000524 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000525",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000525 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000526",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000526 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000532",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000532 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000533",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000533 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000540",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000540 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000541",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000541 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000544",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000544 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000545",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000545 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000548",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000548 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000549",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000549 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000552",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000552 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000553",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000553 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000564",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000564 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000565",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000565 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000569",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000569 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000571",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000571 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000572",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000572 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000573",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000573 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000575",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000575 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000579",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000579 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000580",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000580 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000584",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000584 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000585",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000585 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000588",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000588 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000595",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000595 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000597",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000597 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000600",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000600 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000604",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000604 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000605",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000605 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000610",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000610 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000617",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000617 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000624",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000624 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000625",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000625 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000626",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000626 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000641",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000641 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000651",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000651 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000653",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [
+        "step_therapy"
+      ],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000653 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000657",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000657 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000669",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000669 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000673",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000673 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000677",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000677 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000680",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000680 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000681",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000681 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000682",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000682 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000685",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000685 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000689",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000689 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000696",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000696 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000704",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000704 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000708",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000708 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000712",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000712 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000717",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000717 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000720",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000720 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000721",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000721 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000725",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000725 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000726",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000726 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000732",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000732 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000737",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000737 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000739",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {
+        "material_contradiction": [
+          "contradiction_review"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000739 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000744",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000744 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000748",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000748 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000757",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000757 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000765",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000765 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000773",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000773 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000775",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000775 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000780",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000780 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000781",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000781 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000792",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000792 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000793",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000793 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000796",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000796 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000801",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000801 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000804",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000804 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000805",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000805 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000811",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "missing_evidence": [
+          "missing_evidence_request_info"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000811 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000813",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000813 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000816",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000816 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000817",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000817 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000820",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000820 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000824",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000824 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000832",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000832 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000835",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000835 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000836",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000836 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000837",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000837 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000840",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000840 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000844",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000844 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000858",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000858 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000863",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000863 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000864",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000864 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000869",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "diagnosis_support": [
+          "auto_process"
+        ],
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000869 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000874",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000874 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000876",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000876 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000881",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000881 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000885",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000885 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000887",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000887 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000893",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000893 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000895",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000895 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000896",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000896 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000898",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000898 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000901",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000901 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000904",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000904 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000909",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000909 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000913",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000913 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000915",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000915 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000923",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000923 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000924",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000924 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000941",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000941 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000943",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000943 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000944",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000944 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000946",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000946 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000952",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000952 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000964",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000964 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000967",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000967 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000968",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000968 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000971",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000971 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000975",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000975 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000976",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000976 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000977",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000977 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000979",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "step_therapy": [
+          "auto_process"
+        ],
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000979 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000984",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000984 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000990",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000990 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-04000995",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {
+        "documentation_complete": [
+          "auto_process"
+        ],
+        "material_contradiction": [
+          "contradiction_auto_block"
+        ]
+      },
+      "replay_command": "relay replay GEN-04000995 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz"
+    }
+  ],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}
