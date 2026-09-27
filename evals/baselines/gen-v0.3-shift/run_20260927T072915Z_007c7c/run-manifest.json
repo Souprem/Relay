@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260927T072915Z_007c7c",
+  "created_at": "2026-09-27T07:29:35.561550Z",
+  "dataset_id": "gen-v0.3-shift",
+  "dataset_path": "evals/generated/gen-v0.3-shift",
+  "provider": "jev",
+  "policy_version": "v0.2",
+  "question_set_version": "q-v0.3",
+  "case_count": 400,
+  "trace_file": "traces/run_20260927T072915Z_007c7c.jsonl",
+  "relay_git_sha": "6124ed3aec41ce138c58ac28d335bcc0be35cc61",
+  "sample_limit": null,
+  "sample_seed": null,
+  "mode": "evaluate",
+  "source_run_id": null
+}
