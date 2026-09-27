@@ -2,6 +2,10 @@
 
 Probability is a signal, not a permission slip. Gates run in a fixed order and the first gate
 that fires decides the action.
+
+Phase 3E: `ablate` disables named safety gates for the gate-ablation experiment. It is an
+analysis switch, never a production setting; the default (nothing ablated) is the engine as it
+always was.
 """
 
 from relay.cases.models import CaseInput, MissingEvidence
@@ -12,6 +16,11 @@ from relay.workflow.thresholds import Thresholds
 
 _CHOICE_DECISIONS = {DecisionId.MISSING_EVIDENCE}
 _MISSING_LABELS = {m.value for m in MissingEvidence}
+
+# The gates `determine_action(..., ablate=...)` can disable (Phase 3E spec A1). "contradiction"
+# removes contradiction detection entirely: the review gate AND the auto-block inside
+# auto_process. "missing_evidence" skips only the missing-evidence REQUEST_INFO gate.
+ABLATIONS = frozenset({"contradiction", "missing_evidence"})
 
 
 def bundle_problem(bundle: DecisionBundle) -> str | None:
@@ -45,12 +54,20 @@ def determine_action(
     bundle: DecisionBundle,
     policy: AuthorizationPolicy,
     thresholds: Thresholds,
+    *,
+    ablate: frozenset[str] = frozenset(),
 ) -> PolicyOutcome:
+    unknown = sorted(set(ablate) - ABLATIONS)
+    if unknown:
+        raise ValueError(f"unknown ablation(s) {unknown}; known: {sorted(ABLATIONS)}")
     t = thresholds
     path: list[GateResult] = []
 
     def passed(gate: str, detail: str) -> None:
         path.append(GateResult(gate=gate, fired=False, detail=detail))
+
+    def ablated(gate: str) -> None:
+        path.append(GateResult(gate=gate, fired=False, detail=f"ABLATED: {gate} gate disabled"))
 
     def fired(gate: str, detail: str, action: WorkflowAction, *reasons: str) -> PolicyOutcome:
         path.append(GateResult(gate=gate, fired=True, detail=detail))
@@ -75,15 +92,19 @@ def determine_action(
     passed("age", detail)
 
     contra = _p_yes(bundle, DecisionId.MATERIAL_CONTRADICTION)
+    contradiction_ablated = "contradiction" in ablate
     detail = f"p_yes(material_contradiction)={contra:.3f}, review at >= {t.contradiction_review}"
-    if contra >= t.contradiction_review:
+    if contradiction_ablated:
+        ablated("contradiction")
+    elif contra >= t.contradiction_review:
         return fired(
             "contradiction",
             detail,
             WorkflowAction.HUMAN_REVIEW,
             f"a material contradiction is likely (p={contra:.3f})",
         )
-    passed("contradiction", detail)
+    else:
+        passed("contradiction", detail)
 
     missing = bundle.get(DecisionId.MISSING_EVIDENCE)
     assert missing is not None and missing.answer is not None
@@ -104,7 +125,9 @@ def determine_action(
         f"missing_evidence={missing.answer} (p={missing.probability:.3f}), "
         f"request info at >= {t.missing_evidence_request_info}"
     )
-    if (
+    if "missing_evidence" in ablate:
+        ablated("missing_evidence")
+    elif (
         missing.answer != MissingEvidence.NONE
         and missing.probability >= t.missing_evidence_request_info
     ):
@@ -114,7 +137,8 @@ def determine_action(
             WorkflowAction.REQUEST_INFO,
             f"missing {missing_label} (p={missing.probability:.3f})",
         )
-    passed("missing_evidence", detail)
+    else:
+        passed("missing_evidence", detail)
 
     required = {
         "diagnosis_support": _p_yes(bundle, DecisionId.DIAGNOSIS_SUPPORT),
@@ -126,19 +150,25 @@ def determine_action(
         for name, p in required.items()
         if p < t.auto_process
     ]
-    blocked = contra >= t.contradiction_auto_block
+    blocked = not contradiction_ablated and contra >= t.contradiction_auto_block
+    block_rule = (
+        "contradiction auto-block ABLATED"
+        if contradiction_ablated
+        else f"blocks at >= {t.contradiction_auto_block}"
+    )
     detail = (
         f"min(required p_yes)={min(required.values()):.3f}, auto at >= {t.auto_process}; "
-        f"p_yes(material_contradiction)={contra:.3f}, blocks at >= {t.contradiction_auto_block}"
+        f"p_yes(material_contradiction)={contra:.3f}, {block_rule}"
     )
     if not below and not blocked:
-        return fired(
-            "auto_process",
-            detail,
-            WorkflowAction.AUTO_PROCESS,
-            f"all required judgments are at or above {t.auto_process} and contradiction "
-            f"risk is below {t.contradiction_auto_block}",
+        reason = (
+            f"all required judgments are at or above {t.auto_process} "
+            "(contradiction auto-block ABLATED)"
+            if contradiction_ablated
+            else f"all required judgments are at or above {t.auto_process} and contradiction "
+            f"risk is below {t.contradiction_auto_block}"
         )
+        return fired("auto_process", detail, WorkflowAction.AUTO_PROCESS, reason)
     passed("auto_process", detail)
 
     reasons = list(below)
