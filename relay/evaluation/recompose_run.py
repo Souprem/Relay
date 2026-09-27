@@ -10,7 +10,7 @@ policy_id and thresholds.
 
 import gzip
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -106,10 +106,12 @@ def write_simulated_bundle(
     dataset: Path,
     source: Sequence[WorkflowTrace],
     source_manifest: RunManifest | None = None,
+    extra: Mapping[str, object] | None = None,
 ) -> tuple[Path, Path]:
     """Write out/traces.jsonl.gz and out/run-manifest.json. Refuses a non-empty `out`
     (FileExistsError). The source run's sample_limit/sample_seed carry over when its manifest is
-    given."""
+    given; the traces' ablation (Phase 3E) is recorded; `extra` keys are added to the manifest
+    JSON beside policy_id and thresholds."""
     if out.exists() and any(out.iterdir()):
         raise FileExistsError(f"{out} is not empty; refusing to overwrite")
     out.mkdir(parents=True, exist_ok=True)
@@ -133,10 +135,15 @@ def write_simulated_bundle(
         sample_seed=None if source_manifest is None else source_manifest.sample_seed,
         mode="simulated",
         source_run_id=source[0].run_id,
+        ablation=first.ablation,
     )
-    data = manifest.model_dump(mode="json") | {
-        "policy_id": first.policy_id,
-        "thresholds": first.thresholds.model_dump(mode="json"),
-    }
+    data = (
+        manifest.model_dump(mode="json")
+        | {
+            "policy_id": first.policy_id,
+            "thresholds": first.thresholds.model_dump(mode="json"),
+        }
+        | dict(extra or {})
+    )
     manifest_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return trace_path, manifest_path
