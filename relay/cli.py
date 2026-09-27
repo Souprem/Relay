@@ -85,6 +85,7 @@ from relay.evaluation.tracediff import (
     replay_thresholds,
     replay_trace,
 )
+from relay.generation.facts import GEN_V0_2, GENERATOR_VERSIONS
 from relay.generation.generator import generate_dataset, verify_dataset
 from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest, write_manifest
 from relay.reporting import (
@@ -1450,11 +1451,35 @@ def generate(
     force: Annotated[
         bool, typer.Option("--force", help="Overwrite an existing manifest for this dataset id.")
     ] = False,
+    generator: Annotated[
+        str | None,
+        typer.Option(
+            "--generator",
+            help=f"Generator version: {', '.join(GENERATOR_VERSIONS)} (default {GEN_V0_2}).",
+        ),
+    ] = None,
+    policy: Annotated[
+        str | None,
+        typer.Option(
+            "--policy",
+            help="Policy version every case uses and is labelled under: v0.1 (default) or v0.2.",
+        ),
+    ] = None,
 ) -> None:
     """Generate a seeded synthetic dataset, or verify one against its manifest."""
     if verify is not None:
-        if count is not None or seed is not None or dataset_id is not None:
-            raise _fail("--verify cannot be combined with --count, --seed or --dataset-id")
+        given = {
+            "--count": count,
+            "--seed": seed,
+            "--dataset-id": dataset_id,
+            "--generator": generator,
+            "--policy": policy,
+        }
+        if any(value is not None for value in given.values()):
+            raise _fail(
+                "--verify cannot be combined with --count, --seed, --dataset-id, --generator or "
+                "--policy (they are read from the manifest)"
+            )
         if out is not None and not out.exists():
             raise _fail(f"--out path does not exist: {out}")
         try:
@@ -1478,7 +1503,14 @@ def generate(
     if manifest_path.exists() and not force:
         raise _fail(f"manifest {manifest_path} already exists; pass --force to overwrite it")
     try:
-        manifest = generate_dataset(count, seed, dataset_id, out)
+        manifest = generate_dataset(
+            count,
+            seed,
+            dataset_id,
+            out,
+            generator_version=generator or GEN_V0_2,
+            policy_version=policy or "v0.1",
+        )
     except (FileExistsError, ValueError) as error:
         raise _fail(str(error)) from error
     write_manifest(manifest, manifest_path)

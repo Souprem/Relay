@@ -121,6 +121,7 @@ def test_manifest_hash_matches_files_and_has_no_timestamp(tmp_path):
         "expected_action_counts",
         "missing_evidence_counts",
         "dataset_hash",
+        "policy_version",
     }
     path = tmp_path / "manifests" / "gen-test.json"
     write_manifest(manifest, path)
@@ -180,3 +181,71 @@ def test_verify_rejects_a_different_generator_version(tmp_path):
     old = manifest.model_copy(update={"generator_version": "gen-v0.0"})
     [problem] = verify_dataset(old)
     assert "gen-v0.0" in problem and GENERATOR_VERSION in problem
+
+
+# ---- Phase 3D: gen-v0.3 and policy-labelled datasets ----
+
+REPO = Path(__file__).resolve().parents[2]
+COMMITTED_MANIFESTS = REPO / "evals" / "generated" / "manifests"
+
+
+def test_gen_v0_2_stays_the_default_and_is_unchanged_by_the_version_parameter():
+    assert GENERATOR_VERSION == "gen-v0.2"
+    assert generate_case(42, "hard") == generate_case(42, "hard", generator_version="gen-v0.2")
+
+
+def test_gen_v0_3_cases_are_labelled_and_noted_as_gen_v0_3():
+    case = generate_case(42, "easy", generator_version="gen-v0.3")
+    assert case.ground_truth.notes.startswith("gen-v0.3 easy:")
+    assert case != generate_case(42, "easy")
+
+
+def test_policy_v0_2_cases_carry_and_are_labelled_under_immunara_v0_2():
+    for seed in range(400):
+        v1 = generate_case(seed, "easy", generator_version="gen-v0.3")
+        v2 = generate_case(seed, "easy", generator_version="gen-v0.3", policy_version="v0.2")
+        assert v2.input.policy_id == "immunara-v0.2"
+        assert v1.input.model_copy(update={"policy_id": "immunara-v0.2"}) == v2.input
+        if v1.ground_truth != v2.ground_truth:
+            assert v1.ground_truth.step_therapy_satisfied
+            assert not v2.ground_truth.step_therapy_satisfied
+            return
+    raise AssertionError("no easy case in 400 seeds was old enough to change its label")
+
+
+def test_unknown_generator_version_is_rejected(tmp_path):
+    with pytest.raises(ValueError, match="unknown generator version 'gen-v9'"):
+        generate_case(1, "easy", generator_version="gen-v9")
+    with pytest.raises(ValueError, match="unknown generator version 'gen-v9'"):
+        generate_dataset(4, 1, "gen-test", tmp_path / "ds", generator_version="gen-v9")
+    with pytest.raises(ValueError, match="unknown policy version 'v9'"):
+        generate_dataset(4, 1, "gen-test", tmp_path / "ds", policy_version="v9")
+
+
+def test_gen_v0_3_manifest_records_generator_and_policy_and_verifies(tmp_path):
+    manifest = generate_dataset(
+        8, 5, "gen-test", tmp_path / "ds", generator_version="gen-v0.3", policy_version="v0.2"
+    )
+    assert (manifest.generator_version, manifest.policy_version) == ("gen-v0.3", "v0.2")
+    assert {c.input.policy_id for c in load_dataset(tmp_path / "ds")} == {"immunara-v0.2"}
+    path = tmp_path / "gen-test.json"
+    write_manifest(manifest, path)
+    assert json.loads(path.read_text())["policy_version"] == "v0.2"
+    assert read_manifest(path) == manifest
+    assert verify_dataset(manifest, tmp_path / "ds") == []
+
+
+def test_a_v0_1_manifest_does_not_write_policy_version(tmp_path):
+    manifest = generate_dataset(4, 5, "gen-test", tmp_path / "ds", generator_version="gen-v0.3")
+    path = tmp_path / "gen-test.json"
+    write_manifest(manifest, path)
+    assert "policy_version" not in json.loads(path.read_text())
+    assert read_manifest(path).policy_version == "v0.1"
+
+
+@pytest.mark.parametrize("name", ["gen-v0.2-dev.json", "gen-v0.2-holdout.json"])
+def test_committed_gen_v0_2_manifests_round_trip_byte_identically(tmp_path, name):
+    committed = COMMITTED_MANIFESTS / name
+    path = tmp_path / name
+    write_manifest(read_manifest(committed), path)
+    assert path.read_bytes() == committed.read_bytes()

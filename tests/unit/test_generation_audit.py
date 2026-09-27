@@ -226,6 +226,13 @@ def taken(rendered: list[Rendered]) -> list[Rendered]:
     return [r for r in rendered if r.facts.mtx_status == "taken"]
 
 
+def test_v3_draws_match_generate_case(rendered_v3):
+    for r in rendered_v3[:40]:
+        case = generate_case(r.seed, r.facts.difficulty, generator_version="gen-v0.3")
+        assert {d.id: d for d in case.input.documents} == r.documents
+        assert case.ground_truth == r.truth
+
+
 def test_v3_documents_name_no_label_or_scenario(rendered_v3):
     for r in rendered_v3:
         assert set(r.documents) <= ALLOWED_DOCUMENT_IDS, (r.seed, list(r.documents))

@@ -209,3 +209,42 @@ def test_verify_with_a_missing_out_dir_fails(tmp_path):
     )
     assert result.exit_code == 2
     assert "--out path does not exist" in result.output
+
+
+# ---- Phase 3D: --generator and --policy ----
+
+
+def test_generate_gen_v0_3_with_policy_v0_2_writes_and_verifies(tmp_path):
+    result = generate(tmp_path, 8, 5, "gen-shift", "--generator", "gen-v0.3", "--policy", "v0.2")
+    assert result.exit_code == 0, result.output
+    manifest = json.loads((tmp_path / "manifests" / "gen-shift.json").read_text())
+    assert (manifest["generator_version"], manifest["policy_version"]) == ("gen-v0.3", "v0.2")
+    case = json.loads((tmp_path / "gen-shift" / "GEN-05000000" / "case.json").read_text())
+    assert case["policy_id"] == "immunara-v0.2"
+    checked = verify(tmp_path, "gen-shift")
+    assert checked.exit_code == 0, checked.output
+    assert checked.output.startswith("OK: gen-shift regenerates to ")
+
+
+def test_default_generator_is_gen_v0_2_and_writes_no_policy_version(tmp_path):
+    assert generate(tmp_path).exit_code == 0
+    manifest = json.loads((tmp_path / "manifests" / "gen-test.json").read_text())
+    assert manifest["generator_version"] == "gen-v0.2"
+    assert "policy_version" not in manifest
+
+
+def test_unknown_generator_or_policy_is_exit_2(tmp_path):
+    result = generate(tmp_path, 4, 3, "gen-a", "--generator", "gen-v9")
+    assert result.exit_code == 2
+    assert "unknown generator version 'gen-v9'" in result.output
+    result = generate(tmp_path, 4, 3, "gen-b", "--policy", "v9")
+    assert result.exit_code == 2
+    assert "unknown policy version 'v9'" in result.output
+
+
+def test_verify_rejects_generator_and_policy_flags(tmp_path):
+    generate(tmp_path)
+    for flag, value in (("--generator", "gen-v0.3"), ("--policy", "v0.2")):
+        result = verify(tmp_path, "gen-test", flag, value)
+        assert result.exit_code == 2
+        assert "read from the manifest" in result.output

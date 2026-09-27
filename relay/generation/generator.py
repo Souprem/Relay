@@ -8,14 +8,14 @@ from random import Random
 from relay.cases.loader import CaseLoadError, load_dataset
 from relay.cases.models import CaseInput, Insurance, MedicationRequest, Patient, PriorAuthCase
 from relay.cases.policies import load_policy
-from relay.generation.facts import DIFFICULTIES, GENERATOR_VERSION, Difficulty
+from relay.generation.facts import DIFFICULTIES, GEN_V0_2, GENERATOR_VERSIONS, Difficulty
 from relay.generation.labels import label_case
 from relay.generation.manifest import DatasetManifest, build_manifest, dataset_hash
 from relay.generation.render import render_documents
 from relay.generation.scenarios import sample_facts
 from relay.workflow.thresholds import load_thresholds
 
-POLICY_IDS: dict[str, str] = {"v0.1": "immunara-v0.1"}
+POLICY_IDS: dict[str, str] = {"v0.1": "immunara-v0.1", "v0.2": "immunara-v0.2"}
 SEED_STRIDE = 1_000_000
 
 
@@ -27,6 +27,7 @@ def generate_case(
     note_noise: float | None = None,
     policy_version: str = "v0.1",
     dataset_id: str = "gen-adhoc",
+    generator_version: str = GEN_V0_2,
 ) -> PriorAuthCase:
     if difficulty not in DIFFICULTIES:
         raise ValueError(f"unknown difficulty {difficulty!r}; allowed: {list(DIFFICULTIES)}")
@@ -43,6 +44,7 @@ def generate_case(
         contradiction_probability=contradiction_probability,
         missing_data_probability=missing_data_probability,
         note_noise=note_noise,
+        generator_version=generator_version,
     )
     documents = render_documents(facts, rng)
     case_input = CaseInput(
@@ -55,7 +57,7 @@ def generate_case(
         documents=documents,
         policy_id=policy.id,
     )
-    return PriorAuthCase(input=case_input, ground_truth=label_case(facts))
+    return PriorAuthCase(input=case_input, ground_truth=label_case(facts, policy))
 
 
 def _write(path: Path, text: str) -> None:
@@ -77,7 +79,25 @@ def write_case(case: PriorAuthCase, dataset_dir: Path) -> Path:
     return case_dir
 
 
-def generate_dataset(count: int, seed: int, dataset_id: str, out_dir: Path) -> DatasetManifest:
+def generate_dataset(
+    count: int,
+    seed: int,
+    dataset_id: str,
+    out_dir: Path,
+    *,
+    generator_version: str = GEN_V0_2,
+    policy_version: str = "v0.1",
+) -> DatasetManifest:
+    """Generate `count` cases into out_dir. Every case uses the policy for `policy_version` and is
+    labelled under it; gen-v0.2 datasets are always v0.1."""
+    if generator_version not in GENERATOR_VERSIONS:
+        raise ValueError(
+            f"unknown generator version {generator_version!r}; allowed: {list(GENERATOR_VERSIONS)}"
+        )
+    if policy_version not in POLICY_IDS:
+        raise ValueError(
+            f"unknown policy version {policy_version!r}; allowed: {sorted(POLICY_IDS)}"
+        )
     if count < 1:
         raise ValueError(f"count must be at least 1, got {count}")
     if seed < 0:
@@ -89,7 +109,13 @@ def generate_dataset(count: int, seed: int, dataset_id: str, out_dir: Path) -> D
     difficulties: list[str] = []
     for i in range(count):
         difficulty = DIFFICULTIES[i % len(DIFFICULTIES)]
-        case = generate_case(seed * SEED_STRIDE + i, difficulty, dataset_id=dataset_id)
+        case = generate_case(
+            seed * SEED_STRIDE + i,
+            difficulty,
+            policy_version=policy_version,
+            dataset_id=dataset_id,
+            generator_version=generator_version,
+        )
         write_case(case, out_dir)
         cases.append(case)
         difficulties.append(difficulty)
@@ -98,7 +124,9 @@ def generate_dataset(count: int, seed: int, dataset_id: str, out_dir: Path) -> D
         seed=seed,
         cases=cases,
         difficulties=difficulties,
-        thresholds=load_thresholds("v0.1"),
+        thresholds=load_thresholds(policy_version),
+        generator_version=generator_version,
+        policy_version=policy_version,
     )
 
 
@@ -107,15 +135,20 @@ def verify_dataset(manifest: DatasetManifest, out_dir: Path | None = None) -> li
 
     Returns a list of problems; an empty list means the dataset verifies.
     """
-    if manifest.generator_version != GENERATOR_VERSION:
+    if manifest.generator_version not in GENERATOR_VERSIONS:
         return [
             f"manifest was produced by {manifest.generator_version}, "
-            f"but this code is {GENERATOR_VERSION}"
+            f"but this code generates {', '.join(GENERATOR_VERSIONS)}"
         ]
     problems: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
         regenerated = generate_dataset(
-            manifest.count, manifest.seed, manifest.dataset_id, Path(tmp) / manifest.dataset_id
+            manifest.count,
+            manifest.seed,
+            manifest.dataset_id,
+            Path(tmp) / manifest.dataset_id,
+            generator_version=manifest.generator_version,
+            policy_version=manifest.policy_version,
         )
     if regenerated != manifest:
         problems.append(
