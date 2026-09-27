@@ -28,6 +28,7 @@ from relay.decisions.base import DecisionProvider
 from relay.decisions.claude import ClaudeProvider, Mode
 from relay.decisions.claude_batch import ClaudeBatchProvider
 from relay.decisions.claude_prompt import CLAUDE_QUESTION_SETS
+from relay.decisions.composition import MalformedAnswers
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
 from relay.decisions.questions import (
@@ -70,11 +71,13 @@ from relay.evaluation.jev_spend import (
     settle_jev,
 )
 from relay.evaluation.metrics import EvalError, paired_cases, run_identity, score_run
+from relay.evaluation.recompose_run import changed_counts, recompose_run, write_simulated_bundle
 from relay.evaluation.regression import RegressionResult
 from relay.evaluation.regression_run import (
     CandidateSpec,
     RegressionInputError,
     RegressionRequest,
+    find_run_manifest,
     load_gates,
     load_waivers,
     run_regression,
@@ -1897,6 +1900,52 @@ def replay(
     code = replay_exit_code(diff, reproduce=reproduce)
     if code:
         raise typer.Exit(code=code)
+
+
+@app.command()
+def recompose(
+    traces: TraceFile,
+    dataset: Dataset,
+    policy_id: Annotated[
+        str, typer.Option("--policy", help="Policy id to recompose under, e.g. immunara-v0.1.")
+    ],
+    out: Annotated[
+        Path, typer.Option(help="Directory for traces.jsonl.gz and run-manifest.json (new).")
+    ],
+) -> None:
+    """Recompose a stored Jev run's raw answers under POLICY as a simulated run (offline).
+
+    step_therapy is composed again from the stored date-part answers; nothing is called. Exit 2
+    on any input problem (not a Jev run, cases changed, unknown policy, non-empty --out).
+    """
+    cases = _load_cases(dataset)
+    source = _read_trace_file(traces)
+    if not source:
+        raise _fail(f"{traces}: no traces")
+    target = _policy(policy_id)
+    try:
+        manifest = find_run_manifest(traces)
+        recomposed = recompose_run(source, cases, policy=target)
+    except (EvalError, RegressionInputError, MalformedAnswers, ValueError) as error:
+        raise _fail(f"--traces {traces}: {error}") from error
+    if manifest is not None and manifest.run_id != source[0].run_id:
+        manifest = None  # a manifest left over from another run: carry nothing over
+    try:
+        trace_path, manifest_path = write_simulated_bundle(
+            out, recomposed, dataset=dataset, source=source, source_manifest=manifest
+        )
+    except FileExistsError as error:
+        raise _fail(str(error)) from error
+    step_changed, action_changed = changed_counts(source, recomposed)
+    first = recomposed[0]
+    typer.echo(
+        f"Recomposed {len(recomposed)} traces of run {source[0].run_id} "
+        f"({first.provider} {first.question_set_version}) under policy {target.id} "
+        f"({target.version}), thresholds {first.thresholds.version}: step_therapy changed on "
+        f"{step_changed} case(s), action changed on {action_changed} case(s)."
+    )
+    typer.echo(f"Simulated run: {first.run_id}")
+    typer.echo(f"Traces: {trace_path}\nManifest: {manifest_path}")
 
 
 GatesFile = Annotated[
