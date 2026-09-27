@@ -46,6 +46,7 @@ def test_the_committed_gates_are_the_spec_s_initial_set():
         "gen-v0.3-shift-reproduce-stale",
         "gen-v0.3-shift-reproduce-aware",
         "gen-v0.3-shift-stale-to-aware",
+        "gold-reproduce-ablated-jev-q-v0.3-contradiction",
     ]
 
 

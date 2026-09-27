@@ -130,6 +130,12 @@
       "baseline": "evals/baselines/gen-v0.3-shift/stale-immunara-v0.1/traces.jsonl.gz",
       "candidate": {"traces": "evals/baselines/gen-v0.3-shift/aware-immunara-v0.2/traces.jsonl.gz"},
       "requires_generated": true
+    },
+    {
+      "name": "gold-reproduce-ablated-jev-q-v0.3-contradiction",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/traces.jsonl.gz",
+      "candidate": {"reproduce": true}
     }
   ]
 }

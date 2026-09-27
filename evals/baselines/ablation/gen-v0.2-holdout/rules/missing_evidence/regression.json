@@ -1,0 +1,228 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gen-v0.2-holdout",
+  "n": 1000,
+  "baseline": {
+    "label": "replay-run_20260925T092425Z_0aee97 · rules rules-v0.1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.99",
+    "identity": {
+      "run_id": "replay-run_20260925T092425Z_0aee97",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "rules",
+      "provider_versions": [
+        "rules-v0.1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "rules-v0.1"
+      ],
+      "question_set_hashes": [
+        "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.99"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 667,
+      "n": 1000,
+      "rate": 0.667,
+      "ci95": {
+        "low": 0.6368307821479946,
+        "high": 0.6961821975798403
+      }
+    },
+    "automation": {
+      "count": 134,
+      "n": 1000,
+      "rate": 0.134,
+      "ci95": {
+        "low": 0.11348831145426042,
+        "high": 0.1566928154672988
+      }
+    },
+    "request_info": {
+      "count": 569,
+      "n": 1000,
+      "rate": 0.569,
+      "ci95": {
+        "low": 0.5376412404403941,
+        "high": 0.5999513775754135
+      }
+    },
+    "human_review": {
+      "count": 297,
+      "n": 1000,
+      "rate": 0.297,
+      "ci95": {
+        "low": 0.26881168337948513,
+        "high": 0.32638892683218723
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 134,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.027153482879800322
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104759Z_38dd95 · rules rules-v0.1 · ablate=missing_evidence",
+    "identity": {
+      "run_id": "run_20260927T104759Z_38dd95",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "rules",
+      "provider_versions": [
+        "rules-v0.1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "rules-v0.1"
+      ],
+      "question_set_hashes": [
+        "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.99"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 667,
+      "n": 1000,
+      "rate": 0.667,
+      "ci95": {
+        "low": 0.6368307821479946,
+        "high": 0.6961821975798403
+      }
+    },
+    "automation": {
+      "count": 134,
+      "n": 1000,
+      "rate": 0.134,
+      "ci95": {
+        "low": 0.11348831145426042,
+        "high": 0.1566928154672988
+      }
+    },
+    "request_info": {
+      "count": 569,
+      "n": 1000,
+      "rate": 0.569,
+      "ci95": {
+        "low": 0.5376412404403941,
+        "high": 0.5999513775754135
+      }
+    },
+    "human_review": {
+      "count": 297,
+      "n": 1000,
+      "rate": 0.297,
+      "ci95": {
+        "low": 0.26881168337948513,
+        "high": 0.32638892683218723
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 134,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.027153482879800322
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.01125,
+      "brier_candidate": 0.01125,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0225,
+      "ece_candidate": 0.0225,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.12475,
+      "brier_candidate": 0.12475,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.06450000000000002,
+      "ece_candidate": 0.06450000000000002,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.09675,
+      "brier_candidate": 0.09675,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.1435,
+      "ece_candidate": 0.1435,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.026,
+      "brier_candidate": 0.026,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.026000000000000023,
+      "ece_candidate": 0.026000000000000023,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.14675,
+      "brier_candidate": 0.14675,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.1435,
+      "ece_candidate": 0.1435,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 0,
+    "unchanged": 1000,
+    "regressed": 0,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 317,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [],
+  "unsafe_resolved": [],
+  "regressed": [],
+  "improved": [],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}

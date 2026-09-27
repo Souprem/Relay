@@ -1,0 +1,399 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gen-v0.2-holdout",
+  "n": 1000,
+  "baseline": {
+    "label": "replay-run_20260925T092425Z_0aee97 · rules rules-v0.1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.99",
+    "identity": {
+      "run_id": "replay-run_20260925T092425Z_0aee97",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "rules",
+      "provider_versions": [
+        "rules-v0.1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "rules-v0.1"
+      ],
+      "question_set_hashes": [
+        "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.99"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 667,
+      "n": 1000,
+      "rate": 0.667,
+      "ci95": {
+        "low": 0.6368307821479946,
+        "high": 0.6961821975798403
+      }
+    },
+    "automation": {
+      "count": 134,
+      "n": 1000,
+      "rate": 0.134,
+      "ci95": {
+        "low": 0.11348831145426042,
+        "high": 0.1566928154672988
+      }
+    },
+    "request_info": {
+      "count": 569,
+      "n": 1000,
+      "rate": 0.569,
+      "ci95": {
+        "low": 0.5376412404403941,
+        "high": 0.5999513775754135
+      }
+    },
+    "human_review": {
+      "count": 297,
+      "n": 1000,
+      "rate": 0.297,
+      "ci95": {
+        "low": 0.26881168337948513,
+        "high": 0.32638892683218723
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 134,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.027153482879800322
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104758Z_63aa89 · rules rules-v0.1 · ablate=contradiction",
+    "identity": {
+      "run_id": "run_20260927T104758Z_63aa89",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "rules",
+      "provider_versions": [
+        "rules-v0.1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "rules-v0.1"
+      ],
+      "question_set_hashes": [
+        "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.99"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 650,
+      "n": 1000,
+      "rate": 0.65,
+      "ci95": {
+        "low": 0.6195298087440284,
+        "high": 0.679583875848631
+      }
+    },
+    "automation": {
+      "count": 134,
+      "n": 1000,
+      "rate": 0.134,
+      "ci95": {
+        "low": 0.11348831145426042,
+        "high": 0.1566928154672988
+      }
+    },
+    "request_info": {
+      "count": 586,
+      "n": 1000,
+      "rate": 0.586,
+      "ci95": {
+        "low": 0.5547559494412742,
+        "high": 0.6167362420656444
+      }
+    },
+    "human_review": {
+      "count": 280,
+      "n": 1000,
+      "rate": 0.28,
+      "ci95": {
+        "low": 0.25235288300340397,
+        "high": 0.3089487860190593
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 134,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.027153482879800322
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.01125,
+      "brier_candidate": 0.01125,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0225,
+      "ece_candidate": 0.0225,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.12475,
+      "brier_candidate": 0.12475,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.06450000000000002,
+      "ece_candidate": 0.06450000000000002,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.09675,
+      "brier_candidate": 0.09675,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.1435,
+      "ece_candidate": 0.1435,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.026,
+      "brier_candidate": 0.026,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.026000000000000023,
+      "ece_candidate": 0.026000000000000023,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.14675,
+      "brier_candidate": 0.14675,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.1435,
+      "ece_candidate": 0.1435,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 0,
+    "unchanged": 983,
+    "regressed": 17,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 974,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [],
+  "unsafe_resolved": [],
+  "regressed": [
+    {
+      "case_id": "GEN-02000091",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000091 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000110",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000110 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000170",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000170 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000203",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000203 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000294",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000294 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000346",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000346 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000370",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000370 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000474",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000474 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000530",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000530 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000543",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000543 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000730",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000730 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000762",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000762 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000774",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000774 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000778",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000778 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000886",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000886 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000970",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000970 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000991",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000991 --traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/rules/contradiction/traces.jsonl.gz"
+    }
+  ],
+  "improved": [],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}

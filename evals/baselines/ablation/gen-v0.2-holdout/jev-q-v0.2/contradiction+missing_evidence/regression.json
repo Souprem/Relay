@@ -1,0 +1,1564 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gen-v0.2-holdout",
+  "n": 1000,
+  "baseline": {
+    "label": "replay-run_20260925T075242Z_fd455f · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.89",
+    "identity": {
+      "run_id": "replay-run_20260925T075242Z_fd455f",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "jev",
+      "provider_versions": [
+        "jev-1.13.0"
+      ],
+      "client_versions": [
+        "typesafe-sdk==0.7.1"
+      ],
+      "question_set_versions": [
+        "q-v0.2"
+      ],
+      "question_set_hashes": [
+        "sha256:89717c795a2dfea7efe30e038fb483c6d4ed72d343bfbfcefeabfc6483d7a4aa"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.89"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 895,
+      "n": 1000,
+      "rate": 0.895,
+      "ci95": {
+        "low": 0.874323151544665,
+        "high": 0.9133151751754582
+      }
+    },
+    "automation": {
+      "count": 252,
+      "n": 1000,
+      "rate": 0.252,
+      "ci95": {
+        "low": 0.22535344517347683,
+        "high": 0.28011503242461677
+      }
+    },
+    "request_info": {
+      "count": 313,
+      "n": 1000,
+      "rate": 0.313,
+      "ci95": {
+        "low": 0.28434520294871324,
+        "high": 0.34276041575003013
+      }
+    },
+    "human_review": {
+      "count": 435,
+      "n": 1000,
+      "rate": 0.435,
+      "ci95": {
+        "low": 0.40400337063157965,
+        "high": 0.46638038632130296
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 252,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.014531789887020238
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104756Z_037dae · jev q-v0.2 · ablate=contradiction+missing_evidence",
+    "identity": {
+      "run_id": "run_20260927T104756Z_037dae",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "jev",
+      "provider_versions": [
+        "jev-1.13.0"
+      ],
+      "client_versions": [
+        "typesafe-sdk==0.7.1"
+      ],
+      "question_set_versions": [
+        "q-v0.2"
+      ],
+      "question_set_hashes": [
+        "sha256:89717c795a2dfea7efe30e038fb483c6d4ed72d343bfbfcefeabfc6483d7a4aa"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.89"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 1000,
+    "correct": {
+      "count": 946,
+      "n": 1000,
+      "rate": 0.946,
+      "ci95": {
+        "low": 0.9301259944229354,
+        "high": 0.9591766488743678
+      }
+    },
+    "automation": {
+      "count": 277,
+      "n": 1000,
+      "rate": 0.277,
+      "ci95": {
+        "low": 0.24945344200701397,
+        "high": 0.3058660765841754
+      }
+    },
+    "request_info": {
+      "count": 222,
+      "n": 1000,
+      "rate": 0.222,
+      "ci95": {
+        "low": 0.19659092626388713,
+        "high": 0.24905691838110772
+      }
+    },
+    "human_review": {
+      "count": 501,
+      "n": 1000,
+      "rate": 0.501,
+      "ci95": {
+        "low": 0.4695462833385441,
+        "high": 0.5324478137462605
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 277,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.013228972042470526
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.0011548000000000012,
+      "brier_candidate": 0.0011548000000000012,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.029159999999999974,
+      "ece_candidate": 0.029159999999999974,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.011117994657161182,
+      "brier_candidate": 0.011117994657161182,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.02154270370299525,
+      "ece_candidate": 0.02154270370299525,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.032156399999999995,
+      "brier_candidate": 0.032156399999999995,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.07539999999999998,
+      "ece_candidate": 0.07539999999999998,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.029898900000000003,
+      "brier_candidate": 0.029898900000000003,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.12079000000000004,
+      "ece_candidate": 0.12079000000000004,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.21198689999999998,
+      "brier_candidate": 0.21198689999999998,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.07784000000000005,
+      "ece_candidate": 0.07784000000000005,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 92,
+    "unchanged": 866,
+    "regressed": 41,
+    "changed-both-wrong": 1
+  },
+  "not_identical": 974,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [],
+  "unsafe_resolved": [],
+  "regressed": [
+    {
+      "case_id": "GEN-02000023",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000023 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000031",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000031 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000040",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000040 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000044",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000044 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000054",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000054 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000088",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000088 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000091",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000091 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000141",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000141 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000169",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000169 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000226",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000226 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000257",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000257 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000269",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000269 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000279",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000279 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000338",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000338 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000351",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000351 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000391",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000391 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000413",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000413 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000422",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000422 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000447",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000447 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000456",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000456 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000474",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000474 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000543",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000543 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000570",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000570 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000584",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000584 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000617",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000617 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000619",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000619 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000663",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000663 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000699",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000699 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000713",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000713 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000766",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000766 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000778",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000778 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000784",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000784 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000785",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000785 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000794",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000794 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000814",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000814 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000955",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000955 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000957",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000957 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000971",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000971 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000978",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000978 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000981",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000981 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000991",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000991 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "improved": [
+    {
+      "case_id": "GEN-02000043",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000043 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000046",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000046 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000075",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000075 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000083",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000083 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000085",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000085 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000109",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000109 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000110",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000110 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000114",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000114 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000121",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000121 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000123",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000123 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000127",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000127 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000138",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000138 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000139",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000139 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000187",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000187 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000199",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000199 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000206",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000206 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000223",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000223 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000239",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000239 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000247",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000247 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000263",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000263 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000273",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000273 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000283",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000283 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000295",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000295 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000303",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000303 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000304",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000304 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000311",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000311 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000346",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000346 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000359",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000359 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000363",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000363 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000367",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000367 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000375",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000375 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000381",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000381 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000383",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000383 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000387",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000387 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000407",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000407 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000427",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000427 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000431",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000431 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000432",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000432 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000435",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000435 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000449",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000449 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000461",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000461 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000462",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000462 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000467",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000467 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000475",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000475 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000495",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000495 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000497",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000497 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000503",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000503 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000510",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000510 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000511",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000511 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000519",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000519 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000526",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000526 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000531",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000531 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000535",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000535 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000539",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000539 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000544",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000544 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000550",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000550 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000551",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000551 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000575",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000575 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000585",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000585 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000604",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000604 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000627",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000627 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000647",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000647 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000655",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000655 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000667",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000667 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000671",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000671 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000679",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000679 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000691",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000691 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000695",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000695 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000711",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000711 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000719",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000719 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000755",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000755 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000788",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000788 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000795",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000795 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000803",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000803 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000807",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000807 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000827",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000827 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000831",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000831 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000839",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000839 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000842",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000842 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000848",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000848 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000849",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000849 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000867",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000867 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000871",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000871 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000873",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000873 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000894",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000894 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000895",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000895 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000913",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000913 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000943",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000943 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000967",
+      "expected": "AUTO_PROCESS",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000967 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000977",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000977 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000982",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000982 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000994",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000994 --traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/jev-q-v0.2/contradiction+missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}

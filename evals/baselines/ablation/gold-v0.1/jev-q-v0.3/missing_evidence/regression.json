@@ -1,0 +1,284 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gold-v0.1",
+  "n": 100,
+  "baseline": {
+    "label": "replay-run_20260927T072623Z_ad6f44 · jev q-v0.3 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.81",
+    "identity": {
+      "run_id": "replay-run_20260927T072623Z_ad6f44",
+      "dataset_id": "gold-v0.1",
+      "dataset_hash": null,
+      "provider": "jev",
+      "provider_versions": [
+        "jev-1.13.0"
+      ],
+      "client_versions": [
+        "typesafe-sdk==0.7.1"
+      ],
+      "question_set_versions": [
+        "q-v0.3"
+      ],
+      "question_set_hashes": [
+        "sha256:4589d78b40d2be56216766beec111882b7f96c761be99d1f6ba218e3bfd2979c"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.81"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 100,
+    "correct": {
+      "count": 94,
+      "n": 100,
+      "rate": 0.94,
+      "ci95": {
+        "low": 0.8739700654191773,
+        "high": 0.9776651139286834
+      }
+    },
+    "automation": {
+      "count": 31,
+      "n": 100,
+      "rate": 0.31,
+      "ci95": {
+        "low": 0.22128879213067115,
+        "high": 0.4103145541601989
+      }
+    },
+    "request_info": {
+      "count": 32,
+      "n": 100,
+      "rate": 0.32,
+      "ci95": {
+        "low": 0.23021991676157733,
+        "high": 0.4207668616316228
+      }
+    },
+    "human_review": {
+      "count": 37,
+      "n": 100,
+      "rate": 0.37,
+      "ci95": {
+        "low": 0.27556657961455167,
+        "high": 0.47235164055168233
+      }
+    },
+    "uar": {
+      "count": 1,
+      "n": 31,
+      "rate": 0.03225806451612903,
+      "ci95": {
+        "low": 0.000816370071846611,
+        "high": 0.16702111623022786
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104900Z_b9b9ed · jev q-v0.3 · ablate=missing_evidence",
+    "identity": {
+      "run_id": "run_20260927T104900Z_b9b9ed",
+      "dataset_id": "gold-v0.1",
+      "dataset_hash": null,
+      "provider": "jev",
+      "provider_versions": [
+        "jev-1.13.0"
+      ],
+      "client_versions": [
+        "typesafe-sdk==0.7.1"
+      ],
+      "question_set_versions": [
+        "q-v0.3"
+      ],
+      "question_set_hashes": [
+        "sha256:4589d78b40d2be56216766beec111882b7f96c761be99d1f6ba218e3bfd2979c"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.81"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 100,
+    "correct": {
+      "count": 90,
+      "n": 100,
+      "rate": 0.9,
+      "ci95": {
+        "low": 0.8237774022599775,
+        "high": 0.9509953107785136
+      }
+    },
+    "automation": {
+      "count": 31,
+      "n": 100,
+      "rate": 0.31,
+      "ci95": {
+        "low": 0.22128879213067115,
+        "high": 0.4103145541601989
+      }
+    },
+    "request_info": {
+      "count": 28,
+      "n": 100,
+      "rate": 0.28,
+      "ci95": {
+        "low": 0.19479362749118206,
+        "high": 0.37866700471726755
+      }
+    },
+    "human_review": {
+      "count": 41,
+      "n": 100,
+      "rate": 0.41,
+      "ci95": {
+        "low": 0.3126199765675708,
+        "high": 0.5128557962332292
+      }
+    },
+    "uar": {
+      "count": 1,
+      "n": 31,
+      "rate": 0.03225806451612903,
+      "ci95": {
+        "low": 0.000816370071846611,
+        "high": 0.16702111623022786
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.010045000000000002,
+      "brier_candidate": 0.010045000000000002,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.047700000000000006,
+      "ece_candidate": 0.047700000000000006,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.06737032423399913,
+      "brier_candidate": 0.06737032423399913,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.04376917194975638,
+      "ece_candidate": 0.04376917194975638,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.062727,
+      "brier_candidate": 0.062727,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.03709999999999992,
+      "ece_candidate": 0.03709999999999992,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.041185,
+      "brier_candidate": 0.041185,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.09390000000000003,
+      "ece_candidate": 0.09390000000000003,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.116884,
+      "brier_candidate": 0.116884,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.08969999999999996,
+      "ece_candidate": 0.08969999999999996,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 0,
+    "unchanged": 96,
+    "regressed": 4,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 60,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [
+    {
+      "case_id": "GOLD-TMP-16",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-TMP-16 --traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "unsafe_resolved": [],
+  "regressed": [
+    {
+      "case_id": "GOLD-MIS-01",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-MIS-01 --traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-MIS-06",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-MIS-06 --traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-STR-18",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-STR-18 --traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-TRK-18",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-TRK-18 --traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/jev-q-v0.3/missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "improved": [],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}
