@@ -1621,8 +1621,8 @@ calls were made in Phase 3.
 
 Handoff experiment 6 asks what the contradiction and missing-evidence gates are worth.
 `relay ablate` re-decides a committed run's stored decisions with one gate or both disabled, at
-the run's own dev-selected operating point, and writes a simulated bundle whose traces record the
-ablation. `relay regression` then gates the ablated run against the same run at the same
+the run's own operating point (its dev-selected `--at`, or the recorded 0.95 for ground truth and
+the aware shift run), and writes a simulated bundle whose traces record the ablation. `relay regression` then gates the ablated run against the same run at the same
 threshold, case by case. Expected actions always come from the full engine, so an ablated run is
 scored against what the policy actually requires. Nothing is called: the experiment cost $0.
 
@@ -1716,9 +1716,19 @@ Pairs whose gate FAILs (a newly unsafe automation): 6
   `AUTO_PROCESS` (confirmed offline: `relay replay GOLD-CON-03 --traces
   evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/baseline.jsonl.gz --dataset
   evals/gold --candidate-traces
-  evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/traces.jsonl.gz`). GOLD-CON-13 fails
-  the same way. In both, the contradiction gate is what caught the provider's own judgment error,
-  not an artificial floor a perfect judge would never need.
+  evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/traces.jsonl.gz`). GOLD-CON-13 is
+  caught by the other half of the gate: Jev q-v0.3 judged `step_therapy` at `p_yes=0.849` (above
+  0.81) and `material_contradiction` at `p_yes=0.820`, so the 0.80 HUMAN_REVIEW gate itself fired
+  (confirmed offline: `relay replay GOLD-CON-13 --traces
+  evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/baseline.jsonl.gz --dataset
+  evals/gold --candidate-traces
+  evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/traces.jsonl.gz` prints `contradiction
+  FIRED → passed`, not an auto-block). Across the three providers, the review gate held three of
+  the six newly unsafe cases (Jev q-v0.2 and q-v0.3 on CON-13, Claude on CON-03) and the auto-block
+  held the other three (Jev q-v0.2 and q-v0.3 on CON-03, Claude on CON-13), so the `contradiction`
+  ablation needs both halves removed to show the effect. In both cases, the contradiction gate is
+  what caught the provider's own judgment error, not an artificial floor a perfect judge would
+  never need.
 - **On the generated holdouts the contradiction auto-block costs correct automation.** Removing
   contradiction detection raises Jev's automation from 252/1000 to 277/1000 (q-v0.2,
   gen-v0.2-holdout) and from 244/1000 to 261/1000 (q-v0.3, gen-v0.3-holdout) with UAR still 0
@@ -1730,17 +1740,30 @@ Pairs whose gate FAILs (a newly unsafe automation): 6
   Limitations), so the holdouts have few of the kinds of contradiction that fooled providers on
   gold.
 - **The missing-evidence gate never changes an automation.** In all ten runs, removing it leaves
-  automation and UAR exactly as they were and creates no newly unsafe case. Its policy-level
-  effect on gold is zero (ground truth: 0/100 actions changed). With providers it only moves
-  cases between REQUEST_INFO and HUMAN_REVIEW. For Jev on the generated sets more of those moves
-  are corrections than errors (q-v0.2 on gen-v0.2-holdout: 67 improved, 32 regressed of 100
-  changed; q-v0.3 on gen-v0.3-holdout: 53 and 40 of 93; the aware shift run: 26 and 15 of 41);
-  for Claude's 150-case sample it is the other way round (3 improved, 7 regressed of 10), and on
-  gold it only regresses (Jev q-v0.2 5, Claude 6, Jev q-v0.3 4).
+  automation and UAR exactly as they were and creates no newly unsafe case. This is zero by
+  construction, not a coincidence: the documentation gate runs before the missing-evidence gate,
+  and `GroundTruth`'s validator (`relay/cases/models.py`) ties `missing_evidence != NONE` to
+  `documentation_complete: false`, so ground truth always hits the documentation gate first —
+  its policy-level effect on gold is 0/100 actions changed on any dataset, not just gold. The gate
+  can therefore only act on a *provider* bundle that is internally inconsistent — calling
+  documentation complete (`p_yes >= 0.6`) while separately naming a missing item at
+  `p_yes >= 0.7` — which is exactly the REQUEST_INFO → HUMAN_REVIEW moves below. For Jev on the
+  generated sets more of those moves are corrections than errors (q-v0.2 on gen-v0.2-holdout: 67
+  improved, 32 regressed of 100 changed; q-v0.3 on gen-v0.3-holdout: 53 and 40 of 93; the aware
+  shift run: 26 and 15 of 41); for Claude's 150-case sample it is the other way round (3 improved,
+  7 regressed of 10), and on gold it only regresses (Jev q-v0.2 5, Claude 6, Jev q-v0.3 4).
 - **Null results.** Five pairs change no action at all: rules × missing_evidence on
   gen-v0.2-holdout, ground truth × missing_evidence on gold, and all three rules ablations on
-  gold. The rules baseline's 6 unsafe gold automations (6/20) are already automated with both gates in
-  place, so removing a gate cannot add or remove them.
+  gold. The rules baseline's 6 unsafe gold automations (6/20) are already automated with both gates
+  in place, so removing a gate cannot add or remove them. The two missing_evidence nulls (rules,
+  ground truth) follow the documentation-gate ordering above: every rules bundle that names a
+  missing item at `p_yes >= 0.7` also reports `documentation_complete < 0.6` (28/28 on gold,
+  219/219 on the gen-v0.2 holdout), so the documentation gate always fires first and
+  missing_evidence never gets a chance to change the outcome. The rules × contradiction nulls on
+  gold follow a similar pattern: rules reports `material_contradiction p_yes=0.0` on 97/100 gold
+  cases, including every CON case it automates unsafely; its 3 flagged cases (GOLD-CON-02,
+  GOLD-TMP-17, GOLD-TMP-18) still end in HUMAN_REVIEW with the gate removed, because another gate
+  (not contradiction) is what stops them.
 
 **Caveats.** gold-v0.1 is not a blind test for q-v0.3 (see "Question set q-v0.3"). Claude's
 gen-v0.2-holdout row is the 150-case deterministic sample (`--limit 150 --sample-seed 7`), not
@@ -1795,8 +1818,8 @@ defense there.
   experts, and has 20 cases per category, so per-category rates carry wide uncertainty.
 - The `q-v0.2` question set asks for one treatment start date and one end date, so it cannot
   represent an interrupted course with a gap (two segments). `GOLD-TMP-17` is exactly this case,
-  and it is the only unsafe automation either Jev or Claude has on gold at its own threshold (see
-  "Gold set" above). `q-v0.3` adds interruption and restart questions and was adopted on
+  and it is the only unsafe automation Jev (q-v0.2) or Claude has on gold at its own threshold
+  (see "Gold set" above). `q-v0.3` adds interruption and restart questions and was adopted on
   `gen-v0.3-dev` and confirmed on `gen-v0.3-holdout` (see "Question set q-v0.3" above). It still
   models only one interruption per course (the generator's variants (a)/(b)/(c)), not multiple
   holds and restarts, and it is not blind for `GOLD-TMP-17`/`GOLD-TMP-18` on gold. At its adopted
@@ -1835,3 +1858,5 @@ defense there.
 - [Phase 3D design (q-v0.3, policy shift, parallelism)](docs/superpowers/specs/2026-09-26-phase3d-questions-and-policy-shift-design.md)
 - [Phase 3D1 implementation plan](docs/superpowers/plans/2026-09-26-phase3d1-generator-policy-questions.md)
 - [Phase 3D2 implementation plan](docs/superpowers/plans/2026-09-26-phase3d2-experiments.md)
+- [Phase 3E gate ablation design](docs/superpowers/specs/2026-09-27-phase3e-ablation-design.md)
+- [Phase 3E implementation plan](docs/superpowers/plans/2026-09-27-phase3e-ablation.md)
