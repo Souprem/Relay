@@ -60,6 +60,76 @@
       "baseline": "evals/baselines/gen-v0.2-holdout/run_20260925T212034Z_bbee49/traces.jsonl.gz",
       "candidate": {"reproduce": true},
       "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-dev-reproduce-jev-q-v0.2",
+      "dataset": "evals/generated/gen-v0.3-dev",
+      "baseline": "evals/baselines/gen-v0.3-dev/run_20260927T071846Z_e950c0/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-dev-reproduce-jev-q-v0.3",
+      "dataset": "evals/generated/gen-v0.3-dev",
+      "baseline": "evals/baselines/gen-v0.3-dev/run_20260927T071912Z_cdaf0c/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-holdout-reproduce-jev-q-v0.3",
+      "dataset": "evals/generated/gen-v0.3-holdout",
+      "baseline": "evals/baselines/gen-v0.3-holdout/run_20260927T072144Z_12e1e4/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-holdout-reproduce-jev-q-v0.2",
+      "dataset": "evals/generated/gen-v0.3-holdout",
+      "baseline": "evals/baselines/gen-v0.3-holdout/run_20260927T072249Z_204814/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-holdout-adoption-q-v0.2-to-q-v0.3",
+      "dataset": "evals/generated/gen-v0.3-holdout",
+      "baseline": "evals/baselines/gen-v0.3-holdout/run_20260927T072249Z_204814/traces.jsonl.gz",
+      "baseline_at": 0.97,
+      "candidate": {"traces": "evals/baselines/gen-v0.3-holdout/run_20260927T072144Z_12e1e4/traces.jsonl.gz", "at": 0.81},
+      "requires_generated": true
+    },
+    {
+      "name": "gold-reproduce-jev-q-v0.3",
+      "dataset": "evals/gold",
+      "baseline": "evals/baselines/gold-v0.1/run_20260927T072623Z_ad6f44/traces.jsonl.gz",
+      "candidate": {"reproduce": true}
+    },
+    {
+      "name": "gen-v0.3-shift-reproduce-jev-q-v0.3",
+      "dataset": "evals/generated/gen-v0.3-shift",
+      "baseline": "evals/baselines/gen-v0.3-shift/run_20260927T072915Z_007c7c/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-shift-reproduce-stale",
+      "dataset": "evals/generated/gen-v0.3-shift",
+      "baseline": "evals/baselines/gen-v0.3-shift/stale-immunara-v0.1/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-shift-reproduce-aware",
+      "dataset": "evals/generated/gen-v0.3-shift",
+      "baseline": "evals/baselines/gen-v0.3-shift/aware-immunara-v0.2/traces.jsonl.gz",
+      "candidate": {"reproduce": true},
+      "requires_generated": true
+    },
+    {
+      "name": "gen-v0.3-shift-stale-to-aware",
+      "dataset": "evals/generated/gen-v0.3-shift",
+      "baseline": "evals/baselines/gen-v0.3-shift/stale-immunara-v0.1/traces.jsonl.gz",
+      "candidate": {"traces": "evals/baselines/gen-v0.3-shift/aware-immunara-v0.2/traces.jsonl.gz"},
+      "requires_generated": true
     }
   ]
 }

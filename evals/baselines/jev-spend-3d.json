@@ -1,0 +1,82 @@
+{
+  "entries": [
+    {
+      "run_id": "run_20260927T071846Z_e950c0",
+      "dataset_id": "gen-v0.3-dev",
+      "mode": "sync",
+      "cases": 400,
+      "status": "settled",
+      "cost_usd": "0.045161",
+      "recorded_at": "2026-09-27T07:19:05.769625Z",
+      "batch_id": null,
+      "note": null
+    },
+    {
+      "run_id": "run_20260927T071912Z_cdaf0c",
+      "dataset_id": "gen-v0.3-dev",
+      "mode": "sync",
+      "cases": 400,
+      "status": "settled",
+      "cost_usd": "0.069127",
+      "recorded_at": "2026-09-27T07:19:33.143093Z",
+      "batch_id": null,
+      "note": null
+    },
+    {
+      "run_id": "run_20260927T072144Z_12e1e4",
+      "dataset_id": "gen-v0.3-holdout",
+      "mode": "sync",
+      "cases": 1000,
+      "status": "settled",
+      "cost_usd": "0.172422",
+      "recorded_at": "2026-09-27T07:22:35.014091Z",
+      "batch_id": null,
+      "note": null
+    },
+    {
+      "run_id": "run_20260927T072249Z_204814",
+      "dataset_id": "gen-v0.3-holdout",
+      "mode": "sync",
+      "cases": 1000,
+      "status": "settled",
+      "cost_usd": "0.112539",
+      "recorded_at": "2026-09-27T07:23:37.581637Z",
+      "batch_id": null,
+      "note": null
+    },
+    {
+      "run_id": "run_20260927T072623Z_ad6f44",
+      "dataset_id": "gold-v0.1",
+      "mode": "sync",
+      "cases": 100,
+      "status": "settled",
+      "cost_usd": "0.017497",
+      "recorded_at": "2026-09-27T07:26:28.590509Z",
+      "batch_id": null,
+      "note": null
+    },
+    {
+      "run_id": "run_20260927T072915Z_007c7c",
+      "dataset_id": "gen-v0.3-shift",
+      "mode": "sync",
+      "cases": 400,
+      "status": "settled",
+      "cost_usd": "0.069567",
+      "recorded_at": "2026-09-27T07:29:35.560893Z",
+      "batch_id": null,
+      "note": null
+    },
+    {
+      "run_id": "run_20260927T073246Z_3a5f87",
+      "dataset_id": "gen-v0.3-dev",
+      "mode": "sync",
+      "cases": 40,
+      "status": "settled",
+      "cost_usd": "0.015537",
+      "recorded_at": "2026-09-27T07:33:16.694984Z",
+      "batch_id": null,
+      "note": null
+    }
+  ],
+  "spent_usd": "0.501850"
+}

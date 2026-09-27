@@ -36,6 +36,16 @@ def test_the_committed_gates_are_the_spec_s_initial_set():
         "holdout-reproduce-jev",
         "holdout-reproduce-rules",
         "holdout-reproduce-claude-150",
+        "gen-v0.3-dev-reproduce-jev-q-v0.2",
+        "gen-v0.3-dev-reproduce-jev-q-v0.3",
+        "gen-v0.3-holdout-reproduce-jev-q-v0.3",
+        "gen-v0.3-holdout-reproduce-jev-q-v0.2",
+        "gen-v0.3-holdout-adoption-q-v0.2-to-q-v0.3",
+        "gold-reproduce-jev-q-v0.3",
+        "gen-v0.3-shift-reproduce-jev-q-v0.3",
+        "gen-v0.3-shift-reproduce-stale",
+        "gen-v0.3-shift-reproduce-aware",
+        "gen-v0.3-shift-stale-to-aware",
     ]
 
 
