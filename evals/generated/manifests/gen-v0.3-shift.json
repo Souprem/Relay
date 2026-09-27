@@ -1,0 +1,25 @@
+{
+  "dataset_id": "gen-v0.3-shift",
+  "generator_version": "gen-v0.3",
+  "seed": 5,
+  "count": 400,
+  "difficulty_counts": {
+    "adversarial": 100,
+    "easy": 100,
+    "hard": 100,
+    "medium": 100
+  },
+  "expected_action_counts": {
+    "AUTO_PROCESS": 85,
+    "HUMAN_REVIEW": 216,
+    "REQUEST_INFO": 99
+  },
+  "missing_evidence_counts": {
+    "DIAGNOSIS": 31,
+    "INSURANCE_INFORMATION": 52,
+    "NONE": 286,
+    "TREATMENT_HISTORY": 31
+  },
+  "dataset_hash": "sha256:3f5a9c1cad24cf0ddd8c446999bc4c5e382503c65f1a6d8c54a8a2daf9710e53",
+  "policy_version": "v0.2"
+}

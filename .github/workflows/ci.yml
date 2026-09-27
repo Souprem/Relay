@@ -42,6 +42,18 @@ jobs:
             --verify evals/generated/manifests/gen-v0.2-dev.json --out evals/generated/gen-v0.2-dev
           uv run relay --env-file .no-such.env generate \
             --verify evals/generated/manifests/gen-v0.2-holdout.json --out evals/generated/gen-v0.2-holdout
+          uv run relay --env-file .no-such.env generate --out evals/generated/gen-v0.3-dev \
+            --count 400 --seed 3 --dataset-id gen-v0.3-dev --generator gen-v0.3 --manifests-dir "$RUNNER_TEMP/manifests"
+          uv run relay --env-file .no-such.env generate --out evals/generated/gen-v0.3-holdout \
+            --count 1000 --seed 4 --dataset-id gen-v0.3-holdout --generator gen-v0.3 --manifests-dir "$RUNNER_TEMP/manifests"
+          uv run relay --env-file .no-such.env generate --out evals/generated/gen-v0.3-shift \
+            --count 400 --seed 5 --dataset-id gen-v0.3-shift --generator gen-v0.3 --policy v0.2 --manifests-dir "$RUNNER_TEMP/manifests"
+          uv run relay --env-file .no-such.env generate \
+            --verify evals/generated/manifests/gen-v0.3-dev.json --out evals/generated/gen-v0.3-dev
+          uv run relay --env-file .no-such.env generate \
+            --verify evals/generated/manifests/gen-v0.3-holdout.json --out evals/generated/gen-v0.3-holdout
+          uv run relay --env-file .no-such.env generate \
+            --verify evals/generated/manifests/gen-v0.3-shift.json --out evals/generated/gen-v0.3-shift
 
       - name: Regression gate
         run: >-

@@ -209,9 +209,16 @@ def test_run_manifest_rejects_an_unknown_mode():
 
 
 def test_every_committed_manifest_loads_as_an_evaluate_run():
+    """The 14 manifests committed before Phase 3C have no mode key and load as evaluate runs.
+    Manifests committed since (Phase 3D) carry a mode: evaluate, or simulated with a
+    source_run_id (relay recompose, and the re-decided runs of a regression --out)."""
     paths = sorted((REPO / "evals" / "baselines").rglob("*manifest.json"))
-    assert len(paths) == 14
+    legacy = [p for p in paths if '"mode"' not in p.read_text()]
+    assert len(legacy) == 14
     for path in paths:
-        assert '"mode"' not in path.read_text()
         loaded = RunManifest.model_validate_json(path.read_text())
-        assert (loaded.mode, loaded.source_run_id) == ("evaluate", None), path
+        if path in legacy:
+            assert (loaded.mode, loaded.source_run_id) == ("evaluate", None), path
+        else:
+            assert loaded.mode in ("evaluate", "simulated"), path
+            assert (loaded.mode == "simulated") == (loaded.source_run_id is not None), path

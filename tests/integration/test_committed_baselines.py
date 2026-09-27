@@ -45,13 +45,18 @@ GENERATED = REPO / "evals" / "generated"
 # Committed datasets whose case folders are tracked (not regenerated).
 DATASET_DIRS: dict[str, Path] = {"gold-v0.1": REPO / "evals" / "gold"}
 
-# Every committed gen-v0.2-* run directory: (dataset_id, run_dir).
+# Every committed gen-v0.2-* / gen-v0.3-* and gold run directory: (dataset_id, run_dir). A
+# directory counts when it holds traces.jsonl.gz (a regression --out directory does not).
 RUN_DIRS: list[tuple[str, Path]] = sorted(
     (dataset_dir.name, run_dir)
-    for dataset_dir in [*BASELINES.glob("gen-v0.2-*"), BASELINES / "gold-v0.1"]
+    for dataset_dir in [
+        *BASELINES.glob("gen-v0.2-*"),
+        *BASELINES.glob("gen-v0.3-*"),
+        BASELINES / "gold-v0.1",
+    ]
     if dataset_dir.is_dir()
     for run_dir in dataset_dir.iterdir()
-    if run_dir.is_dir()
+    if run_dir.is_dir() and (run_dir / "traces.jsonl.gz").is_file()
 )
 
 KEY_METRICS = (

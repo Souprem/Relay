@@ -48,6 +48,12 @@ def test_the_steps_run_in_order():
         "--dataset-id gen-v0.2-holdout",
         "--verify evals/generated/manifests/gen-v0.2-dev.json",
         "--verify evals/generated/manifests/gen-v0.2-holdout.json",
+        "--dataset-id gen-v0.3-dev",
+        "--dataset-id gen-v0.3-holdout",
+        "--dataset-id gen-v0.3-shift",
+        "--verify evals/generated/manifests/gen-v0.3-dev.json",
+        "--verify evals/generated/manifests/gen-v0.3-holdout.json",
+        "--verify evals/generated/manifests/gen-v0.3-shift.json",
         "regression --config evals/regression/gates.json --strict-generated --out regression-report",
     ]
     positions = [commands.index(fragment) for fragment in expected]
@@ -62,6 +68,21 @@ def test_the_regeneration_flags_match_the_committed_manifests():
             f"--out evals/generated/{name} --count {manifest['count']} --seed {manifest['seed']} "
             f"--dataset-id {name}"
         ) in commands
+
+
+def test_the_gen_v0_3_regeneration_flags_match_the_committed_manifests():
+    commands = " ".join("\n".join(runs()).replace("\\\n", " ").split())
+    for name in ("gen-v0.3-dev", "gen-v0.3-holdout", "gen-v0.3-shift"):
+        manifest = json.loads((REPO / "evals/generated/manifests" / f"{name}.json").read_text())
+        assert manifest["generator_version"] == "gen-v0.3"
+        policy = manifest.get("policy_version", "v0.1")
+        flags = (
+            f"--out evals/generated/{name} --count {manifest['count']} --seed {manifest['seed']} "
+            f"--dataset-id {name} --generator gen-v0.3"
+        )
+        if policy != "v0.1":
+            flags += f" --policy {policy}"
+        assert flags + " --manifests-dir" in commands, name
 
 
 def test_the_regression_gate_step_uses_strict_generated():
