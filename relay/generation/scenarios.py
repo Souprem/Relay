@@ -9,10 +9,15 @@ from random import Random
 
 from relay.generation.facts import (
     DIFFICULTIES,
+    GEN_V0_2,
+    GEN_V0_3,
+    GENERATOR_VERSIONS,
     CaseFacts,
     ContradictionKind,
     DiagnosisStatus,
     Difficulty,
+    InterruptionReason,
+    InterruptionVariant,
     MtxOutcome,
     MtxStatus,
     Precision,
@@ -50,6 +55,27 @@ OUTCOMES_ENDED: tuple[MtxOutcome, ...] = ("inadequate_response", "intolerance", 
 OUTCOME_WEIGHTS_ENDED: tuple[float, ...] = (0.6, 0.25, 0.15)
 OUTCOMES_ONGOING: tuple[MtxOutcome, ...] = ("inadequate_response", "not_stated")
 OUTCOME_WEIGHTS_ONGOING: tuple[float, ...] = (0.8, 0.2)
+
+# gen-v0.3 (Phase 3D). About 20% of taken-methotrexate courses are interrupted: eligible courses
+# (taken, no contradiction) are interrupted with INTERRUPTED_PROBABILITY; the audit checks the
+# share over all taken courses against 20% +/- 5 pp. Variants are equally likely.
+INTERRUPTED_PROBABILITY = 0.24
+INTERRUPTION_VARIANTS: tuple[InterruptionVariant, ...] = ("a", "b", "c")
+INTERRUPTION_REASONS: tuple[InterruptionReason, ...] = ("infection", "surgery", "travel", "lab")
+HOLD_DAYS = (14, 56)  # the gap between the pause and the restart
+# Segment lengths in days, (first, second), per variant. Short segments stay at least 7 days
+# under the 84-day minimum and long ones 14 days over it, so no segment is a near miss;
+# pattern (a)'s total span (first + hold + second) always reaches 84.
+SEGMENT_DAYS: dict[InterruptionVariant, tuple[tuple[int, int], tuple[int, int]]] = {
+    "a": ((42, 77), (28, 77)),
+    "b": ((21, 70), (98, 180)),
+    "c": ((98, 180), (21, 70)),
+}
+# About 25% of taken courses ended more than 365 days before as_of. Only ended courses can be
+# old, and ongoing courses are 20% of taken ones, so an ended course is moved back with
+# probability 0.25 / 0.8. Its final end then lands 380-720 days before as_of.
+OLD_COURSE_PROBABILITY = 0.3125
+OLD_COURSE_GAP_DAYS = (380, 720)
 
 
 @dataclass(frozen=True)
@@ -141,7 +167,12 @@ def sample_facts(
     contradiction_probability: float | None = None,
     missing_data_probability: float | None = None,
     note_noise: float | None = None,
+    generator_version: str = GEN_V0_2,
 ) -> CaseFacts:
+    if generator_version not in GENERATOR_VERSIONS:
+        raise ValueError(
+            f"unknown generator version {generator_version!r}; allowed: {list(GENERATOR_VERSIONS)}"
+        )
     if difficulty not in PROFILES:
         raise ValueError(f"unknown difficulty {difficulty!r}; allowed: {list(DIFFICULTIES)}")
     profile = PROFILES[difficulty]
@@ -244,6 +275,40 @@ def sample_facts(
             history_start = mtx_start - _days(rng, *CONFLICT_EXTRA_DAYS)
             diagnosis_year = min(diagnosis_year, history_start.year)
 
+    # 5b. gen-v0.3 only: interrupted courses, then old courses. gen-v0.2 draws nothing here, so
+    # its facts (and every later draw) are unchanged.
+    mtx_segments: tuple[tuple[date, date | None], ...] | None = None
+    variant: InterruptionVariant | None = None
+    reason: InterruptionReason | None = None
+    if generator_version == GEN_V0_3 and mtx_status == "taken":
+        if contradiction is None and rng.random() < INTERRUPTED_PROBABILITY:
+            variant = rng.choice(INTERRUPTION_VARIANTS)
+            reason = rng.choice(INTERRUPTION_REASONS)
+            (first_low, first_high), (second_low, second_high) = SEGMENT_DAYS[variant]
+            first = rng.randint(first_low, first_high)
+            hold = rng.randint(*HOLD_DAYS)
+            second = rng.randint(second_low, second_high)
+            restart = (mtx_end or as_of) - timedelta(days=second)
+            pause = restart - timedelta(days=hold)
+            mtx_start = pause - timedelta(days=first)
+            mtx_segments = ((mtx_start, pause), (restart, mtx_end))
+            start_precision = "day"
+            end_precision = None if ongoing else "day"
+            split = False
+        if mtx_end is not None and rng.random() < OLD_COURSE_PROBABILITY:
+            shift = timedelta(days=rng.randint(*OLD_COURSE_GAP_DAYS) - (as_of - mtx_end).days)
+            mtx_end -= shift
+            assert mtx_start is not None
+            mtx_start -= shift
+            if history_start is not None:
+                history_start -= shift
+            if mtx_segments is not None:
+                (s1, p1), (r2, e2) = mtx_segments
+                assert e2 is not None
+                mtx_segments = ((s1 - shift, p1 - shift), (r2 - shift, e2 - shift))
+        assert mtx_start is not None
+        diagnosis_year = min(diagnosis_year, (history_start or mtx_start).year)
+
     # 6. Normalize fields that only apply to a documented methotrexate course.
     if mtx_status != "taken":
         mtx_start = mtx_end = None
@@ -288,4 +353,8 @@ def sample_facts(
         stale_note=stale_note,
         stale_note_date=stale_note_date,
         noise=noise,
+        generator_version=generator_version,
+        mtx_segments=mtx_segments,
+        interruption_variant=variant,
+        interruption_reason=reason,
     )
