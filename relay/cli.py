@@ -42,6 +42,7 @@ from relay.evaluation.artifacts import write_eval_bundle
 from relay.evaluation.bench import (
     DEFAULT_SIZES,
     BenchCall,
+    bench_rotation_seed,
     build_bench_result,
     parse_sizes,
     render_bench,
@@ -718,9 +719,22 @@ def _jev_reserve(
     write_ledger(jev.ledger, ledger)
 
 
-def _jev_settle(jev: JevBudget, run_id: str, traces: list[WorkflowTrace] | None) -> None:
+def _jev_settle(
+    jev: JevBudget,
+    run_id: str,
+    traces: list[WorkflowTrace] | None,
+    *,
+    per_case_estimate: Decimal = Decimal("0"),
+    in_flight: int = 0,
+) -> None:
     """Settle at the traces' summed estimated cost. None (an unreadable partial trace file)
-    leaves the reservation counted, as for a Claude sync run."""
+    leaves the reservation counted, as for a Claude sync run.
+
+    M1: never under-record. A trace whose estimated_cost_usd is None (its call errored before any
+    tokens were billed) is charged at `per_case_estimate` instead of $0, and so is each of
+    `in_flight` calls that were still running (up to --concurrency) when a run died or was
+    interrupted, since their real cost is unknown too.
+    """
     if traces is None:
         typer.echo(
             f"error: Jev run {run_id}'s trace file could not be parsed; its reservation stays "
@@ -728,7 +742,16 @@ def _jev_settle(jev: JevBudget, run_id: str, traces: list[WorkflowTrace] | None)
             err=True,
         )
         return
-    actual = sum((t.decisions.estimated_cost_usd or Decimal("0") for t in traces), Decimal("0"))
+    known = sum(
+        (
+            t.decisions.estimated_cost_usd
+            for t in traces
+            if t.decisions.estimated_cost_usd is not None
+        ),
+        Decimal("0"),
+    )
+    unknown = sum(1 for t in traces if t.decisions.estimated_cost_usd is None)
+    actual = known + per_case_estimate * (unknown + in_flight)
     ledger = settle_jev(_load_jev_ledger(jev), run_id, actual)
     write_ledger(jev.ledger, ledger)
     typer.echo(
@@ -805,6 +828,7 @@ async def _execute(
     store = TraceStore.create(traces_dir, run_id)
     git_sha = current_git_sha()
     on_submitted = None
+    per_case_jev_estimate = jev_estimate / len(cases) if jev is not None and cases else Decimal("0")
     if jev is not None:
         _jev_reserve(jev, run_id, cases[0].input.dataset_id, len(cases), jev_estimate)
     if claude is not None:
@@ -849,7 +873,16 @@ async def _execute(
             )
             _settle_interrupted(claude, run_id, store, batch_id, ambiguous_submission=ambiguous)
         if jev is not None:
-            _jev_settle(jev, run_id, _partial_traces(store))
+            partial = _partial_traces(store)
+            # M1: up to `concurrency` cases could have been in flight (dispatched, not yet
+            # written) when this died or was interrupted; their real cost is unknown, so charge
+            # them at the per-case estimate rather than $0. Skipped when the trace file itself is
+            # unreadable (partial is None): that path already leaves the whole reservation
+            # counted, which is even more conservative.
+            in_flight = 0 if partial is None else min(concurrency, len(cases) - len(partial))
+            _jev_settle(
+                jev, run_id, partial, per_case_estimate=per_case_jev_estimate, in_flight=in_flight
+            )
         if store.path.exists() and store.path.stat().st_size == 0:
             store.path.unlink()
         raise
@@ -857,7 +890,7 @@ async def _execute(
         batch_id = getattr(provider, "batch_id", None) or claude.batch_id
         _settle(claude, run_id, traces, batch_id, collected=True)
     if jev is not None:
-        _jev_settle(jev, run_id, traces)
+        _jev_settle(jev, run_id, traces, per_case_estimate=per_case_jev_estimate)
     manifest = RunManifest(
         run_id=run_id,
         created_at=datetime.now(UTC),
@@ -2000,15 +2033,35 @@ def bench(
     dataset_id = cases[0].input.dataset_id
     _jev_reserve(jev, run_id, dataset_id, len(cases), estimate)
     calls: list[BenchCall] = []
+    seed = bench_rotation_seed(sample)
 
     async def go() -> None:
         async with AsyncTypeSafeClient(timeout=30.0) as client:
-            await run_bench([c.input for c in cases], client, sizes=size_list, on_call=calls.append)
+            await run_bench(
+                [c.input for c in cases],
+                client,
+                sizes=size_list,
+                sample_seed=seed,
+                on_call=calls.append,
+            )
 
     try:
         asyncio.run(go())
     finally:
-        actual = sum((c.cost_usd or Decimal("0") for c in calls), Decimal("0"))
+        # M1: never under-record. A call whose cost is unknown (it errored, so cost_usd is None)
+        # is charged at that size's per-call estimate; bench never runs concurrently, so at most
+        # one more call — the priciest size in --sizes, as an upper bound — could have been in
+        # flight when this ran (an error partway through, or an interruption).
+        known = sum((c.cost_usd for c in calls if c.cost_usd is not None), Decimal("0"))
+        errored = sum(
+            (estimate_jev_cost(1, c.size) for c in calls if c.cost_usd is None), Decimal("0")
+        )
+        in_flight = (
+            estimate_jev_cost(1, max(size_list))
+            if len(calls) < len(cases) * len(size_list)
+            else Decimal("0")
+        )
+        actual = known + errored + in_flight
         ledger = settle_jev(_load_jev_ledger(jev), run_id, actual)
         write_ledger(jev.ledger, ledger)
         typer.echo(

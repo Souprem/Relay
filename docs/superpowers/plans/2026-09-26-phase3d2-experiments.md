@@ -44,7 +44,7 @@ There are exactly seven paid steps: Task 3 Steps 1 and 2, Task 4 Steps 1 and 3, 
 
 **Budget (estimates from the counter; actuals from measured cost).** Committed Jev traces cost $0.000111–0.000115 per case with 12 questions (max $0.000126882); question text is billed once per call. Upper bound for q-v0.3: 19/12 × $0.000112 = $0.000177 per case.
 
-| Paid step | Run | Counter estimate | Expected actual (upper) |
+| Paid step | Run | Counter estimate | Expected (mean) |
 |---|---|---|---|
 | Task 3 Step 1 | Jev q-v0.2 on gen-v0.3-dev (400 × 12) | $0.0624 | $0.045 |
 | Task 3 Step 2 | Jev q-v0.3 on gen-v0.3-dev (400 × 19) | $0.0988 | $0.071 |
@@ -1300,6 +1300,10 @@ restarted)". Code composes P(some consecutive segment ≥ 12 weeks) =
 (1 − p_int) · P(first start → final end) + p_int · P(start → pause **or** restart → end).
 The two segment events are combined by inclusion-exclusion, under the same independence
 approximation as the date parts.
+
+For an interrupted-and-restarted (variant (c)) course, labelling counts the final-stop outcome
+documented after the short second segment, applied to the long first segment — the spec's resolved
+ambiguity 8 (`relay/generation/labels.py`, `label_case`).
 
 **Adoption on dev** (rule fixed in advance: adopt iff q-v0.3's dev correct-action rate is higher
 and the dev regression gate passes with 0 newly unsafe), *(from `evals/baselines/gen-v0.3-dev/adoption.txt`, fenced as text)*.

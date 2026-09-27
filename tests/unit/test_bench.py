@@ -13,10 +13,12 @@ from relay.evaluation.bench import (
     BenchCall,
     bench_question_ids,
     bench_questions,
+    bench_rotation_seed,
     build_bench_result,
     nearest_rank,
     parse_sizes,
     render_bench,
+    rotate_sizes,
     run_bench,
     summarize_size,
 )
@@ -76,20 +78,50 @@ async def test_run_bench_times_each_call_sequentially_with_one_request_per_size(
     client = GenericSystemOneClient(on_call=clock.advance_for)
     cases = [make_case_input("T-01"), make_case_input("T-02")]
     calls = await run_bench(cases, client, sizes=(1, 5, 20), clock=clock)
-    assert [(c.case_id, c.size) for c in calls] == [
-        ("T-01", 1),
-        ("T-01", 5),
-        ("T-01", 20),
-        ("T-02", 1),
-        ("T-02", 5),
-        ("T-02", 20),
+    # Default sample_seed=0: T-01 (case index 0) keeps the given order; T-02 (index 1) is rotated
+    # by one (I1).
+    assert [(c.case_id, c.size, c.position) for c in calls] == [
+        ("T-01", 1, 0),
+        ("T-01", 5, 1),
+        ("T-01", 20, 2),
+        ("T-02", 5, 0),
+        ("T-02", 20, 1),
+        ("T-02", 1, 2),
     ]
-    assert [len(call["questions"]) for call in client.calls] == [1, 5, 20, 1, 5, 20]
+    assert [len(call["questions"]) for call in client.calls] == [1, 5, 20, 5, 20, 1]
     assert {call["model"] for call in client.calls} == {"jev-1.13.0"}
     assert [round(c.latency_ms, 6) for c in calls[:3]] == [110.0, 150.0, 300.0]
     assert calls[2].input_tokens == 1000 + 50 * 20
     assert calls[2].cost_usd == Decimal("0.042") / Decimal(1_000_000) * 2000
     assert all(c.error is None for c in calls)
+
+
+def test_rotate_sizes_offsets_by_seed_plus_case_index():
+    sizes = (1, 5, 10, 20)
+    assert rotate_sizes(sizes, seed=0, case_index=0) == (1, 5, 10, 20)
+    assert rotate_sizes(sizes, seed=0, case_index=1) == (5, 10, 20, 1)
+    assert rotate_sizes(sizes, seed=1, case_index=2) == (20, 1, 5, 10)
+    assert rotate_sizes((), seed=3, case_index=2) == ()
+
+
+def test_bench_rotation_seed_is_the_sample_seed_or_zero():
+    assert bench_rotation_seed(None) == 0
+    assert bench_rotation_seed((40, 11)) == 11
+
+
+async def test_bench_size_order_rotates_so_each_size_hits_each_position_once_across_4_cases():
+    """I1: with as many cases as sizes, a Latin-square rotation puts each size in each call
+    position exactly once, so size is not confounded with call position (e.g. always first,
+    always paying connection warm-up; or always last, always benefiting from any cache)."""
+    client = GenericSystemOneClient()
+    cases = [make_case_input(f"T-{i:02d}") for i in range(4)]
+    sizes = (1, 5, 10, 20)
+    calls = await run_bench(cases, client, sizes=sizes, sample_seed=3)
+    by_size: dict[int, list[int]] = {size: [] for size in sizes}
+    for call in calls:
+        by_size[call.size].append(call.position)
+    for size in sizes:
+        assert sorted(by_size[size]) == [0, 1, 2, 3], (size, by_size[size])
 
 
 class FlakyClient(GenericSystemOneClient):
@@ -116,9 +148,23 @@ async def test_errors_are_recorded_per_call_and_the_bench_continues():
 
 def test_summaries_exclude_errors_from_latency_and_count_all_cost():
     calls = [
-        BenchCall(case_id="a", size=5, latency_ms=100.0, input_tokens=1000, cost_usd=Decimal("1")),
-        BenchCall(case_id="b", size=5, latency_ms=300.0, input_tokens=3000, cost_usd=Decimal("2")),
-        BenchCall(case_id="c", size=5, latency_ms=9000.0, error="TypeSafeError: x"),
+        BenchCall(
+            case_id="a",
+            size=5,
+            position=0,
+            latency_ms=100.0,
+            input_tokens=1000,
+            cost_usd=Decimal("1"),
+        ),
+        BenchCall(
+            case_id="b",
+            size=5,
+            position=1,
+            latency_ms=300.0,
+            input_tokens=3000,
+            cost_usd=Decimal("2"),
+        ),
+        BenchCall(case_id="c", size=5, position=2, latency_ms=9000.0, error="TypeSafeError: x"),
     ]
     s = summarize_size(5, calls, case_count=3)
     assert (s.calls, s.errors) == (3, 1)
@@ -147,3 +193,5 @@ async def test_result_and_markdown_disclose_batching_padding_and_sample():
     assert "returns no per-question timing" in text
     assert "a duplicate of 'diagnosis_support'" in text
     assert "not scored" in text
+    assert "Size order: size order rotated per case" in text
+    assert "Latin square" in text

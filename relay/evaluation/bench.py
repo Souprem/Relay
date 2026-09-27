@@ -5,9 +5,15 @@ questions of a fixed ordering of q-v0.3's 19 (QUESTION_IDS_V0_3); size 20 adds o
 question, a duplicate of diagnosis_support under another id (disclosed in every output). The
 installed typesafe-sdk sends all of a call's questions in one HTTP request and returns no
 per-question timing, so the bench measures per-call wall latency around that one request. Calls
-run one at a time (never concurrently), case by case, sizes in the given order, so no call's
-latency includes another's. Decisions are not scored: a partial question set cannot form a
-bundle.
+run one at a time (never concurrently), case by case, so no call's latency includes another's.
+Decisions are not scored: a partial question set cannot form a bundle.
+
+I1: within a case, the sizes are rotated (a Latin-square offset derived deterministically from the
+sample seed and the case's index) rather than always run in the same order, so no one size is
+always the first call of a case (which would always pay connection warm-up) or always the last
+(which would always benefit from any server-side prefix or state cache). Each call's `position`
+(its 0-based index within its case) is recorded, so the confound can be checked directly. This
+does not change the call count (still cases × len(sizes)) or the pre-run estimate.
 """
 
 import math
@@ -62,6 +68,23 @@ def bench_questions(policy: AuthorizationPolicy, years: Sequence[str], size: int
     return {qid: full[qid] for qid in bench_question_ids(size)}
 
 
+def rotate_sizes(sizes: Sequence[int], seed: int, case_index: int) -> tuple[int, ...]:
+    """`sizes` rotated by (seed + case_index) mod len(sizes) (I1): a Latin-square offset, so
+    across enough cases each size lands in each call position equally often instead of always
+    at the same position."""
+    ordered = tuple(sizes)
+    n = len(ordered)
+    if n == 0:
+        return ordered
+    offset = (seed + case_index) % n
+    return ordered[offset:] + ordered[:offset]
+
+
+def bench_rotation_seed(sample: tuple[int, int] | None) -> int:
+    """The seed used to rotate each case's size order: --sample-seed if one was given, else 0."""
+    return 0 if sample is None else sample[1]
+
+
 def parse_sizes(text: str) -> tuple[int, ...]:
     """'1,5,10,20' -> (1, 5, 10, 20). ValueError for anything else (empty, duplicate, range)."""
     try:
@@ -78,6 +101,7 @@ def parse_sizes(text: str) -> tuple[int, ...]:
 class BenchCall(BaseModel):
     case_id: str
     size: int
+    position: int  # 0-based: this call's index within its case's (rotated) size order (I1)
     latency_ms: float
     input_tokens: int | None = None
     cost_usd: Decimal | None = None
@@ -108,6 +132,7 @@ class BenchResult(BaseModel):
     padding_question: str
     batching: str
     per_question_latency: str
+    size_order: str
     sizes: list[BenchSize]
     total_cost_usd: Decimal
     calls: list[BenchCall]
@@ -143,19 +168,25 @@ async def run_bench(
     client: SystemOneClient,
     *,
     sizes: Sequence[int],
+    sample_seed: int = 0,
     model: str = JEV_MODEL,
     clock: Callable[[], float] = time.perf_counter,
     policy_loader: Callable[[str], AuthorizationPolicy] = load_policy,
     on_call: Callable[[BenchCall], None] | None = None,
 ) -> list[BenchCall]:
     """One call per (case, size), sequentially. A TypeSafeError or a response missing an asked
-    question is recorded as that call's error, and the bench continues."""
+    question is recorded as that call's error, and the bench continues.
+
+    Sizes are rotated per case (I1, `rotate_sizes`), offset by `sample_seed` and the case's index,
+    so size is not confounded with call position; each call's `position` is recorded.
+    """
     calls: list[BenchCall] = []
-    for case in cases:
+    for case_index, case in enumerate(cases):
         policy = policy_loader(case.policy_id)
         state = build_state(case, policy)
         years = candidate_years(case)
-        for size in sizes:
+        order = rotate_sizes(sizes, sample_seed, case_index)
+        for position, size in enumerate(order):
             questions = bench_questions(policy, years, size)
             started = clock()
             try:
@@ -164,6 +195,7 @@ async def run_bench(
                 call = BenchCall(
                     case_id=case.id,
                     size=size,
+                    position=position,
                     latency_ms=(clock() - started) * 1000,
                     error=f"{type(error).__name__}: {error}",
                 )
@@ -174,6 +206,7 @@ async def run_bench(
                 call = BenchCall(
                     case_id=case.id,
                     size=size,
+                    position=position,
                     latency_ms=latency_ms,
                     input_tokens=tokens,
                     cost_usd=None if tokens is None else PRICE_PER_INPUT_TOKEN_USD * tokens,
@@ -183,6 +216,13 @@ async def run_bench(
             if on_call is not None:
                 on_call(call)
     return calls
+
+
+def _size_order_note(seed: int) -> str:
+    return (
+        f"size order rotated per case (offset = (sample seed {seed} + case index) mod "
+        "len(sizes), a Latin square), so each size appears equally often in each call position"
+    )
 
 
 def build_bench_result(
@@ -207,6 +247,7 @@ def build_bench_result(
         padding_question=PADDING_QUESTION,
         batching=BATCHING_NOTE,
         per_question_latency=PER_QUESTION_NOTE,
+        size_order=_size_order_note(bench_rotation_seed(sample)),
         sizes=per_size,
         total_cost_usd=sum((s.total_cost_usd for s in per_size), Decimal("0")),
         calls=list(calls),
@@ -248,6 +289,7 @@ def render_bench(result: BenchResult) -> str:
         f"- Batching: {result.batching}",
         f"- Per-question latency: {result.per_question_latency}",
         f"- Padding: {PADDING_NOTE}",
+        f"- Size order: {result.size_order}.",
         "- Calls ran one at a time; latency is wall time around one request, retries included.",
         "- Latency-only: these runs' decisions are not scored.",
         "- Question ordering: " + ", ".join(result.ordering),

@@ -63,7 +63,27 @@ def test_bench_prints_the_estimate_runs_every_size_and_writes_both_files(tmp_pat
     # 4 cases x (12 + 12 + 12 + 20) billed questions x $0.000013
     assert "jev estimate: 4 cases × (1+5+10+20) questions ≈ $0.0029" in result.output
     [client] = fake_jev.instances
-    assert [len(c["questions"]) for c in client.calls] == [1, 5, 10, 20] * 4
+    # Sizes are rotated per case (I1), offset by sample seed 11 + case index, mod 4:
+    # case 0 -> offset 3 (20,1,5,10), case 1 -> offset 0 (1,5,10,20),
+    # case 2 -> offset 1 (5,10,20,1), case 3 -> offset 2 (10,20,1,5).
+    assert [len(c["questions"]) for c in client.calls] == [
+        20,
+        1,
+        5,
+        10,
+        1,
+        5,
+        10,
+        20,
+        5,
+        10,
+        20,
+        1,
+        10,
+        20,
+        1,
+        5,
+    ]
     data = json.loads((tmp_path / "bench" / "parallelism.json").read_text())
     assert [s["size"] for s in data["sizes"]] == [1, 5, 10, 20]
     assert (data["sample_limit"], data["sample_seed"], data["case_count"]) == (4, 11, 4)

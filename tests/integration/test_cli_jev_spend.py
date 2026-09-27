@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
-from typesafe_sdk import SystemOneResponse
+from typesafe_sdk import SystemOneResponse, TypeSafeError
 
 import relay.cli as cli_module
 from relay.cli import app
@@ -140,7 +140,34 @@ def test_a_failed_run_settles_what_was_written(tmp_path, fake_jev, monkeypatch):
     result = eval_jev(tmp_path, "--jev-budget-usd", "1.00", "--jev-ledger", str(ledger))
     assert result.exit_code != 0
     [entry] = load_ledger(ledger).entries
-    assert (entry.status, entry.cost_usd) == ("settled", Decimal("0"))
+    # M1: no trace was written (0 partial), so up to --concurrency (4) cases could have been in
+    # flight when run_dataset died; each is charged at the per-case estimate rather than $0, so
+    # settlement never under-records. 10 smoke cases x 12 questions: per-case estimate is
+    # $0.0016 / 10 = $0.000156; 4 in flight -> $0.000624.
+    assert (entry.status, entry.cost_usd) == ("settled", Decimal("0.000624"))
+
+
+def test_an_errored_call_settles_at_the_per_case_estimate_not_zero(tmp_path, fake_jev, monkeypatch):
+    """M1: a call that errors outright (no tokens billed) must not settle at $0 — its real cost is
+    unknown, so it is charged at the per-case estimate instead."""
+    ledger = tmp_path / "jev-spend.json"
+    calls = 0
+
+    async def flaky(self, state, questions, *, model=None, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise TypeSafeError("rate limited")
+        return SystemOneResponse.model_validate(json.loads(FIXTURE.read_text()))
+
+    monkeypatch.setattr(FakeAsyncClient, "system_one", flaky)
+    result = eval_jev(tmp_path, "--jev-budget-usd", "1.00", "--jev-ledger", str(ledger))
+    assert result.exit_code == 0, result.output
+    [entry] = load_ledger(ledger).entries
+    # 10 cases; 1 errors (charged at the $0.0016/10 = $0.000156 per-case estimate instead of $0),
+    # 9 settle at their real cost (9 x $0.0000756 = $0.0006804); rounded (ROUND_HALF_EVEN, 6dp).
+    assert entry.status == "settled"
+    assert entry.cost_usd == Decimal("0.000836")
 
 
 @pytest.mark.parametrize(

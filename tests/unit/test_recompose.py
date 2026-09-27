@@ -63,7 +63,12 @@ async def test_stale_and_aware_from_the_same_bundle():
     assert step(aware) == 0.0
     assert aware.derivations["step_therapy"]["max_days_since_therapy"] == 365
     assert stale.derivations["step_therapy"]["max_days_since_therapy"] is None
-    for other in (DecisionId.DIAGNOSIS_SUPPORT, DecisionId.MISSING_EVIDENCE):
+    for other in (
+        DecisionId.DIAGNOSIS_SUPPORT,
+        DecisionId.DOCUMENTATION_COMPLETE,
+        DecisionId.MATERIAL_CONTRADICTION,
+        DecisionId.MISSING_EVIDENCE,
+    ):
         assert stale.get(other) == aware.get(other) == bundle.get(other)
     # Only decisions and derivations change; the call's record is kept.
     keep = {"raw_answers", "latency_ms", "input_tokens", "estimated_cost_usd", "question_set_hash"}
