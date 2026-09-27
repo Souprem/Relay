@@ -65,6 +65,7 @@ uv run relay budget show --ledger results/claude-spend.json                     
 uv run relay generate --generator gen-v0.3 [--policy v0.2] --count N --seed S --dataset-id ID --out DIR   # gen-v0.3: interrupted and old courses
 uv run relay eval --dataset <dir> --provider jev --questions q-v0.3 --jev-budget-usd 1.00 --jev-ledger <abs path>   # Jev spend counter: estimate first, refuse over the cap
 uv run relay recompose --traces <jev file> --dataset <dir> --policy immunara-v0.1 --out <dir>   # stored Jev answers recomposed under a policy (offline)
+uv run relay ablate --traces <file> --dataset <dir> --disable contradiction[,missing_evidence] [--at X] --out <dir>   # engine gates disabled, as a simulated run (offline; see "Gate ablation")
 uv run relay bench --dataset <dir> --limit 40 --sample-seed 11 --sizes 1,5,10,20 --jev-budget-usd 1.00   # latency vs questions per call (paid)
 ```
 
@@ -944,8 +945,8 @@ CALIBRATION (Δ = candidate − baseline)
 REGRESSION GATE: PASS
 ```
 
-**Committed gates.** [`evals/regression/gates.json`](evals/regression/gates.json) holds the gates
-CI runs with `relay regression --config evals/regression/gates.json`. Each gate's report is
+**Committed gates.** [`evals/regression/gates.json`](evals/regression/gates.json) holds the 20
+gates CI runs with `relay regression --config evals/regression/gates.json`. Each gate's report is
 printed, then a summary table; the exit code is the highest across gates, and `--gate NAME` runs
 only the named gates. `--strict-generated` turns a `requires_generated` gate whose dataset is
 missing into an ERROR row (exit 2) instead of SKIPPED, so a failed, dropped or misnamed dataset
@@ -963,8 +964,10 @@ regeneration step cannot leave a holdout drift gate silently green; CI passes it
 | `gold-reproduce-jev-q-v0.3` | the committed gold q-v0.3 Jev run | `--reproduce` | engine drift on the new gold q-v0.3 run; no `requires_generated` (gold-v0.1 is always on disk) |
 | `gen-v0.3-shift-reproduce-jev-q-v0.3`, `-stale`, `-aware` | each committed gen-v0.3-shift / stale / aware run | `--reproduce` | engine drift on the paid shift run and its two `recompose` outputs; `requires_generated` |
 | `gen-v0.3-shift-stale-to-aware` | stale (immunara-v0.1, policy-unaware) | aware (immunara-v0.2, policy-aware) | the E2 policy-shift check: PASS with 0 newly unsafe, 0 regressed (see "Policy shift"); `requires_generated` |
+| `gold-reproduce-ablated-jev-q-v0.3-contradiction` | the committed ablated bundle (gold, Jev q-v0.3, `contradiction` gate disabled) | `--reproduce` | engine drift on an ablated trace: shows that ablated traces replay exactly, so `ABLATED` gate-path entries and the `ablation` field survive a reproduce round trip (see "Gate ablation"); no `requires_generated` (gold-v0.1 is always on disk) |
 
-The failing demonstrations above (gold q-v0.2 → q-v0.3, which FAILs on `GOLD-TMP-16`) are
+The failing demonstrations — Jev at auto_process 0.89 on `GOLD-TMP-17` (above) and gold
+q-v0.2 → q-v0.3, which FAILs on `GOLD-TMP-16` (below, in "Question set q-v0.3") — are
 deliberately not committed gates, so CI stays green.
 
 **Adding a waiver.** A waiver is the deliberate, reviewed policy decision that lets a newly unsafe
@@ -1329,7 +1332,7 @@ REGRESSION GATE: PASS
 
 The 10 REGRESSED cases above (all `HUMAN_REVIEW` → `REQUEST_INFO`) are correctness regressions,
 not safety regressions: none of them changed to an unsafe automation, and each is still a
-non-automated action. In each, Jev's `missing_evidence = TREATMENT_HISTORY` confidence rose past
+non-automated action. In each, Jev's `missing_evidence = TREATMENT_HISTORY` confidence reached
 the 0.7 request-info bar under q-v0.3 (e.g. GEN-04000114 0.63 → 0.77, GEN-04000999 0.64 → 0.72),
 while the truth is `NONE` — producing an unnecessary information request to the submitter rather
 than an automation.
@@ -1614,6 +1617,138 @@ above, rounds it to "Settled $0.5018") of the $1.00 cap. Total Claude spend is u
 $10.00 default budget (`results/claude-spend.json`, `evals/baselines/claude-spend.json`); no Claude
 calls were made in Phase 3.
 
+## Gate ablation
+
+Handoff experiment 6 asks what the contradiction and missing-evidence gates are worth.
+`relay ablate` re-decides a committed run's stored decisions with one gate or both disabled, at
+the run's own dev-selected operating point, and writes a simulated bundle whose traces record the
+ablation. `relay regression` then gates the ablated run against the same run at the same
+threshold, case by case. Expected actions always come from the full engine, so an ablated run is
+scored against what the policy actually requires. Nothing is called: the experiment cost $0.
+
+- `contradiction` removes contradiction detection entirely: the contradiction review gate
+  (`p_yes(material_contradiction) >= 0.80` → HUMAN_REVIEW) and the auto-block inside the
+  auto-process gate (`>= 0.20` blocks AUTO_PROCESS).
+- `missing_evidence` skips the missing-evidence REQUEST_INFO gate (a named missing item with
+  probability `>= 0.70`). The documentation gate stays.
+
+Ten committed runs × three ablations give 30 pairs, each under
+`evals/baselines/ablation/<dataset>/<run>/<ablation>/` (the ablated bundle, `regression.json`,
+`regression.md`, and the re-decided baseline its replay commands use). An ablated trace shows
+`ABLATED: <gate> gate disabled` in its gate path, and `relay replay` prints an `ABLATION:` line.
+The ablated runs are expected to fail the gate, so they are not CI gates. One of them (gold,
+Jev q-v0.3, `contradiction`) has a reproduce gate, `gold-reproduce-ablated-jev-q-v0.3-contradiction`,
+which shows that ablated traces replay exactly.
+
+From [`evals/baselines/ablation/summary.md`](evals/baselines/ablation/summary.md):
+
+| Dataset | Run | Provider | Thresholds | Ablation | Gate | Actions changed | Newly unsafe | Regressed | Improved | Automation (baseline → ablated) | UAR (baseline → ablated) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| gen-v0.2-holdout | jev-q-v0.2 (`run_20260925T075242Z_fd455f`) | jev q-v0.2 | v0.1+at0.89 | contradiction | PASS | 37/1000 | 0 | 12 | 25 | 252/1000 (25.2%) [22.5%, 28.0%] → 277/1000 (27.7%) [24.9%, 30.6%] | 0/252 (0.0%) [0.0%, 1.5%] → 0/277 (0.0%) [0.0%, 1.3%] |
+| gen-v0.2-holdout | jev-q-v0.2 (`run_20260925T075242Z_fd455f`) | jev q-v0.2 | v0.1+at0.89 | missing_evidence | PASS | 100/1000 | 0 | 32 | 67 | 252/1000 (25.2%) [22.5%, 28.0%] → 252/1000 (25.2%) [22.5%, 28.0%] | 0/252 (0.0%) [0.0%, 1.5%] → 0/252 (0.0%) [0.0%, 1.5%] |
+| gen-v0.2-holdout | jev-q-v0.2 (`run_20260925T075242Z_fd455f`) | jev q-v0.2 | v0.1+at0.89 | contradiction+missing_evidence | PASS | 134/1000 | 0 | 41 | 92 | 252/1000 (25.2%) [22.5%, 28.0%] → 277/1000 (27.7%) [24.9%, 30.6%] | 0/252 (0.0%) [0.0%, 1.5%] → 0/277 (0.0%) [0.0%, 1.3%] |
+| gen-v0.2-holdout | rules (`run_20260925T092425Z_0aee97`) | rules rules-v0.1 | v0.1+at0.99 | contradiction | PASS | 17/1000 | 0 | 17 | 0 | 134/1000 (13.4%) [11.3%, 15.7%] → 134/1000 (13.4%) [11.3%, 15.7%] | 0/134 (0.0%) [0.0%, 2.7%] → 0/134 (0.0%) [0.0%, 2.7%] |
+| gen-v0.2-holdout | rules (`run_20260925T092425Z_0aee97`) | rules rules-v0.1 | v0.1+at0.99 | missing_evidence | PASS | 0/1000 | 0 | 0 | 0 | 134/1000 (13.4%) [11.3%, 15.7%] → 134/1000 (13.4%) [11.3%, 15.7%] | 0/134 (0.0%) [0.0%, 2.7%] → 0/134 (0.0%) [0.0%, 2.7%] |
+| gen-v0.2-holdout | rules (`run_20260925T092425Z_0aee97`) | rules rules-v0.1 | v0.1+at0.99 | contradiction+missing_evidence | PASS | 17/1000 | 0 | 17 | 0 | 134/1000 (13.4%) [11.3%, 15.7%] → 134/1000 (13.4%) [11.3%, 15.7%] | 0/134 (0.0%) [0.0%, 2.7%] → 0/134 (0.0%) [0.0%, 2.7%] |
+| gen-v0.2-holdout | claude-150 (`run_20260925T212034Z_bbee49`) | claude q-v0.2+claude-prompt-v1 | v0.1+at0.55 | contradiction | PASS | 3/150 | 0 | 3 | 0 | 37/150 (24.7%) [18.0%, 32.4%] → 37/150 (24.7%) [18.0%, 32.4%] | 0/37 (0.0%) [0.0%, 9.5%] → 0/37 (0.0%) [0.0%, 9.5%] |
+| gen-v0.2-holdout | claude-150 (`run_20260925T212034Z_bbee49`) | claude q-v0.2+claude-prompt-v1 | v0.1+at0.55 | missing_evidence | PASS | 10/150 | 0 | 7 | 3 | 37/150 (24.7%) [18.0%, 32.4%] → 37/150 (24.7%) [18.0%, 32.4%] | 0/37 (0.0%) [0.0%, 9.5%] → 0/37 (0.0%) [0.0%, 9.5%] |
+| gen-v0.2-holdout | claude-150 (`run_20260925T212034Z_bbee49`) | claude q-v0.2+claude-prompt-v1 | v0.1+at0.55 | contradiction+missing_evidence | PASS | 13/150 | 0 | 10 | 3 | 37/150 (24.7%) [18.0%, 32.4%] → 37/150 (24.7%) [18.0%, 32.4%] | 0/37 (0.0%) [0.0%, 9.5%] → 0/37 (0.0%) [0.0%, 9.5%] |
+| gen-v0.3-holdout | jev-q-v0.3 (`run_20260927T072144Z_12e1e4`) | jev q-v0.3 | v0.1+at0.81 | contradiction | PASS | 33/1000 | 0 | 16 | 17 | 244/1000 (24.4%) [21.8%, 27.2%] → 261/1000 (26.1%) [23.4%, 28.9%] | 0/244 (0.0%) [0.0%, 1.5%] → 0/261 (0.0%) [0.0%, 1.4%] |
+| gen-v0.3-holdout | jev-q-v0.3 (`run_20260927T072144Z_12e1e4`) | jev q-v0.3 | v0.1+at0.81 | missing_evidence | PASS | 93/1000 | 0 | 40 | 53 | 244/1000 (24.4%) [21.8%, 27.2%] → 244/1000 (24.4%) [21.8%, 27.2%] | 0/244 (0.0%) [0.0%, 1.5%] → 0/244 (0.0%) [0.0%, 1.5%] |
+| gen-v0.3-holdout | jev-q-v0.3 (`run_20260927T072144Z_12e1e4`) | jev q-v0.3 | v0.1+at0.81 | contradiction+missing_evidence | PASS | 123/1000 | 0 | 53 | 70 | 244/1000 (24.4%) [21.8%, 27.2%] → 261/1000 (26.1%) [23.4%, 28.9%] | 0/244 (0.0%) [0.0%, 1.5%] → 0/261 (0.0%) [0.0%, 1.4%] |
+| gen-v0.3-shift | jev-q-v0.3-aware (`run_20260927T072949Z_bd430c`) | jev q-v0.3 | v0.2 | contradiction | PASS | 7/400 | 0 | 7 | 0 | 13/400 (3.2%) [1.7%, 5.5%] → 13/400 (3.2%) [1.7%, 5.5%] | 0/13 (0.0%) [0.0%, 24.7%] → 0/13 (0.0%) [0.0%, 24.7%] |
+| gen-v0.3-shift | jev-q-v0.3-aware (`run_20260927T072949Z_bd430c`) | jev q-v0.3 | v0.2 | missing_evidence | PASS | 41/400 | 0 | 15 | 26 | 13/400 (3.2%) [1.7%, 5.5%] → 13/400 (3.2%) [1.7%, 5.5%] | 0/13 (0.0%) [0.0%, 24.7%] → 0/13 (0.0%) [0.0%, 24.7%] |
+| gen-v0.3-shift | jev-q-v0.3-aware (`run_20260927T072949Z_bd430c`) | jev q-v0.3 | v0.2 | contradiction+missing_evidence | PASS | 47/400 | 0 | 21 | 26 | 13/400 (3.2%) [1.7%, 5.5%] → 13/400 (3.2%) [1.7%, 5.5%] | 0/13 (0.0%) [0.0%, 24.7%] → 0/13 (0.0%) [0.0%, 24.7%] |
+| gold-v0.1 | groundtruth (`run_20260925T170825Z_440df0`) | groundtruth groundtruth | v0.1 | contradiction | PASS | 1/100 | 0 | 1 | 0 | 34/100 (34.0%) [24.8%, 44.2%] → 34/100 (34.0%) [24.8%, 44.2%] | 0/34 (0.0%) [0.0%, 10.3%] → 0/34 (0.0%) [0.0%, 10.3%] |
+| gold-v0.1 | groundtruth (`run_20260925T170825Z_440df0`) | groundtruth groundtruth | v0.1 | missing_evidence | PASS | 0/100 | 0 | 0 | 0 | 34/100 (34.0%) [24.8%, 44.2%] → 34/100 (34.0%) [24.8%, 44.2%] | 0/34 (0.0%) [0.0%, 10.3%] → 0/34 (0.0%) [0.0%, 10.3%] |
+| gold-v0.1 | groundtruth (`run_20260925T170825Z_440df0`) | groundtruth groundtruth | v0.1 | contradiction+missing_evidence | PASS | 1/100 | 0 | 1 | 0 | 34/100 (34.0%) [24.8%, 44.2%] → 34/100 (34.0%) [24.8%, 44.2%] | 0/34 (0.0%) [0.0%, 10.3%] → 0/34 (0.0%) [0.0%, 10.3%] |
+| gold-v0.1 | jev-q-v0.2 (`run_20260925T170857Z_b95be9`) | jev q-v0.2 | v0.1+at0.89 | contradiction | FAIL | 6/100 | 2 (GOLD-CON-03, GOLD-CON-13) | 5 | 1 | 29/100 (29.0%) [20.4%, 38.9%] → 32/100 (32.0%) [23.0%, 42.1%] | 1/29 (3.4%) [0.1%, 17.8%] → 3/32 (9.4%) [2.0%, 25.0%] |
+| gold-v0.1 | jev-q-v0.2 (`run_20260925T170857Z_b95be9`) | jev q-v0.2 | v0.1+at0.89 | missing_evidence | PASS | 5/100 | 0 | 5 | 0 | 29/100 (29.0%) [20.4%, 38.9%] → 29/100 (29.0%) [20.4%, 38.9%] | 1/29 (3.4%) [0.1%, 17.8%] → 1/29 (3.4%) [0.1%, 17.8%] |
+| gold-v0.1 | jev-q-v0.2 (`run_20260925T170857Z_b95be9`) | jev q-v0.2 | v0.1+at0.89 | contradiction+missing_evidence | FAIL | 9/100 | 2 (GOLD-CON-03, GOLD-CON-13) | 8 | 1 | 29/100 (29.0%) [20.4%, 38.9%] → 32/100 (32.0%) [23.0%, 42.1%] | 1/29 (3.4%) [0.1%, 17.8%] → 3/32 (9.4%) [2.0%, 25.0%] |
+| gold-v0.1 | rules (`run_20260925T170839Z_d3b427`) | rules rules-v0.1 | v0.1+at0.99 | contradiction | PASS | 0/100 | 0 | 0 | 0 | 20/100 (20.0%) [12.7%, 29.2%] → 20/100 (20.0%) [12.7%, 29.2%] | 6/20 (30.0%) [11.9%, 54.3%] → 6/20 (30.0%) [11.9%, 54.3%] |
+| gold-v0.1 | rules (`run_20260925T170839Z_d3b427`) | rules rules-v0.1 | v0.1+at0.99 | missing_evidence | PASS | 0/100 | 0 | 0 | 0 | 20/100 (20.0%) [12.7%, 29.2%] → 20/100 (20.0%) [12.7%, 29.2%] | 6/20 (30.0%) [11.9%, 54.3%] → 6/20 (30.0%) [11.9%, 54.3%] |
+| gold-v0.1 | rules (`run_20260925T170839Z_d3b427`) | rules rules-v0.1 | v0.1+at0.99 | contradiction+missing_evidence | PASS | 0/100 | 0 | 0 | 0 | 20/100 (20.0%) [12.7%, 29.2%] → 20/100 (20.0%) [12.7%, 29.2%] | 6/20 (30.0%) [11.9%, 54.3%] → 6/20 (30.0%) [11.9%, 54.3%] |
+| gold-v0.1 | claude (`run_20260926T011730Z_f1852f`) | claude q-v0.2+claude-prompt-v1 | v0.1+at0.55 | contradiction | FAIL | 5/100 | 2 (GOLD-CON-03, GOLD-CON-13) | 3 | 2 | 30/100 (30.0%) [21.2%, 40.0%] → 34/100 (34.0%) [24.8%, 44.2%] | 1/30 (3.3%) [0.1%, 17.2%] → 3/34 (8.8%) [1.9%, 23.7%] |
+| gold-v0.1 | claude (`run_20260926T011730Z_f1852f`) | claude q-v0.2+claude-prompt-v1 | v0.1+at0.55 | missing_evidence | PASS | 6/100 | 0 | 6 | 0 | 30/100 (30.0%) [21.2%, 40.0%] → 30/100 (30.0%) [21.2%, 40.0%] | 1/30 (3.3%) [0.1%, 17.2%] → 1/30 (3.3%) [0.1%, 17.2%] |
+| gold-v0.1 | claude (`run_20260926T011730Z_f1852f`) | claude q-v0.2+claude-prompt-v1 | v0.1+at0.55 | contradiction+missing_evidence | FAIL | 11/100 | 2 (GOLD-CON-03, GOLD-CON-13) | 9 | 2 | 30/100 (30.0%) [21.2%, 40.0%] → 34/100 (34.0%) [24.8%, 44.2%] | 1/30 (3.3%) [0.1%, 17.2%] → 3/34 (8.8%) [1.9%, 23.7%] |
+| gold-v0.1 | jev-q-v0.3 (`run_20260927T072623Z_ad6f44`) | jev q-v0.3 | v0.1+at0.81 | contradiction | FAIL | 5/100 | 2 (GOLD-CON-03, GOLD-CON-13) | 4 | 1 | 31/100 (31.0%) [22.1%, 41.0%] → 34/100 (34.0%) [24.8%, 44.2%] | 1/31 (3.2%) [0.1%, 16.7%] → 3/34 (8.8%) [1.9%, 23.7%] |
+| gold-v0.1 | jev-q-v0.3 (`run_20260927T072623Z_ad6f44`) | jev q-v0.3 | v0.1+at0.81 | missing_evidence | PASS | 4/100 | 0 | 4 | 0 | 31/100 (31.0%) [22.1%, 41.0%] → 31/100 (31.0%) [22.1%, 41.0%] | 1/31 (3.2%) [0.1%, 16.7%] → 1/31 (3.2%) [0.1%, 16.7%] |
+| gold-v0.1 | jev-q-v0.3 (`run_20260927T072623Z_ad6f44`) | jev q-v0.3 | v0.1+at0.81 | contradiction+missing_evidence | FAIL | 8/100 | 2 (GOLD-CON-03, GOLD-CON-13) | 7 | 1 | 31/100 (31.0%) [22.1%, 41.0%] → 34/100 (34.0%) [24.8%, 44.2%] | 1/31 (3.2%) [0.1%, 16.7%] → 3/34 (8.8%) [1.9%, 23.7%] |
+
+Null results (no action changed): 5
+- gen-v0.2-holdout / rules × missing_evidence
+- gold-v0.1 / groundtruth × missing_evidence
+- gold-v0.1 / rules × contradiction
+- gold-v0.1 / rules × missing_evidence
+- gold-v0.1 / rules × contradiction+missing_evidence
+
+Pairs whose gate FAILs (a newly unsafe automation): 6
+- gold-v0.1 / jev-q-v0.2 × contradiction: GOLD-CON-03, GOLD-CON-13
+- gold-v0.1 / jev-q-v0.2 × contradiction+missing_evidence: GOLD-CON-03, GOLD-CON-13
+- gold-v0.1 / claude × contradiction: GOLD-CON-03, GOLD-CON-13
+- gold-v0.1 / claude × contradiction+missing_evidence: GOLD-CON-03, GOLD-CON-13
+- gold-v0.1 / jev-q-v0.3 × contradiction: GOLD-CON-03, GOLD-CON-13
+- gold-v0.1 / jev-q-v0.3 × contradiction+missing_evidence: GOLD-CON-03, GOLD-CON-13
+
+**Findings.**
+
+- **Contradiction detection is the only gate whose removal creates unsafe automation, and only
+  on gold.** On gold-v0.1, removing it makes GOLD-CON-03 and GOLD-CON-13 newly unsafe for all
+  three model providers, and each of those gates FAILs: Jev q-v0.2 at 0.89 (UAR 1/29 → 3/32),
+  Jev q-v0.3 at 0.81 (1/31 → 3/34) and Claude at 0.55 (1/30 → 3/34). On the three generated sets
+  it creates no newly unsafe case for any provider.
+- **The ground-truth row is the policy-level effect, not an upper bound.** With perfect
+  judgments, removing contradiction detection changes one gold action (1/100, a regression) and
+  creates no unsafe automation: in gold-v0.1 every case with a material contradiction also fails
+  another requirement in its ground truth, so the default review still catches it. The providers'
+  2 newly unsafe cases are therefore provider errors (they judged every required decision at or
+  above their operating point on GOLD-CON-03 and GOLD-CON-13) that only the contradiction gate
+  held back. On gold the gate's value is defense in depth against judgment errors, which a
+  ground-truth run cannot show.
+
+  For example, on GOLD-CON-03 (a case where `medication_history` and the physician's note
+  disagree about how long a methotrexate course ran, so ground truth marks
+  `step_therapy_satisfied: false`), Jev q-v0.3 judged `step_therapy` at `p_yes=0.905` — above its
+  own 0.81 operating point, its own misjudgment of the disputed course — while its
+  `material_contradiction` probability was only `p_yes=0.270`: too low to trigger the 0.80
+  HUMAN_REVIEW gate, but enough to trip the auto-block gate's 0.20 bar and force HUMAN_REVIEW
+  anyway. With `contradiction` ablated that auto-block is gone, so the run becomes an unsafe
+  `AUTO_PROCESS` (confirmed offline: `relay replay GOLD-CON-03 --traces
+  evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/baseline.jsonl.gz --dataset
+  evals/gold --candidate-traces
+  evals/baselines/ablation/gold-v0.1/jev-q-v0.3/contradiction/traces.jsonl.gz`). GOLD-CON-13 fails
+  the same way. In both, the contradiction gate is what caught the provider's own judgment error,
+  not an artificial floor a perfect judge would never need.
+- **On the generated holdouts the contradiction auto-block costs correct automation.** Removing
+  contradiction detection raises Jev's automation from 252/1000 to 277/1000 (q-v0.2,
+  gen-v0.2-holdout) and from 244/1000 to 261/1000 (q-v0.3, gen-v0.3-holdout) with UAR still 0
+  (0/277, 0/261), so every added automation was correct; the same ablations regress 12 and 16
+  cases respectively. For rules on gen-v0.2-holdout (17), Claude's 150-case sample (3) and the
+  aware shift run (7), it only regresses cases and leaves automation unchanged. This is a real
+  trade-off, not a reason to remove the gate: the gold rows above show the same gate catching
+  genuine provider judgment errors, and the generator's contradictions are template-derived (see
+  Limitations), so the holdouts have few of the kinds of contradiction that fooled providers on
+  gold.
+- **The missing-evidence gate never changes an automation.** In all ten runs, removing it leaves
+  automation and UAR exactly as they were and creates no newly unsafe case. Its policy-level
+  effect on gold is zero (ground truth: 0/100 actions changed). With providers it only moves
+  cases between REQUEST_INFO and HUMAN_REVIEW. For Jev on the generated sets more of those moves
+  are corrections than errors (q-v0.2 on gen-v0.2-holdout: 67 improved, 32 regressed of 100
+  changed; q-v0.3 on gen-v0.3-holdout: 53 and 40 of 93; the aware shift run: 26 and 15 of 41);
+  for Claude's 150-case sample it is the other way round (3 improved, 7 regressed of 10), and on
+  gold it only regresses (Jev q-v0.2 5, Claude 6, Jev q-v0.3 4).
+- **Null results.** Five pairs change no action at all: rules × missing_evidence on
+  gen-v0.2-holdout, ground truth × missing_evidence on gold, and all three rules ablations on
+  gold. The rules baseline's 6 unsafe gold automations (6/20) are already automated with both gates in
+  place, so removing a gate cannot add or remove them.
+
+**Caveats.** gold-v0.1 is not a blind test for q-v0.3 (see "Question set q-v0.3"). Claude's
+gen-v0.2-holdout row is the 150-case deterministic sample (`--limit 150 --sample-seed 7`), not
+the full set. Gold has 100 cases, so its intervals are wide (Jev q-v0.3's ablated UAR 3/34 has
+a 95% interval of 1.9%–23.7%). The generated sets' contradictions come from templates (see
+Limitations), which bears on how often a provider's contradiction signal is the last line of
+defense there.
+
 ## Limitations
 
 - The regression gate (G5) is relative to its baseline, so it cannot catch an unsafe automation
@@ -1662,11 +1797,11 @@ calls were made in Phase 3.
   represent an interrupted course with a gap (two segments). `GOLD-TMP-17` is exactly this case,
   and it is the only unsafe automation either Jev or Claude has on gold at its own threshold (see
   "Gold set" above). `q-v0.3` adds interruption and restart questions and was adopted on
-  `gen-v0.3-dev` and confirmed on `gen-v0.3-holdout` (see "Question set q-v0.3" below). It still
+  `gen-v0.3-dev` and confirmed on `gen-v0.3-holdout` (see "Question set q-v0.3" above). It still
   models only one interruption per course (the generator's variants (a)/(b)/(c)), not multiple
   holds and restarts, and it is not blind for `GOLD-TMP-17`/`GOLD-TMP-18` on gold. At its adopted
   dev threshold (0.81) it automates `GOLD-TMP-16` unsafely, a new negative result of the change
-  (see "Question set q-v0.3" below).
+  (see "Question set q-v0.3" above).
 - The authors, blind reviewer and adjudicator of `gold-v0.1` are all Claude agents, and
   `claude-opus-5` is also an evaluated provider on that same set (see "Gold set" above). The 100%
   blind agreement reflects one model family applying one guide consistently, not independent human
