@@ -911,6 +911,15 @@ def _run_simulated(
 ) -> None:
     """The incumbent: every action becomes a simulated case-status transition in --state."""
     try:
+        if not request.reset_state:
+            ensure_unclaimed(load_store(request.state), [c.input.id for c in cases])
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    # M1: the run's inputs (--from-traces / the provider call) are validated before the state
+    # file is archived, so a bad run (e.g. --from-traces that doesn't pair with the dataset)
+    # leaves the state file untouched instead of resetting it for nothing.
+    manifest, traces = _workflow_traces(request, cases, sample)
+    try:
         if request.reset_state:
             backup = reset_state(request.state)
             typer.echo(
@@ -918,11 +927,6 @@ def _run_simulated(
                 if backup is not None
                 else f"State: nothing to archive at {request.state}"
             )
-        ensure_unclaimed(load_store(request.state), [c.input.id for c in cases])
-    except StatusStoreError as error:
-        raise _fail(str(error)) from error
-    manifest, traces = _workflow_traces(request, cases, sample)
-    try:
         _, transitions = apply_transitions(request.state, traces)
     except StatusStoreError as error:
         raise _fail(str(error)) from error
@@ -939,7 +943,7 @@ def _load_incumbent(path: Path, cases: list[PriorAuthCase]) -> list[WorkflowTrac
     """The run a shadow candidate is compared with: a simulated or evaluate run covering the same
     cases. Checked before the shadow run starts, so a bad incumbent costs no provider call."""
     traces = _read_trace_file(path)
-    if traces and traces[0].mode == "shadow":
+    if any(t.mode == "shadow" for t in traces):
         raise _fail(
             f"--incumbent {path} is a shadow run; the incumbent must be a simulated or evaluate run"
         )
@@ -966,6 +970,39 @@ def _run_shadow(
     except RegressionInputError as error:
         raise _fail(str(error)) from error
     manifest, traces = _workflow_traces(request, cases, sample)
+
+    # I1: everything the command can write is done before the digest is taken a second time, so
+    # the verification (and the "(verified)" trailer that reports it) covers the --out writes
+    # too, not just the traced-run writes above. The report's own text output is deferred until
+    # after the digest check, to keep stdout in the same order as before this fix.
+    report = None
+    rendered = None
+    if incumbent is not None:
+        try:
+            report = build_shadow_report(
+                incumbent,
+                traces,
+                cases,
+                incumbent_label=f"{incumbent[0].mode} {original_label(incumbent[0])}",
+                candidate_label=f"shadow {original_label(traces[0])}",
+                waivers=waivers,
+                max_regressed=request.max_regressed,
+                dataset_hash=_manifest_hash(request.dataset, cases),
+                replay_command=lambda case_id: (
+                    f"relay replay {case_id} --traces {request.incumbent} --dataset "
+                    f"{request.dataset} --candidate-traces {manifest.trace_file}"
+                ),
+            )
+        except EvalError as error:
+            raise _fail(str(error)) from error
+        rendered = render_shadow_report(report)
+        if request.out is not None:
+            request.out.mkdir(parents=True, exist_ok=True)
+            (request.out / "shadow.json").write_text(
+                report.model_dump_json(indent=2) + "\n", encoding="utf-8"
+            )
+            (request.out / "shadow.md").write_text(rendered + "\n", encoding="utf-8")
+
     after = state_digest(request.state)
     if after != before:
         typer.echo(
@@ -984,32 +1021,9 @@ def _run_shadow(
     typer.echo(shadow_trailer(manifest.run_id, len(traces)))
     for line in _run_paths(manifest):
         typer.echo(line)
-    if incumbent is None:
+    if report is None:
         return
-    try:
-        report = build_shadow_report(
-            incumbent,
-            traces,
-            cases,
-            incumbent_label=f"{incumbent[0].mode} {original_label(incumbent[0])}",
-            candidate_label=f"shadow {original_label(traces[0])}",
-            waivers=waivers,
-            max_regressed=request.max_regressed,
-            dataset_hash=_manifest_hash(request.dataset, cases),
-            replay_command=lambda case_id: (
-                f"relay replay {case_id} --traces {request.incumbent} --dataset "
-                f"{request.dataset} --candidate-traces {manifest.trace_file}"
-            ),
-        )
-    except EvalError as error:
-        raise _fail(str(error)) from error
-    rendered = render_shadow_report(report)
     if request.out is not None:
-        request.out.mkdir(parents=True, exist_ok=True)
-        (request.out / "shadow.json").write_text(
-            report.model_dump_json(indent=2) + "\n", encoding="utf-8"
-        )
-        (request.out / "shadow.md").write_text(rendered + "\n", encoding="utf-8")
         typer.echo(f"Shadow report: {request.out / 'shadow.json'}, {request.out / 'shadow.md'}")
     typer.echo("")
     typer.echo(rendered)
@@ -1179,6 +1193,18 @@ def run(
             raise _fail("--reset-state applies only to --workflow simulated")
         if incumbent is None and shadow_only:
             raise _fail(f"{', '.join(shadow_only)} needs --incumbent")
+    resolved_state = DEFAULT_STATE if state is None else state
+    # I1: nothing this command writes may land on the state file. --traces-dir writes files
+    # named after a fresh run id, so a collision there would need a deliberately matching
+    # --state name; --out always writes shadow.json/shadow.md, so a colliding --out is a much
+    # easier accident (and is exactly the reviewer's reproduction). Both are refused up front,
+    # exit 2, before any provider call or write.
+    if resolved_state.resolve() == traces_dir.resolve():
+        raise _fail(f"--traces-dir must not be the --state file ({resolved_state})")
+    if out is not None:
+        out_writes = {(out / "shadow.json").resolve(), (out / "shadow.md").resolve()}
+        if resolved_state.resolve() in out_writes:
+            raise _fail(f"--out must not write to the --state file ({resolved_state})")
     resolved_provider = provider or ProviderName.jev
     claude = (
         None
@@ -1190,7 +1216,7 @@ def run(
         workflow=workflow,
         dataset=dataset,
         traces_dir=traces_dir,
-        state=DEFAULT_STATE if state is None else state,
+        state=resolved_state,
         from_traces=from_traces,
         at=at,
         provider=resolved_provider,

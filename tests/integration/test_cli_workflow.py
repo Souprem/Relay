@@ -147,6 +147,23 @@ def test_at_re_decides_the_stored_run(tmp_path, smoke_runs):
     assert {t.thresholds.version for t in read_traces(trace_file)} == {"v0.1+at0.5"}
 
 
+def test_reset_state_with_a_bad_from_traces_leaves_the_state_file_in_place(tmp_path, smoke_runs):
+    """M1: --reset-state must not archive the state file until the run's inputs are known good.
+    A --from-traces file that doesn't pair with the dataset (wrong case ids) is a usage error;
+    it must fail before anything is archived, not after."""
+    first = workflow(tmp_path, "simulated", "--from-traces", smoke_runs["groundtruth"])
+    assert first.exit_code == 0, first.output
+    state = tmp_path / "state" / "case-status.json"
+    before = state.read_bytes()
+    bad_from_traces = REPO / "evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz"
+    result = workflow(tmp_path, "simulated", "--from-traces", bad_from_traces, "--reset-state")
+    assert result.exit_code == 2, result.output
+    assert "--from-traces" in result.output
+    assert "State archived" not in result.output
+    assert state.exists() and state.read_bytes() == before
+    assert not list((tmp_path / "state").glob("case-status.json.bak-*"))
+
+
 # ---- shadow ----
 
 

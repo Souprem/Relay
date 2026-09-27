@@ -238,6 +238,69 @@ def test_out_writes_the_shadow_report(tmp_path):
     assert result.output.endswith(markdown)
 
 
+def test_out_colliding_with_state_is_rejected_before_any_write(tmp_path, smoke_runs):
+    """I1 (Important): reproduces the reviewer's scenario. A shadow run whose --out directory
+    contains the --state file (--state P/o/shadow.json --out P/o) must be refused up front,
+    exit 2, rather than overwriting the state file with the shadow report after printing
+    "case state unchanged (verified)"."""
+    out_dir = tmp_path / "o"
+    state = out_dir / "shadow.json"
+    sim = invoke(
+        tmp_path,
+        "run",
+        "--dataset",
+        SMOKE,
+        "--workflow",
+        "simulated",
+        "--from-traces",
+        smoke_runs["groundtruth"],
+        "--traces-dir",
+        tmp_path / "traces",
+        "--state",
+        state,
+    )
+    assert sim.exit_code == 0, sim.output
+    incumbent_file = trace_file_of(sim)
+    before = state_digest(state)
+    result = invoke(
+        tmp_path,
+        "run",
+        "--dataset",
+        SMOKE,
+        "--workflow",
+        "shadow",
+        "--from-traces",
+        smoke_runs["rules"],
+        "--traces-dir",
+        tmp_path / "traces",
+        "--state",
+        state,
+        "--incumbent",
+        incumbent_file,
+        "--out",
+        out_dir,
+    )
+    assert result.exit_code == 2, result.output
+    assert "--out" in result.output and "--state" in result.output
+    assert "verified" not in result.output
+    assert state_digest(state) == before
+    assert not (out_dir / "shadow.md").exists()
+    # the collision is a usage error: no provider call, no new traced run either.
+    assert sorted((tmp_path / "traces").glob("*.jsonl")) == [incumbent_file]
+
+
+def test_traces_dir_colliding_with_state_is_rejected(tmp_path, smoke_runs):
+    """I1: the same protection for --traces-dir, even though its filenames are run-id based and
+    a real collision needs a deliberately matching --state name."""
+    state = tmp_path / "traces"
+    result = workflow(
+        tmp_path, SMOKE, "shadow", "--from-traces", smoke_runs["rules"], "--state", state
+    )
+    assert result.exit_code == 2, result.output
+    assert "--traces-dir" in result.output
+    assert not (tmp_path / "traces").exists()
+
+
 # ---- incumbent and flag errors ----
 
 
@@ -257,6 +320,33 @@ def test_a_shadow_run_cannot_be_the_incumbent(tmp_path, smoke_runs):
     assert result.exit_code == 2
     assert "is a shadow run; the incumbent must be a simulated or evaluate run" in result.output
     assert sorted((tmp_path / "traces").glob("*.jsonl")) == runs_before
+
+
+def test_incumbent_check_catches_shadow_mode_anywhere_in_the_file(tmp_path, smoke_runs):
+    """M2: paired_cases only requires one run id, so a hand-edited trace file can carry a mix of
+    modes under a single run id (`--incumbent {path}:942` used to check only traces[0].mode).
+    A shadow trace anywhere in the file must still be refused."""
+    sim = workflow(tmp_path, SMOKE, "simulated", "--from-traces", smoke_runs["groundtruth"])
+    assert sim.exit_code == 0, sim.output
+    incumbent_file = trace_file_of(sim)
+    lines = incumbent_file.read_text().splitlines()
+    assert len(lines) >= 2
+    second = json.loads(lines[1])
+    assert second["mode"] == "simulated"
+    second["mode"] = "shadow"
+    lines[1] = json.dumps(second)
+    incumbent_file.write_text("\n".join(lines) + "\n")
+    result = workflow(
+        tmp_path,
+        SMOKE,
+        "shadow",
+        "--from-traces",
+        smoke_runs["rules"],
+        "--incumbent",
+        incumbent_file,
+    )
+    assert result.exit_code == 2
+    assert "is a shadow run; the incumbent must be a simulated or evaluate run" in result.output
 
 
 def test_an_incumbent_on_other_cases_is_refused_before_the_run(tmp_path, smoke_runs):
