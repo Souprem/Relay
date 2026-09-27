@@ -1,0 +1,26 @@
+Relay replay — GOLD-TMP-18
+ORIGINAL run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE candidate trace run_20260927T072623Z_ad6f44 · jev q-v0.3
+EXPECTED (evaluation-only): AUTO_PROCESS
+
+   DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
+   diagnosis_support       p_yes=0.960  p_yes=0.970  +0.010
+   step_therapy            p_yes=0.932  p_yes=0.960  +0.028  auto_process
+   documentation_complete  p_yes=0.970  p_yes=0.970  +0.000
+   material_contradiction  p_yes=0.130  p_yes=0.110  -0.020
+   missing_evidence        NONE (0.91)  NONE (0.91)  +0.000
+
+GATES (rows whose outcome differs; --all-gates shows every row)
+  auto_process      passed → FIRED
+      original:  min(required p_yes)=0.932, auto at >= 0.95; p_yes(material_contradiction)=0.130, blocks at >= 0.2
+      candidate: min(required p_yes)=0.960, auto at >= 0.95; p_yes(material_contradiction)=0.110, blocks at >= 0.2
+  default_review    FIRED → not reached
+      original:  case does not meet the autonomous-action bar
+
+ACTIONS
+  ORIGINAL  HUMAN_REVIEW (wrong-safe)
+      - step_therapy p_yes=0.932 is below the 0.95 autonomous-action bar
+  CANDIDATE AUTO_PROCESS (correct)
+      - all required judgments are at or above 0.95 and contradiction risk is below 0.2
+
+ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS (improved)
