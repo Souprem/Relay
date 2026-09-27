@@ -62,6 +62,10 @@ uv run relay regression --config evals/regression/gates.json                    
 uv run relay run --dataset <dir> --workflow simulated --from-traces <file> [--at X]    # the incumbent: actions become simulated case status (see "Shadow mode")
 uv run relay run --dataset <dir> --workflow shadow --from-traces <file> --incumbent <file>   # a shadow candidate: proposals recorded, never applied; PROMOTE/HOLD
 uv run relay budget show --ledger results/claude-spend.json                     # Claude spend ledger entries and totals
+uv run relay generate --generator gen-v0.3 [--policy v0.2] --count N --seed S --dataset-id ID --out DIR   # gen-v0.3: interrupted and old courses
+uv run relay eval --dataset <dir> --provider jev --questions q-v0.3 --jev-budget-usd 1.00 --jev-ledger <abs path>   # Jev spend counter: estimate first, refuse over the cap
+uv run relay recompose --traces <jev file> --dataset <dir> --policy immunara-v0.1 --out <dir>   # stored Jev answers recomposed under a policy (offline)
+uv run relay bench --dataset <dir> --limit 40 --sample-seed 11 --sizes 1,5,10,20 --jev-budget-usd 1.00   # latency vs questions per call (paid)
 ```
 
 `relay run` writes `traces/<run_id>.jsonl` and `reports/<run_id>.md`, a per-case explanation
@@ -163,6 +167,18 @@ derived by the engine, as for the smoke cases.
 |---|---|---|---|---|
 | `gen-v0.2-dev` | 1 | 400 | 106 / 96 / 198 | Development: any tuning, threshold sweeps, question changes |
 | `gen-v0.2-holdout` | 2 | 1000 | 281 / 236 / 483 | Final reporting only |
+| `gen-v0.3-dev` | 3 | 400 | 122 / 93 / 185 | q-v0.3 development and threshold selection (gen-v0.3) |
+| `gen-v0.3-holdout` | 4 | 1000 | 265 / 269 / 466 | One-shot q-v0.2 vs q-v0.3 evaluation (gen-v0.3) |
+| `gen-v0.3-shift` | 5 | 400 | 85 / 99 / 216 | Policy-shift experiment, labelled under immunara-v0.2 (gen-v0.3) |
+
+`gen-v0.3` (`--generator gen-v0.3`) keeps every gen-v0.2 distribution and adds two things.
+About 20% of taken methotrexate courses are interrupted (held for an infection, surgery, travel
+or a lab recheck, then restarted), split evenly between no segment reaching 12 weeks although
+the whole span does (the GOLD-TMP-17 pattern), the later segment qualifying (GOLD-TMP-18), and
+the earlier one qualifying. Labels follow gold rule D8: only a single segment of at least 84 days
+counts. About 25% of taken courses ended more than 365 days before the request. Labels are
+derived under each case's own policy, so `gen-v0.3-shift` (`--policy v0.2`) is labelled under
+immunara-v0.2's recency rule. gen-v0.2 output is unchanged (`--verify` still passes).
 
 **Tune only on dev.** Do not change questions, thresholds, or the generator after looking at
 holdout results. Run the holdout once per frozen configuration and report what it says.
@@ -1188,6 +1204,378 @@ REGRESSION GATE: FAIL — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
 PROMOTION CHECK: HOLD — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
 ```
 
+## Question set q-v0.3 (interrupted courses)
+
+**Honesty constraint.** q-v0.3 was motivated by a gold finding: GOLD-TMP-17's interrupted
+methotrexate course, which q-v0.2 read as one 133-day course and which both Jev and Claude
+therefore auto-approved. The README rule forbids question changes motivated by gold, so q-v0.3 was
+developed on a new generated dev set (`gen-v0.3-dev`) and evaluated once on a new holdout
+(`gen-v0.3-holdout`), which is the primary evidence. It ran on gold-v0.1 exactly once, for
+completeness. **Gold is not a blind test for q-v0.3 on the interruption and restart cases
+(GOLD-TMP-17 and GOLD-TMP-18).** gold-v0.1 was not edited.
+
+q-v0.3 keeps all 12 q-v0.2 questions and adds 7 (19 in all): whether the patient's own methotrexate
+was held, paused or stopped and later restarted, and the date parts of the pause and of the restart.
+Two instructions gain "(the first time, if it was restarted)" and "(the last time, if it was
+restarted)". Code composes P(some consecutive segment ≥ 12 weeks) =
+(1 − p_int) · P(first start → final end) + p_int · P(start → pause **or** restart → end).
+The two segment events are combined by inclusion-exclusion, under the same independence
+approximation as the date parts.
+
+For an interrupted-and-restarted (variant (c)) course, labelling counts the final-stop outcome
+documented after the short second segment, applied to the long first segment — the spec's resolved
+ambiguity 8 (`relay/generation/labels.py`, `label_case`).
+
+**Adoption on dev** (rule fixed in advance: adopt iff q-v0.3's dev correct-action rate is higher
+and the dev regression gate passes with 0 newly unsafe), from
+[`evals/baselines/gen-v0.3-dev/adoption.txt`](evals/baselines/gen-v0.3-dev/adoption.txt):
+
+```text
+Adoption rule (Phase 3D spec §5 E1, dev only): adopt q-v0.3 iff its correct-action rate is higher than
+q-v0.2's and the dev regression gate q-v0.2 -> q-v0.3 passes (0 newly unsafe).
+  q-v0.2: run run_20260927T071846Z_e950c0 correct 268/400 (0.6700) at thresholds v0.1+at0.97, unsafe 0
+  q-v0.3: run run_20260927T071912Z_cdaf0c correct 373/400 (0.9325) at thresholds v0.1+at0.81, unsafe 0
+  gate: PASS (newly unsafe 0, regressed 3, improved 108)
+DECISION: ADOPT q-v0.3
+```
+
+Note the q-v0.2 thresholds above: `v0.1+at0.97` is q-v0.2's own **`gen-v0.3-dev`-selected** threshold
+(the sweep's highest automation with UAR ≤ 1%, run fresh for this comparison), not the `0.89`
+selected on `gen-v0.2-dev` in Phase 2. The two numbers are not comparable; q-v0.2's threshold moves
+because `gen-v0.3-dev`'s case mix (interrupted and old courses) is different from `gen-v0.2-dev`'s,
+and every q-v0.2 comparison in this section uses the `0.97` figure for that reason.
+
+**Holdout, once, at the dev-selected thresholds.** From
+[`evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/regression.md`](evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/regression.md):
+
+```text
+Relay regression — dataset gen-v0.3-holdout · n=1000
+BASELINE  replay-run_20260927T072249Z_204814 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.97
+CANDIDATE candidate trace run_20260927T072144Z_12e1e4 · jev q-v0.3 · re-decided at auto_process=0.81
+
+METRIC                  BASELINE          CANDIDATE         Δ         BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     694/1000 (69.4%)  921/1000 (92.1%)  +22.7 pp  [66.4%, 72.2%]   [90.3%, 93.7%]
+Automation rate         17/1000 (1.7%)    244/1000 (24.4%)  +22.7 pp  [1.0%, 2.7%]     [21.8%, 27.2%]
+Request-info rate       323/1000 (32.3%)  327/1000 (32.7%)  +0.4 pp   [29.4%, 35.3%]   [29.8%, 35.7%]
+Human escalation rate   660/1000 (66.0%)  429/1000 (42.9%)  -23.1 pp  [63.0%, 68.9%]   [39.8%, 46.0%]
+Unsafe automation rate  1/17 (5.9%)       0/244 (0.0%)      -5.9 pp   [0.1%, 28.7%]    [0.0%, 1.5%]
+Invalid outputs         0                 0                 +0
+
+CHANGES: improved 237 · unchanged 753 · regressed 10 · changed-both-wrong 0 · not identical 1000
+
+UNSAFE RESOLVED (1)
+  GEN-04000653  expected HUMAN_REVIEW  AUTO_PROCESS → HUMAN_REVIEW
+      answer changed: step_therapy · gated crossings: step_therapy: auto_process
+      replay: relay replay GEN-04000653 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+
+REGRESSED (10)
+  GEN-04000114  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000114 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000195  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: diagnosis_support: auto_process; documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000195 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000459  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000459 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000479  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: diagnosis_support: auto_process; documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000479 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000556  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000556 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000583  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000583 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000771  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: diagnosis_support: auto_process; documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000771 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000839  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: diagnosis_support: auto_process; documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000839 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000847  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: documentation_complete: auto_process; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000847 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+  GEN-04000999  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: documentation_complete: auto_process; material_contradiction: contradiction_auto_block; missing_evidence: missing_evidence_request_info
+      replay: relay replay GEN-04000999 --traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/generated/gen-v0.3-holdout --candidate-traces evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.001 → 0.001        -0.000   0.029 → 0.029      -0.000
+ step_therapy            0.045 → 0.014        -0.031   0.020 → 0.038      +0.018
+ documentation_complete  0.036 → 0.036        +0.001   0.073 → 0.072      -0.001
+ material_contradiction  0.032 → 0.032        -0.000   0.118 → 0.116      -0.002
+ missing_evidence        0.192 → 0.196        +0.003   0.068 → 0.072      +0.003
+
+REGRESSION GATE: PASS
+```
+
+The 10 REGRESSED cases above (all `HUMAN_REVIEW` → `REQUEST_INFO`) are correctness regressions,
+not safety regressions: none of them changed to an unsafe automation, and each is still a
+non-automated action (a human still sees the case; q-v0.3 just asks for more information first
+instead of routing straight to review).
+
+**Gold (not blind for this change; see above).** From
+[`evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/regression.md`](evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/regression.md):
+
+```text
+Relay regression — dataset gold-v0.1 · n=100
+BASELINE  replay-run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.97
+CANDIDATE candidate trace run_20260927T072623Z_ad6f44 · jev q-v0.3 · re-decided at auto_process=0.81
+
+METRIC                  BASELINE        CANDIDATE       Δ         BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     69/100 (69.0%)  94/100 (94.0%)  +25.0 pp  [59.0%, 77.9%]   [87.4%, 97.8%]
+Automation rate         5/100 (5.0%)    31/100 (31.0%)  +26.0 pp  [1.6%, 11.3%]    [22.1%, 41.0%]
+Request-info rate       32/100 (32.0%)  32/100 (32.0%)  +0.0 pp   [23.0%, 42.1%]   [23.0%, 42.1%]
+Human escalation rate   63/100 (63.0%)  37/100 (37.0%)  -26.0 pp  [52.8%, 72.4%]   [27.6%, 47.2%]
+Unsafe automation rate  0/5 (0.0%)      1/31 (3.2%)     +3.2 pp   [0.0%, 52.2%]    [0.1%, 16.7%]
+Invalid outputs         0               0               +0
+
+CHANGES: improved 25 · unchanged 74 · regressed 0 · changed-both-wrong 1 · not identical 100
+
+NEWLY UNSAFE (1)
+  GOLD-TMP-16  expected REQUEST_INFO  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: diagnosis_support: auto_process; step_therapy: auto_process; documentation_complete: auto_process
+      replay: relay replay GOLD-TMP-16 --traces evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.011 → 0.010        -0.001   0.049 → 0.048      -0.001
+ step_therapy            0.075 → 0.067        -0.008   0.049 → 0.044      -0.005
+ documentation_complete  0.063 → 0.063        -0.000   0.035 → 0.037      +0.002
+ material_contradiction  0.040 → 0.041        +0.002   0.086 → 0.094      +0.008
+ missing_evidence        0.120 → 0.117        -0.003   0.067 → 0.090      +0.022
+
+REGRESSION GATE: FAIL — 1 newly unsafe case(s) without a waiver: GOLD-TMP-16
+```
+
+**How GOLD-TMP-16 becomes newly unsafe.** `relay replay GOLD-TMP-16` with `--all-gates`, offline:
+
+```text
+Relay replay — GOLD-TMP-16
+ORIGINAL replay-run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.97
+CANDIDATE candidate trace replay-run_20260927T072623Z_ad6f44 · jev q-v0.3
+EXPECTED (evaluation-only): REQUEST_INFO
+
+   DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
+   diagnosis_support       p_yes=0.940  p_yes=0.940  +0.000  auto_process
+   step_therapy            p_yes=0.811  p_yes=0.836  +0.024  auto_process
+   documentation_complete  p_yes=0.910  p_yes=0.910  +0.000  auto_process
+   material_contradiction  p_yes=0.090  p_yes=0.090  +0.000  (auto_process)
+   missing_evidence        NONE (0.78)  NONE (0.81)  +0.030  (auto_process)
+  ((name) = reported-only comparison: no engine gate acts on it)
+
+THRESHOLDS CHANGED
+  auto_process  0.97 → 0.81
+
+GATES (all rows)
+  provider          passed
+      all five decisions present and well-formed
+  age               passed
+      patient.age=47, policy min_age=18
+  contradiction     passed
+      p_yes(material_contradiction)=0.090, review at >= 0.8
+  documentation     passed
+      p_yes(documentation_complete)=0.910, request info below 0.6
+  missing_evidence  passed
+      original:  missing_evidence=NONE (p=0.780), request info at >= 0.7
+      candidate: missing_evidence=NONE (p=0.810), request info at >= 0.7
+  auto_process      passed → FIRED
+      original:  min(required p_yes)=0.811, auto at >= 0.97; p_yes(material_contradiction)=0.090, blocks at >= 0.2
+      candidate: min(required p_yes)=0.836, auto at >= 0.81; p_yes(material_contradiction)=0.090, blocks at >= 0.2
+  default_review    FIRED → not reached
+      original:  case does not meet the autonomous-action bar
+
+ACTIONS
+  ORIGINAL  HUMAN_REVIEW (wrong-safe)
+      - diagnosis_support p_yes=0.940 is below the 0.97 autonomous-action bar
+      - step_therapy p_yes=0.811 is below the 0.97 autonomous-action bar
+      - documentation_complete p_yes=0.910 is below the 0.97 autonomous-action bar
+  CANDIDATE AUTO_PROCESS (UNSAFE)
+      - all required judgments are at or above 0.81 and contradiction risk is below 0.2
+
+ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS (NEWLY UNSAFE)
+```
+
+None of GOLD-TMP-16's five raw judgments moved by more than 0.03. What changed the action is the
+lower `auto_process` bar alone (`0.97 → 0.81`): `diagnosis_support` at 0.94, `documentation_complete`
+at 0.91 and `step_therapy` at about 0.836 all now clear the 0.81 bar, where at 0.97 none of them did.
+The `missing_evidence` gate did run on this case (`GATES` shows it evaluated and passed on both
+sides) — the case's missing-evidence distribution reports `NONE` at 0.78 (original) and 0.81
+(candidate), both below the 0.7 point at which `missing_evidence_request_info` would instead route
+the case to `REQUEST_INFO`. That distribution simply never moved into the range the gate acts on;
+the gate itself is not a no-op, it just didn't fire here.
+
+GOLD-TMP-17 replayed across the two question sets:
+
+```text
+Relay replay — GOLD-TMP-17
+ORIGINAL run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE candidate trace run_20260927T072623Z_ad6f44 · jev q-v0.3
+EXPECTED (evaluation-only): HUMAN_REVIEW
+
+    DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
+    diagnosis_support       p_yes=0.980  p_yes=0.980  +0.000
+ *  step_therapy            p_yes=0.932  p_yes=0.027  -0.904
+    documentation_complete  p_yes=0.970  p_yes=0.970  +0.000
+    material_contradiction  p_yes=0.100  p_yes=0.100  +0.000
+    missing_evidence        NONE (0.85)  NONE (0.90)  +0.050
+  (* = answer changed)
+
+GATES: same outcome at every gate (--all-gates shows every row)
+
+ACTIONS
+  ORIGINAL  HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.932 is below the 0.95 autonomous-action bar
+  CANDIDATE HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.027 is below the 0.95 autonomous-action bar
+
+ACTION UNCHANGED: HUMAN_REVIEW
+```
+
+**Where the interrupted-course accuracy comes from.** The dev/holdout `step_therapy` accuracy gap
+concentrates on interrupted-course cases, not old-course ones. Recomputed offline from the committed
+`gen-v0.3-dev` and `gen-v0.3-holdout` traces and ground truth, joined against the deterministic
+generation facts (`relay.generation.scenarios.sample_facts`, same seed, no network) to tag each case
+as interrupted, old-course or neither, `step_therapy` accuracy (prediction = `p_yes >= 0.5` vs
+`ground_truth.step_therapy_satisfied`) splits as:
+
+```text
+gen-v0.3-dev (n=400): interrupted 73, old_course 58, other 269
+  interrupted  q-v0.2 50/73  = 0.6849   q-v0.3 72/73  = 0.9863
+  old_course   q-v0.2 57/58  = 0.9828   q-v0.3 56/58  = 0.9655
+  other        q-v0.2 265/269 = 0.9851  q-v0.3 261/269 = 0.9703
+
+gen-v0.3-holdout (n=1000): interrupted 188, old_course 142, other 670
+  interrupted  q-v0.2 147/188 = 0.7819  q-v0.3 188/188 = 1.0000
+  old_course   q-v0.2 142/142 = 1.0000  q-v0.3 137/142 = 0.9648
+  other        q-v0.2 658/670 = 0.9821  q-v0.3 653/670 = 0.9746
+```
+
+(The overall `per_question_accuracy.step_therapy` figures this reproduces — 0.947/0.978 on holdout
+for q-v0.2/q-v0.3 — match the committed `results.json` files exactly, confirming the method.)
+
+**Findings.** The dev gate passed (0 newly unsafe, 3 regressed, 108 improved) with q-v0.3's correct-action
+rate higher than q-v0.2's (373/400 vs 268/400), so the fixed-in-advance rule ADOPTed q-v0.3. Holdout,
+run once, confirmed the direction at much larger scale: 921/1000 correct and 244/1000 automated for
+q-v0.3@0.81 against 694/1000 correct and 17/1000 automated for q-v0.2@0.97, with the one q-v0.2 unsafe
+automation (1/17) resolved and 0/244 unsafe under q-v0.3; the 10 regressed cases are correctness
+regressions, not safety regressions. The GOLD-TMP-17 replay shows the read Jev was designed to fix:
+`step_therapy` drops from p_yes=0.932 to p_yes=0.027 once the question set can represent an
+interruption, though the action stays `HUMAN_REVIEW` (correct) on both sides at gold's `q-v0.2`
+threshold of 0.95. The negative result: on gold (not blind for this change) the regression gate
+FAILED, with GOLD-TMP-16 newly unsafe — not because any raw judgment moved much, but because the
+dev-selected `auto_process` bar dropped from 0.97 to 0.81 and let diagnosis (0.94), documentation
+(0.91) and step therapy (about 0.84) all clear it, while the `missing_evidence` gate's own
+`NONE`-confidence distribution (0.78 → 0.81) never reached its separate 0.7 request-info bar.
+
+## Policy shift (immunara-v0.2)
+
+immunara-v0.2 is immunara-v0.1 plus one added prior-treatment requirement ("policy_v5" in the
+handoff): *"The qualifying methotrexate course must have been ongoing, or have ended, within the
+12 months (365 days) before the request date."* Recency is part of step therapy, which Relay composes
+in code, so the policy engine needed no new gate. One paid q-v0.3 Jev run on `gen-v0.3-shift`
+(ground truth labelled under v0.2) was recomposed twice from the same stored answers with
+`relay recompose`: **stale** composes under immunara-v0.1 (policy-unaware), and **aware** under
+immunara-v0.2. Both are scored against the v0.2 ground truth at auto_process 0.95.
+
+From [`evals/baselines/gen-v0.3-shift/shift-summary.md`](evals/baselines/gen-v0.3-shift/shift-summary.md):
+
+| Run | Policy composed under | Correct action | Automation | Unsafe / auto (UAR) |
+|---|---|---|---|---|
+| stale (`run_20260927T072948Z_e5915e`) | v0.1 | 294/400 (73.5%) | 16/400 (4.0%) | 3/16 (18.8%) |
+| aware (`run_20260927T072949Z_bd430c`) | v0.2 | 297/400 (74.2%) | 13/400 (3.2%) | 0/13 (0.0%) |
+
+Stale-only unsafe automations (3): GEN-05000118, GEN-05000257, GEN-05000289
+Still unsafe in both (0): none
+Gate stale → aware: PASS (newly unsafe 0, regressed 0)
+
+The stale-only unsafe automations are approvals that pass v0.1's rule but break the recency
+requirement. The committed gate `gen-v0.3-shift-stale-to-aware` runs stale → aware in CI.
+
+**Shadow demo.** Stale is the simulated incumbent and aware the shadow candidate:
+
+```text
+SHADOW RUN run_20260927T073007Z_c1a0ba: 400 proposals recorded; case state unchanged (verified).
+PROMOTION CHECK: PROMOTE
+```
+
+**Rules baseline, for context.** rules-v0.1 has no recency rule, so it is naive by construction:
+
+```text
+  Correct action rate       261/400 (65.2%)
+  Automation rate           50/400 (12.5%)
+  Unsafe automation rate    6/50 (12.0%)
+```
+
+**Findings.** Under immunara-v0.2, the stale (policy-unaware) recomposition of the same stored Jev
+answers has 3 unsafe automations out of 16 (18.8% UAR) — approvals that satisfy v0.1's rule but
+break the new 365-day recency requirement. Recomposing the same answers as aware resolves all
+three (0/13 unsafe) while giving up 3 automated cases (16 → 13, about 0.8 pp of the 400-case set)
+and gaining a small amount of correct-action rate (73.5% → 74.2%). The stale → aware regression
+gate PASSes (0 newly unsafe, 0 regressed), and the shadow demo, run over the same 400 cases with
+stale as the simulated incumbent and aware as the candidate, verdicts PROMOTE.
+
+## Parallelism (narrow decisions per call)
+
+Handoff experiment 4 asks whether adding narrow decisions costs latency. `relay bench` sent 40
+gen-v0.3-dev cases (sample seed 11) to Jev with 1, 5, 10 and 20 questions per call. Every call is
+one `system_one` request carrying all of its questions, and the typesafe-sdk client returns no
+per-question timing. Calls ran one at a time. Size 20 is q-v0.3's 19 questions plus one duplicated
+question (controlled padding). The runs are latency-only; their decisions are not scored.
+
+Dataset gen-v0.3-dev, 40 cases (--limit 40 --sample-seed 11); model jev-1.13.0; q-v0.3 ordering.
+
+| Questions per call | Calls | Errors | p50 latency (ms) | p95 latency (ms) | Mean latency (ms) | Mean input tokens | Est. cost / case |
+|---|---|---|---|---|---|---|---|
+| 1 | 40 | 0 | 178 | 230 | 186 | 982 | $0.000041 |
+| 5 | 40 | 0 | 177 | 225 | 183 | 1526 | $0.000064 |
+| 10 | 40 | 0 | 186 | 207 | 186 | 2534 | $0.000106 |
+| 20 | 40 | 0 | 191 | 290 | 202 | 4207 | $0.000177 |
+
+Total estimated cost: $0.0155
+
+- Batching: Each call is one system_one request carrying all k questions for one case (typesafe-sdk==0.7.1); the client does not split a request.
+- Per-question latency: Not measured: typesafe-sdk==0.7.1 returns no per-question timing (one HTTP request per call).
+- Padding: Size 20 is q-v0.3's 19 questions plus 'diagnosis_support_padding', a duplicate of 'diagnosis_support' under another id (controlled padding).
+- Size order: size order rotated per case (offset = (sample seed 11 + case index) mod len(sizes), a Latin square), so each size appears equally often in each call position.
+- Calls ran one at a time; latency is wall time around one request, retries included.
+- Latency-only: these runs' decisions are not scored.
+- Question ordering: diagnosis_support, documentation_complete, material_contradiction, missing_evidence, mtx_start_month, mtx_start_day, mtx_start_year, mtx_end_status, mtx_end_month, mtx_end_day, mtx_end_year, mtx_inadequate_response, mtx_interrupted, mtx_pause_month, mtx_pause_day, mtx_pause_year, mtx_restart_month, mtx_restart_day, mtx_restart_year, diagnosis_support_padding
+
+**Findings.** The "size order rotated per case" note above describes a cyclic Latin square (each
+case's call order is a fixed rotation of `1, 5, 10, 20` by `(sample seed + case index) mod 4`), not
+a Williams design (which balances first-order carryover pairs); this run only balances position,
+not adjacency, and n = 40 per size. p50 latency is flat from 1 to 10 questions (178 → 177 → 186 ms)
+and rises modestly at 20 (191 ms); p95 is similarly flat through 10 (230 → 225 → 207 ms) and rises
+more at 20 (290 ms). Estimated cost per case scales with the token count, from $0.000041 at 1
+question to $0.000177 at 20 — about 4.3× for 20× the questions, since the fixed per-call overhead
+is amortized. All differences are small relative to the ~180-200 ms baseline call latency.
+
+## Phase 3D Jev spend
+
+Every paid Phase 3D run went through the Jev spend counter (cap $1.00). The committed copy of the ledger
+is [`evals/baselines/jev-spend-3d.json`](evals/baselines/jev-spend-3d.json). No Claude calls were made.
+
+From `env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env budget show --ledger evals/baselines/jev-spend-3d.json`:
+
+```text
+Claude spend ledger — evals/baselines/jev-spend-3d.json
+RUN                          DATASET           MODE  CASES  STATUS   COST     BATCH  NOTE
+run_20260927T071846Z_e950c0  gen-v0.3-dev      sync  400    settled  $0.0452  —
+run_20260927T071912Z_cdaf0c  gen-v0.3-dev      sync  400    settled  $0.0691  —
+run_20260927T072144Z_12e1e4  gen-v0.3-holdout  sync  1000   settled  $0.1724  —
+run_20260927T072249Z_204814  gen-v0.3-holdout  sync  1000   settled  $0.1125  —
+run_20260927T072623Z_ad6f44  gold-v0.1         sync  100    settled  $0.0175  —
+run_20260927T072915Z_007c7c  gen-v0.3-shift    sync  400    settled  $0.0696  —
+run_20260927T073246Z_3a5f87  gen-v0.3-dev      sync  40     settled  $0.0155  —
+```
+
+Total: Settled $0.501850 of the $1.00 cap. Total Claude spend is unchanged at $8.710495 of the
+$10.00 default budget (`results/claude-spend.json`, `evals/baselines/claude-spend.json`); no Claude
+calls were made in Phase 3.
+
 ## Limitations
 
 - The regression gate (G5) is relative to its baseline, so it cannot catch an unsafe automation
@@ -1267,3 +1655,6 @@ PROMOTION CHECK: HOLD — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
 - [Phase 3B implementation plan](docs/superpowers/plans/2026-09-26-phase3b-regression-gate.md)
 - [Phase 3C shadow mode design](docs/superpowers/specs/2026-09-26-phase3c-shadow-mode-design.md)
 - [Phase 3C implementation plan](docs/superpowers/plans/2026-09-26-phase3c-shadow-mode.md)
+- [Phase 3D design (q-v0.3, policy shift, parallelism)](docs/superpowers/specs/2026-09-26-phase3d-questions-and-policy-shift-design.md)
+- [Phase 3D1 implementation plan](docs/superpowers/plans/2026-09-26-phase3d1-generator-policy-questions.md)
+- [Phase 3D2 implementation plan](docs/superpowers/plans/2026-09-26-phase3d2-experiments.md)
