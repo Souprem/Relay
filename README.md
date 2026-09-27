@@ -59,6 +59,8 @@ uv run relay compare --dataset <dir> --traces <a> --traces <b> [--labels a,b]   
 uv run relay replay CASE_ID --traces <file> --dataset <dir> [--at 0.9]           # one case beside a candidate (see "Replay")
 uv run relay regression --dataset <dir> --baseline <file> --candidate-at 0.9     # run-level regression gate (see "Regression gate")
 uv run relay regression --config evals/regression/gates.json                    # every committed gate, as CI runs them
+uv run relay run --dataset <dir> --workflow simulated --from-traces <file> [--at X]    # the incumbent: actions become simulated case status (see "Shadow mode")
+uv run relay run --dataset <dir> --workflow shadow --from-traces <file> --incumbent <file>   # a shadow candidate: proposals recorded, never applied; PROMOTE/HOLD
 uv run relay budget show --ledger results/claude-spend.json                     # Claude spend ledger entries and totals
 ```
 
@@ -964,6 +966,228 @@ manifests with `--verify` (a few seconds locally), then runs the committed gates
 workflow references no secrets and sets no provider keys, and a test checks that it contains no
 `secrets.` reference.
 
+## Shadow mode
+
+Shadow mode models a safe, progressive rollout. It does not pretend Relay has real production
+traffic: every case is synthetic, and every status change is simulated in a local file. The
+rollout ladder has three rungs:
+
+1. **The simulated live system (the incumbent).** `relay run --workflow simulated` runs the
+   accepted configuration (provider, question set, policy and thresholds). Each action becomes a
+   simulated case-status transition in a small state file (default `state/case-status.json`,
+   git-ignored): `RECEIVED` → `AUTO_APPROVED` (AUTO_PROCESS), `INFO_REQUESTED` (REQUEST_INFO) or
+   `IN_HUMAN_REVIEW` (HUMAN_REVIEW).
+2. **The shadow candidate.** `relay run --workflow shadow` runs a new configuration on the same
+   cases. It records each proposed action as a `mode: "shadow"` trace and prints
+   `SHADOW: Would auto-process CASE-ID; no action was taken.` The state file is only read. The
+   command hashes it before and after the run, and prints `case state unchanged (verified)` only
+   when the two hashes match. If they differ, it prints `SHADOW VIOLATION` and exits 3.
+3. **The promotion check.** With `--incumbent TRACES`, the shadow run is compared with the
+   incumbent. The agreement section uses no ground truth, so it is what a real shadow deployment
+   could see: the action agreement rate, an incumbent × candidate action matrix, and the cases the
+   candidate would newly auto-process or would stop auto-processing. The promotion check below it
+   is labelled EVALUATION-ONLY. It is the regression gate from "Regression gate" above, with the
+   incumbent as its baseline. Gate PASS prints `PROMOTION CHECK: PROMOTE` (exit 0), and gate FAIL
+   prints `PROMOTION CHECK: HOLD — <failures>` (exit 4). STILL UNSAFE cases are listed but never
+   cause a HOLD.
+
+The guarantee is enforced in code, not only in the CLI. The status store's only writer refuses a
+shadow trace with `ShadowWriteError` before it touches the file, and a test checks the file stays
+byte-identical.
+
+The handoff's `relay run --dataset evals/gold --mode shadow` is `relay run --dataset evals/gold
+--workflow shadow` here, because `--mode` already selects Claude's sync or batch mode. Two
+details follow from that choice:
+
+- **Offline runs.** `--from-traces FILE [--at X]` re-issues a stored run's decisions as a new run
+  in the requested mode, with `replay_of` set on every trace and `source_run_id` in the manifest.
+  No provider is called. Without `--from-traces`, the run calls the provider with every existing
+  guard: the Jev key check, and the Claude budget check and spend ledger.
+- **Conflicts.** A second simulated run over cases the state file already moved is refused with
+  exit 2. `--reset-state` first archives the file to `<state>.bak-<UTC timestamp>`.
+
+`--waivers` and `--max-regressed` pass through to the promotion check, and `--out DIR` writes
+`shadow.json` and `shadow.md`. The shadow traces and manifest go to `--traces-dir` (default
+`traces/`), like any run.
+
+The demos below use the committed gold traces only as frozen inputs, and nothing is tuned on
+them. The per-case lines are trimmed (`[… N more … lines …]`); everything else is the commands'
+real output. First, the incumbent: Jev's gold decisions at its dev-selected threshold, 0.89.
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env run \
+    --dataset evals/gold --workflow simulated --state state/promote-demo.json \
+    --from-traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz --at 0.89
+SIMULATED: GOLD-CON-01 RECEIVED → IN_HUMAN_REVIEW (HUMAN_REVIEW)
+SIMULATED: GOLD-CON-02 RECEIVED → IN_HUMAN_REVIEW (HUMAN_REVIEW)
+SIMULATED: GOLD-CON-03 RECEIVED → IN_HUMAN_REVIEW (HUMAN_REVIEW)
+[… 97 more SIMULATED lines, one per case …]
+
+SIMULATED RUN run_20260927T053253Z_80ff2f: 100 transitions applied — AUTO_APPROVED 29 · INFO_REQUESTED 32 · IN_HUMAN_REVIEW 39
+Traces: traces/run_20260927T053253Z_80ff2f.jsonl
+Manifest: traces/run_20260927T053253Z_80ff2f.manifest.json
+State: state/promote-demo.json
+```
+
+Then Claude at its own dev-selected threshold, 0.55, shadows it. This is the `gold-jev-vs-claude`
+gate as a rollout: 96/100 actions agree, and the candidate is not an unsafe regression, so the
+check says PROMOTE. Both configurations automate `GOLD-TMP-17` unsafely (see "Regression gate"
+above), so it appears under STILL UNSAFE and not as a failure.
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env run \
+    --dataset evals/gold --workflow shadow --state state/promote-demo.json \
+    --from-traces evals/baselines/gold-v0.1/run_20260926T011730Z_f1852f/traces.jsonl.gz --at 0.55 \
+    --incumbent traces/run_20260927T053253Z_80ff2f.jsonl
+SHADOW: Would send GOLD-CON-01 to human review; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053253Z_80ff2f)
+SHADOW: Would send GOLD-CON-02 to human review; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053253Z_80ff2f)
+SHADOW: Would send GOLD-CON-03 to human review; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053253Z_80ff2f)
+[… 97 more SHADOW lines, one per case …]
+
+SHADOW RUN run_20260927T053259Z_9dc576: 100 proposals recorded; case state unchanged (verified).
+Traces: traces/run_20260927T053259Z_9dc576.jsonl
+Manifest: traces/run_20260927T053259Z_9dc576.manifest.json
+
+Relay shadow comparison — dataset gold-v0.1 · n=100
+INCUMBENT simulated run_20260927T053253Z_80ff2f · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.89
+CANDIDATE shadow run_20260927T053259Z_9dc576 · claude q-v0.2+claude-prompt-v1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.55
+
+AGREEMENT (unlabelled; what a real shadow deployment sees)
+  Action agreement: 96/100 (96.0%)  95% CI [90.1%, 98.9%]
+
+  INCUMBENT \ CANDIDATE  AUTO_PROCESS  REQUEST_INFO  HUMAN_REVIEW
+  AUTO_PROCESS           28            0             1
+  REQUEST_INFO           0             32            0
+  HUMAN_REVIEW           2             1             36
+
+  Would newly auto-process (2): GOLD-MIS-17, GOLD-TMP-15
+  Would stop auto-processing (1): GOLD-TMP-18
+
+EVALUATION-ONLY (uses ground truth; not available in a real shadow deployment)
+Relay regression — dataset gold-v0.1 · n=100
+BASELINE  simulated run_20260927T053253Z_80ff2f · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.89
+CANDIDATE shadow run_20260927T053259Z_9dc576 · claude q-v0.2+claude-prompt-v1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.55
+
+METRIC                  BASELINE        CANDIDATE       Δ        BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     91/100 (91.0%)  93/100 (93.0%)  +2.0 pp  [83.6%, 95.8%]   [86.1%, 97.1%]
+Automation rate         29/100 (29.0%)  30/100 (30.0%)  +1.0 pp  [20.4%, 38.9%]   [21.2%, 40.0%]
+Request-info rate       32/100 (32.0%)  33/100 (33.0%)  +1.0 pp  [23.0%, 42.1%]   [23.9%, 43.1%]
+Human escalation rate   39/100 (39.0%)  37/100 (37.0%)  -2.0 pp  [29.4%, 49.3%]   [27.6%, 47.2%]
+Unsafe automation rate  1/29 (3.4%)     1/30 (3.3%)     -0.1 pp  [0.1%, 17.8%]    [0.1%, 17.2%]
+Invalid outputs         0               0               +0
+
+CHANGES: improved 3 · unchanged 96 · regressed 1 · changed-both-wrong 0 · not identical 100
+
+STILL UNSAFE (1) — also unsafe in the baseline; not a gate failure
+  GOLD-TMP-17  expected HUMAN_REVIEW  AUTO_PROCESS → AUTO_PROCESS
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-TMP-17 --traces traces/run_20260927T053253Z_80ff2f.jsonl --dataset evals/gold --candidate-traces traces/run_20260927T053259Z_9dc576.jsonl
+
+REGRESSED (1)
+  GOLD-TMP-18  expected AUTO_PROCESS  AUTO_PROCESS → HUMAN_REVIEW
+      answer changed: step_therapy · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-18 --traces traces/run_20260927T053253Z_80ff2f.jsonl --dataset evals/gold --candidate-traces traces/run_20260927T053259Z_9dc576.jsonl
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.011 → 0.008        -0.003   0.049 → 0.049      -0.000
+ step_therapy            0.075 → 0.084        +0.009   0.049 → 0.152      +0.102
+ documentation_complete  0.063 → 0.046        -0.017   0.035 → 0.098      +0.064
+ material_contradiction  0.040 → 0.007        -0.032   0.086 → 0.054      -0.032
+ missing_evidence        0.120 → 0.076        -0.045   0.067 → 0.133      +0.065
+
+REGRESSION GATE: PASS
+
+PROMOTION CHECK: PROMOTE
+```
+
+The second demo is the FAIL demo from "Regression gate" in rollout terms. The incumbent is Jev
+at the recorded 0.95, and the candidate is the same decisions at 0.89. The shadow line for
+`GOLD-TMP-17` shows the candidate would auto-process a case the incumbent sent to human review,
+and the promotion check holds the rollout. The command exits 4.
+
+```text
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env run \
+    --dataset evals/gold --workflow simulated --state state/hold-demo.json \
+    --from-traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz
+SIMULATED: GOLD-CON-01 RECEIVED → IN_HUMAN_REVIEW (HUMAN_REVIEW)
+SIMULATED: GOLD-CON-02 RECEIVED → IN_HUMAN_REVIEW (HUMAN_REVIEW)
+SIMULATED: GOLD-CON-03 RECEIVED → IN_HUMAN_REVIEW (HUMAN_REVIEW)
+[… 97 more SIMULATED lines, one per case …]
+
+SIMULATED RUN run_20260927T053303Z_3c64c0: 100 transitions applied — AUTO_APPROVED 18 · INFO_REQUESTED 32 · IN_HUMAN_REVIEW 50
+Traces: traces/run_20260927T053303Z_3c64c0.jsonl
+Manifest: traces/run_20260927T053303Z_3c64c0.manifest.json
+State: state/hold-demo.json
+
+$ env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env run \
+    --dataset evals/gold --workflow shadow --state state/hold-demo.json \
+    --from-traces evals/baselines/gold-v0.1/run_20260925T170857Z_b95be9/traces.jsonl.gz --at 0.89 \
+    --incumbent traces/run_20260927T053303Z_3c64c0.jsonl
+SHADOW: Would send GOLD-CON-01 to human review; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053303Z_3c64c0)
+SHADOW: Would send GOLD-CON-02 to human review; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053303Z_3c64c0)
+SHADOW: Would send GOLD-CON-03 to human review; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053303Z_3c64c0)
+[… 73 more SHADOW lines, one per case …]
+SHADOW: Would auto-process GOLD-TMP-17; no action was taken. (current status: IN_HUMAN_REVIEW by run_20260927T053303Z_3c64c0)
+[… 23 more SHADOW lines, one per case …]
+
+SHADOW RUN run_20260927T053309Z_5ae601: 100 proposals recorded; case state unchanged (verified).
+Traces: traces/run_20260927T053309Z_5ae601.jsonl
+Manifest: traces/run_20260927T053309Z_5ae601.manifest.json
+
+Relay shadow comparison — dataset gold-v0.1 · n=100
+INCUMBENT simulated run_20260927T053303Z_3c64c0 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE shadow run_20260927T053309Z_5ae601 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.89
+
+AGREEMENT (unlabelled; what a real shadow deployment sees)
+  Action agreement: 89/100 (89.0%)  95% CI [81.2%, 94.4%]
+
+  INCUMBENT \ CANDIDATE  AUTO_PROCESS  REQUEST_INFO  HUMAN_REVIEW
+  AUTO_PROCESS           18            0             0
+  REQUEST_INFO           0             32            0
+  HUMAN_REVIEW           11            0             39
+
+  Would newly auto-process (11): GOLD-MIS-19, GOLD-STR-01, GOLD-STR-03, GOLD-STR-04, GOLD-STR-06, GOLD-TMP-01, GOLD-TMP-03, GOLD-TMP-08, GOLD-TMP-17, GOLD-TMP-18, GOLD-TRK-16
+  Would stop auto-processing (0): none
+
+EVALUATION-ONLY (uses ground truth; not available in a real shadow deployment)
+Relay regression — dataset gold-v0.1 · n=100
+BASELINE  simulated run_20260927T053303Z_3c64c0 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE shadow run_20260927T053309Z_5ae601 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.89
+
+METRIC                  BASELINE        CANDIDATE       Δ         BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     82/100 (82.0%)  91/100 (91.0%)  +9.0 pp   [73.1%, 89.0%]   [83.6%, 95.8%]
+Automation rate         18/100 (18.0%)  29/100 (29.0%)  +11.0 pp  [11.0%, 26.9%]   [20.4%, 38.9%]
+Request-info rate       32/100 (32.0%)  32/100 (32.0%)  +0.0 pp   [23.0%, 42.1%]   [23.0%, 42.1%]
+Human escalation rate   50/100 (50.0%)  39/100 (39.0%)  -11.0 pp  [39.8%, 60.2%]   [29.4%, 49.3%]
+Unsafe automation rate  0/18 (0.0%)     1/29 (3.4%)     +3.4 pp   [0.0%, 18.5%]    [0.1%, 17.8%]
+Invalid outputs         0               0               +0
+
+CHANGES: improved 10 · unchanged 89 · regressed 1 · changed-both-wrong 0 · not identical 56
+
+NEWLY UNSAFE (1)
+  GOLD-TMP-17  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-17 --traces traces/run_20260927T053303Z_3c64c0.jsonl --dataset evals/gold --candidate-traces traces/run_20260927T053309Z_5ae601.jsonl
+
+REGRESSED (1)
+  GOLD-TMP-17  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: step_therapy: auto_process
+      replay: relay replay GOLD-TMP-17 --traces traces/run_20260927T053303Z_3c64c0.jsonl --dataset evals/gold --candidate-traces traces/run_20260927T053309Z_5ae601.jsonl
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.011 → 0.011        +0.000   0.049 → 0.049      +0.000
+ step_therapy            0.075 → 0.075        +0.000   0.049 → 0.049      +0.000
+ documentation_complete  0.063 → 0.063        +0.000   0.035 → 0.035      +0.000
+ material_contradiction  0.040 → 0.040        +0.000   0.086 → 0.086      +0.000
+ missing_evidence        0.120 → 0.120        +0.000   0.067 → 0.067      +0.000
+
+REGRESSION GATE: FAIL — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
+
+PROMOTION CHECK: HOLD — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
+```
+
 ## Limitations
 
 - The regression gate (G5) is relative to its baseline, so it cannot catch an unsafe automation
@@ -1018,7 +1242,9 @@ workflow references no secrets and sets no provider keys, and a test checks that
   blind agreement reflects one model family applying one guide consistently, not independent human
   validation. Claude's gold results may benefit from shared interpretation with its own labels, so
   a human review matters most for comparisons involving Claude.
-- Actions are simulated. Relay never submits anything anywhere.
+- Actions are simulated. Relay never submits anything anywhere. Shadow mode's agreement section
+  is the only part a real shadow deployment could compute; its promotion check uses ground truth,
+  which a real deployment would not have (see "Shadow mode" above).
 
 ## Project docs
 
@@ -1037,3 +1263,7 @@ workflow references no secrets and sets no provider keys, and a test checks that
 - [Phase 2E implementation plan](docs/superpowers/plans/2026-09-25-phase2e-gold-set.md)
 - [Phase 3A replay design](docs/superpowers/specs/2026-09-26-phase3a-replay-design.md)
 - [Phase 3A implementation plan](docs/superpowers/plans/2026-09-26-phase3a-replay.md)
+- [Phase 3B regression gate design](docs/superpowers/specs/2026-09-26-phase3b-regression-gate-design.md)
+- [Phase 3B implementation plan](docs/superpowers/plans/2026-09-26-phase3b-regression-gate.md)
+- [Phase 3C shadow mode design](docs/superpowers/specs/2026-09-26-phase3c-shadow-mode-design.md)
+- [Phase 3C implementation plan](docs/superpowers/plans/2026-09-26-phase3c-shadow-mode.md)
