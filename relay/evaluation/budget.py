@@ -63,10 +63,12 @@ class SpendLedger(BaseModel):
 
 
 class BudgetExceeded(Exception):
-    def __init__(self, spent: Decimal, projected: Decimal, budget: Decimal) -> None:
+    def __init__(
+        self, spent: Decimal, projected: Decimal, budget: Decimal, label: str = "Claude"
+    ) -> None:
         self.spent, self.projected, self.budget = spent, projected, budget
         super().__init__(
-            f"Claude budget exceeded: spent ${spent:.4f} + projected ${projected:.4f} "
+            f"{label} budget exceeded: spent ${spent:.4f} + projected ${projected:.4f} "
             f"= ${spent + projected:.4f}, over the ${budget:.2f} budget"
         )
 
@@ -139,9 +141,12 @@ def project_cost(ledger: SpendLedger, n_cases: int, mode: Mode) -> Decimal:
     return cost * BATCH_DISCOUNT if mode == "batch" else cost
 
 
-def check_budget(ledger: SpendLedger, projected: Decimal, budget: Decimal) -> None:
+def check_budget(
+    ledger: SpendLedger, projected: Decimal, budget: Decimal, *, label: str = "Claude"
+) -> None:
+    """BudgetExceeded (its message names `label`) if spend plus `projected` exceeds `budget`."""
     if ledger.spent_usd + projected > budget:
-        raise BudgetExceeded(ledger.spent_usd, projected, budget)
+        raise BudgetExceeded(ledger.spent_usd, projected, budget, label)
 
 
 def reserve(

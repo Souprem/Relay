@@ -30,7 +30,12 @@ from relay.decisions.claude_batch import ClaudeBatchProvider
 from relay.decisions.claude_prompt import CLAUDE_QUESTION_SETS
 from relay.decisions.ground_truth import GroundTruthProvider
 from relay.decisions.jev import JevProvider
-from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_2, QUESTION_SET_VERSIONS
+from relay.decisions.questions import (
+    DEFAULT_QUESTION_SET_VERSION,
+    Q_V0_2,
+    QUESTION_SET_VERSIONS,
+    question_ids,
+)
 from relay.decisions.rules_baseline import RulesBaselineProvider
 from relay.evaluation.artifacts import write_eval_bundle
 from relay.evaluation.budget import (
@@ -55,6 +60,15 @@ from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
+from relay.evaluation.jev_spend import (
+    DEFAULT_JEV_LEDGER,
+    JevBudget,
+    check_jev_budget,
+    estimate_jev_cost,
+    estimate_line,
+    reserve_jev,
+    settle_jev,
+)
 from relay.evaluation.metrics import EvalError, paired_cases, run_identity, score_run
 from relay.evaluation.regression import RegressionResult
 from relay.evaluation.regression_run import (
@@ -232,6 +246,19 @@ LedgerOption = Annotated[
 BatchId = Annotated[
     str | None,
     typer.Option(help="claude --mode batch only: re-attach to this submitted Message Batch."),
+]
+
+JevBudgetUsd = Annotated[
+    float | None,
+    typer.Option(
+        min=0.0,
+        help="jev only: the Jev spend counter. Print the estimate and refuse to start if the "
+        "ledger's Jev spend + the estimate exceeds this cap.",
+    ),
+]
+JevLedgerOption = Annotated[
+    Path | None,
+    typer.Option(help=f"jev only: Jev spend ledger (default {DEFAULT_JEV_LEDGER})."),
 ]
 
 TraceFile = Annotated[
@@ -623,6 +650,82 @@ def _is_ambiguous_submission_error(error: BaseException) -> bool:
     return False
 
 
+def _resolve_jev(
+    provider: ProviderName, budget_usd: float | None, ledger: Path | None
+) -> JevBudget | None:
+    """The Jev spend counter's settings, or None when --jev-budget-usd is not given.
+
+    Both flags need --provider jev, and --jev-ledger needs --jev-budget-usd.
+    """
+    given = [
+        flag
+        for flag, value in (("--jev-budget-usd", budget_usd), ("--jev-ledger", ledger))
+        if value is not None
+    ]
+    if given and provider is not ProviderName.jev:
+        raise _fail(f"{', '.join(given)} applies only to --provider jev")
+    if budget_usd is None:
+        if ledger is not None:
+            raise _fail("--jev-ledger needs --jev-budget-usd")
+        return None
+    return JevBudget(
+        budget_usd=Decimal(str(budget_usd)),
+        ledger=DEFAULT_JEV_LEDGER if ledger is None else ledger,
+    )
+
+
+def _load_jev_ledger(jev: JevBudget) -> SpendLedger:
+    try:
+        return load_ledger(jev.ledger)
+    except (ValidationError, OSError) as error:
+        raise _fail(f"{jev.ledger}: {error}") from error
+
+
+def _jev_budget_check(jev: JevBudget, cases: int, questions: int | str, estimate: Decimal) -> None:
+    """Print the estimate and the ledger's spend; exit 2 if the run could break the cap."""
+    ledger = _load_jev_ledger(jev)
+    typer.echo(estimate_line(cases, questions, estimate))
+    typer.echo(
+        f"Jev budget: spent ${ledger.spent_usd:.4f} of the ${jev.budget_usd:.2f} cap ({jev.ledger})"
+    )
+    try:
+        check_jev_budget(ledger, estimate, jev.budget_usd)
+    except BudgetExceeded as error:
+        raise _fail(str(error)) from error
+
+
+def _jev_reserve(
+    jev: JevBudget, run_id: str, dataset_id: str, cases: int, estimate: Decimal
+) -> None:
+    ledger = reserve_jev(
+        _load_jev_ledger(jev),
+        run_id=run_id,
+        dataset_id=dataset_id,
+        cases=cases,
+        estimate=estimate,
+    )
+    write_ledger(jev.ledger, ledger)
+
+
+def _jev_settle(jev: JevBudget, run_id: str, traces: list[WorkflowTrace] | None) -> None:
+    """Settle at the traces' summed estimated cost. None (an unreadable partial trace file)
+    leaves the reservation counted, as for a Claude sync run."""
+    if traces is None:
+        typer.echo(
+            f"error: Jev run {run_id}'s trace file could not be parsed; its reservation stays "
+            f"counted in {jev.ledger} until this is resolved by hand.",
+            err=True,
+        )
+        return
+    actual = sum((t.decisions.estimated_cost_usd or Decimal("0") for t in traces), Decimal("0"))
+    ledger = settle_jev(_load_jev_ledger(jev), run_id, actual)
+    write_ledger(jev.ledger, ledger)
+    typer.echo(
+        f"Jev spend: this run ${actual:.4f}; total ${ledger.spent_usd:.4f} of the "
+        f"${jev.budget_usd:.2f} cap ({jev.ledger})"
+    )
+
+
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
     try:
         validate_run_config(cases, policy)
@@ -684,11 +787,15 @@ async def _execute(
     claude: ClaudeRun | None = None,
     projected: Decimal = Decimal("0"),
     mode: WorkflowMode = "evaluate",
+    jev: JevBudget | None = None,
+    jev_estimate: Decimal = Decimal("0"),
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
     git_sha = current_git_sha()
     on_submitted = None
+    if jev is not None:
+        _jev_reserve(jev, run_id, cases[0].input.dataset_id, len(cases), jev_estimate)
     if claude is not None:
         _reserve(claude, run_id, cases, projected)
 
@@ -730,12 +837,16 @@ async def _execute(
                 and _is_ambiguous_submission_error(error)
             )
             _settle_interrupted(claude, run_id, store, batch_id, ambiguous_submission=ambiguous)
+        if jev is not None:
+            _jev_settle(jev, run_id, _partial_traces(store))
         if store.path.exists() and store.path.stat().st_size == 0:
             store.path.unlink()
         raise
     if claude is not None:
         batch_id = getattr(provider, "batch_id", None) or claude.batch_id
         _settle(claude, run_id, traces, batch_id, collected=True)
+    if jev is not None:
+        _jev_settle(jev, run_id, traces)
     manifest = RunManifest(
         run_id=run_id,
         created_at=datetime.now(UTC),
@@ -766,12 +877,19 @@ def _run_provider(
     sample: tuple[int, int] | None = None,
     claude: ClaudeRun | None = None,
     mode: WorkflowMode = "evaluate",
+    jev: JevBudget | None = None,
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     """A provider run with every guard: question set, policy and key preflight, the Claude budget
-    check and ledger, and the provider's NOTE."""
+    check and ledger, the Jev spend counter (with jev), and the provider's NOTE."""
     resolved = _resolve_questions(provider, questions)
     _preflight(cases, provider, policy)
     projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
+    jev_estimate = Decimal("0")
+    if jev is not None:
+        assert resolved is not None  # _resolve_jev allows the counter only for --provider jev
+        per_case = len(question_ids(resolved))
+        jev_estimate = estimate_jev_cost(len(cases), per_case)
+        _jev_budget_check(jev, len(cases), per_case, jev_estimate)
     if provider in PROVIDER_NOTES:
         typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
     return asyncio.run(
@@ -787,6 +905,8 @@ def _run_provider(
             claude,
             projected,
             mode,
+            jev,
+            jev_estimate,
         )
     )
 
@@ -802,9 +922,19 @@ def _run_and_report(
     questions: str | None,
     sample: tuple[int, int] | None = None,
     claude: ClaudeRun | None = None,
+    jev: JevBudget | None = None,
 ) -> list[WorkflowTrace]:
     manifest, traces = _run_provider(
-        cases, provider, policy, concurrency, traces_dir, dataset, questions, sample, claude
+        cases,
+        provider,
+        policy,
+        concurrency,
+        traces_dir,
+        dataset,
+        questions,
+        sample,
+        claude,
+        jev=jev,
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -1280,11 +1410,14 @@ def eval_command(
     budget_usd: BudgetUsd = None,
     ledger: LedgerOption = None,
     batch_id: BatchId = None,
+    jev_budget_usd: JevBudgetUsd = None,
+    jev_ledger: JevLedgerOption = None,
 ) -> None:
     """Run (or re-score) DATASET and print action-level and decision-level metrics."""
     cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
     if traces is None:
         claude = _resolve_claude(provider, mode, budget_usd, ledger, batch_id)
+        jev = _resolve_jev(provider, jev_budget_usd, jev_ledger)
         trace_list = _run_and_report(
             cases,
             provider,
@@ -1296,8 +1429,11 @@ def eval_command(
             questions,
             sample,
             claude,
+            jev,
         )
     else:
+        if jev_budget_usd is not None or jev_ledger is not None:
+            raise _fail("--jev-budget-usd and --jev-ledger need a run, not --traces")
         trace_list = _read_trace_file(traces)
     try:
         summary = score_run(trace_list, cases)
