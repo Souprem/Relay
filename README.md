@@ -676,7 +676,8 @@ infection, then 2026-03-23 to 2026-05-18 = 56 days; neither segment reaches the 
 consecutive weeks, so the correct action is `HUMAN_REVIEW`). Both providers reported a single start
 and end date (2026-01-05 to 2026-05-18, 133 days) instead, because the `q-v0.2` question set has
 one start date and one end date and cannot represent a gap — a shared, structural limitation of the
-question set, not two independent mistakes. Claude's composed `step_therapy` probability there was
+question set, not two independent mistakes (Phase 3D's `q-v0.3` adds the missing questions; see
+"Question set q-v0.3" below). Claude's composed `step_therapy` probability there was
 0.5513, just 0.0013 above its 0.55 threshold; Jev's was 0.9316.
 
 TMP is the weakest category by correct-action rate for every model provider — rules 7/20 (35%),
@@ -691,7 +692,9 @@ all at 0.95 on this dataset (see "Claude's 0% headline automation" above), so th
 reflects the threshold, not the dates specifically. At each provider's own dev threshold, Jev still auto-processes only TMP-14; Claude
 auto-processes both TMP-14 and TMP-15. TMP-12 goes to `HUMAN_REVIEW` under both providers at every
 threshold shown here, and TMP-16 (truth `REQUEST_INFO`) also goes to `HUMAN_REVIEW` under both —
-wrong relative to ground truth, but safe, not an unsafe automation.
+wrong relative to ground truth, but safe, not an unsafe automation — under `q-v0.2` and Claude.
+This no longer holds for `q-v0.3` at its adopted dev threshold of 0.81, where `GOLD-TMP-16`
+becomes an unsafe `AUTO_PROCESS` (see "Question set q-v0.3" below).
 
 `compare-jev-rules-claude.txt` computes action differences at each run's recorded 0.95 threshold,
 where Claude has 0 `AUTO_PROCESS` actions at all: 6 new unsafe automations across the 47 cases
@@ -954,8 +957,15 @@ regeneration step cannot leave a holdout drift gate silently green; CI passes it
 | `smoke-reproduce-jev` | the v0.1 smoke Jev run (its case hashes still match `evals/smoke`) | `--reproduce` | engine drift on the oldest committed trace, which predates policy-text hashes |
 | `gold-jev-vs-claude` | Jev gold, re-decided at 0.89 | Claude gold traces, re-decided at 0.55 | Claude at its own operating point is not an unsafe regression versus Jev: 4 action differences (3 improved, 1 regressed), 0 newly unsafe. Both Jev at 0.89 and Claude at 0.55 automate `GOLD-TMP-17` unsafely; that is the baseline's own unsafe automation, so it is not newly unsafe — it shows up as 1 STILL UNSAFE instead. |
 | `holdout-reproduce-jev`, `-rules`, `-claude-150` | each committed gen-v0.2-holdout run | `--reproduce` | engine drift on the holdout; `requires_generated`, so SKIPPED when `evals/generated/gen-v0.2-holdout` is absent (ERROR instead with `--strict-generated`, as CI runs it). The Claude gate uses the run's 150-case sample. |
+| `gen-v0.3-dev-reproduce-jev-q-v0.2`, `-q-v0.3` | each committed gen-v0.3-dev run | `--reproduce` | engine drift on the q-v0.3 dev sets; `requires_generated` |
+| `gen-v0.3-holdout-reproduce-jev-q-v0.3`, `-q-v0.2` | each committed gen-v0.3-holdout run | `--reproduce` | engine drift on the q-v0.3 holdout sets; `requires_generated` |
+| `gen-v0.3-holdout-adoption-q-v0.2-to-q-v0.3` | q-v0.2 gen-v0.3-holdout, re-decided at 0.97 | q-v0.3 gen-v0.3-holdout, re-decided at 0.81 | the E1 holdout adoption check itself: PASS with 0 newly unsafe (10 correctness regressions; see "Question set q-v0.3"). Present only because the dev decision was ADOPT; `requires_generated` |
+| `gold-reproduce-jev-q-v0.3` | the committed gold q-v0.3 Jev run | `--reproduce` | engine drift on the new gold q-v0.3 run; no `requires_generated` (gold-v0.1 is always on disk) |
+| `gen-v0.3-shift-reproduce-jev-q-v0.3`, `-stale`, `-aware` | each committed gen-v0.3-shift / stale / aware run | `--reproduce` | engine drift on the paid shift run and its two `recompose` outputs; `requires_generated` |
+| `gen-v0.3-shift-stale-to-aware` | stale (immunara-v0.1, policy-unaware) | aware (immunara-v0.2, policy-aware) | the E2 policy-shift check: PASS with 0 newly unsafe, 0 regressed (see "Policy shift"); `requires_generated` |
 
-The failing demonstration above is deliberately not a committed gate, so CI stays green.
+The failing demonstrations above (gold q-v0.2 → q-v0.3, which FAILs on `GOLD-TMP-16`) are
+deliberately not committed gates, so CI stays green.
 
 **Adding a waiver.** A waiver is the deliberate, reviewed policy decision that lets a newly unsafe
 case through. Add an entry to a waiver file, pass it with `--waivers FILE` (or `"waivers"` in a
@@ -975,12 +985,12 @@ matches no newly unsafe case is reported as a stale waiver, which is a warning, 
 
 **CI.** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request
 on ubuntu-latest with uv and Python 3.12. It installs with `uv sync --frozen`, runs `ruff check`,
-`ruff format --check` and `pytest -q` (live tests are deselected by default), regenerates
-gen-v0.2-dev and gen-v0.2-holdout with `relay generate` and checks both against the committed
-manifests with `--verify` (a few seconds locally), then runs the committed gates with
-`--strict-generated` and uploads `regression-report/` as an artifact, even when a step fails. The
-workflow references no secrets and sets no provider keys, and a test checks that it contains no
-`secrets.` reference.
+`ruff format --check` and `pytest -q` (live tests are deselected by default), regenerates all five
+generated datasets — gen-v0.2-dev, gen-v0.2-holdout, gen-v0.3-dev, gen-v0.3-holdout and
+gen-v0.3-shift — with `relay generate` and checks each against its committed manifest with
+`--verify` (a few seconds locally), then runs the committed gates with `--strict-generated` and
+uploads `regression-report/` as an artifact, even when a step fails. The workflow references no
+secrets and sets no provider keys, and a test checks that it contains no `secrets.` reference.
 
 ## Shadow mode
 
@@ -1242,8 +1252,14 @@ DECISION: ADOPT q-v0.3
 Note the q-v0.2 thresholds above: `v0.1+at0.97` is q-v0.2's own **`gen-v0.3-dev`-selected** threshold
 (the sweep's highest automation with UAR ≤ 1%, run fresh for this comparison), not the `0.89`
 selected on `gen-v0.2-dev` in Phase 2. The two numbers are not comparable; q-v0.2's threshold moves
-because `gen-v0.3-dev`'s case mix (interrupted and old courses) is different from `gen-v0.2-dev`'s,
-and every q-v0.2 comparison in this section uses the `0.97` figure for that reason.
+because `gen-v0.3-dev`'s case mix (interrupted and old courses) is different from `gen-v0.2-dev`'s:
+on `gen-v0.3-dev`, q-v0.2 at 0.89 automates 131 cases with 18 unsafe (UAR 13.7%,
+[`frontier.csv`](evals/baselines/gen-v0.3-dev/run_20260927T071846Z_e950c0/report/frontier.csv)),
+all 18 interrupted-course cases, so the ≤ 1% UAR ceiling pushes its t\* to 0.97. Every q-v0.2
+*re-decided* comparison in this section (the holdout and gold regressions, both re-decided at a
+dev-selected threshold) uses that `0.97` figure. The GOLD-TMP-17/18 replays below are the one
+exception: they show the traces at their **recorded** `auto_process=0.95`, not re-decided at 0.97
+or 0.89.
 
 **Holdout, once, at the dev-selected thresholds.** From
 [`evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/regression.md`](evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/regression.md):
@@ -1313,8 +1329,10 @@ REGRESSION GATE: PASS
 
 The 10 REGRESSED cases above (all `HUMAN_REVIEW` → `REQUEST_INFO`) are correctness regressions,
 not safety regressions: none of them changed to an unsafe automation, and each is still a
-non-automated action (a human still sees the case; q-v0.3 just asks for more information first
-instead of routing straight to review).
+non-automated action. In each, Jev's `missing_evidence = TREATMENT_HISTORY` confidence rose past
+the 0.7 request-info bar under q-v0.3 (e.g. GEN-04000114 0.63 → 0.77, GEN-04000999 0.64 → 0.72),
+while the truth is `NONE` — producing an unnecessary information request to the submitter rather
+than an automation.
 
 **Gold (not blind for this change; see above).** From
 [`evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/regression.md`](evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/regression.md):
@@ -1401,11 +1419,12 @@ ACTION CHANGED: HUMAN_REVIEW → AUTO_PROCESS (NEWLY UNSAFE)
 None of GOLD-TMP-16's five raw judgments moved by more than 0.03. What changed the action is the
 lower `auto_process` bar alone (`0.97 → 0.81`): `diagnosis_support` at 0.94, `documentation_complete`
 at 0.91 and `step_therapy` at about 0.836 all now clear the 0.81 bar, where at 0.97 none of them did.
-The `missing_evidence` gate did run on this case (`GATES` shows it evaluated and passed on both
-sides) — the case's missing-evidence distribution reports `NONE` at 0.78 (original) and 0.81
-(candidate), both below the 0.7 point at which `missing_evidence_request_info` would instead route
-the case to `REQUEST_INFO`. That distribution simply never moved into the range the gate acts on;
-the gate itself is not a no-op, it just didn't fire here.
+The `missing_evidence` gate did run (`GATES` shows it passed on both sides), but it only routes to
+`REQUEST_INFO` when the most likely answer is a missing item (not `NONE`) with probability ≥ 0.7
+(`relay/workflow/engine.py`). Jev answered `NONE` both times (0.78, then 0.81), whereas gold labels
+the case `TREATMENT_HISTORY` (the methotrexate dates carry no year;
+[`evals/gold/ADJUDICATION.md`](evals/gold/ADJUDICATION.md)). The gate therefore had nothing to act
+on, and the lower `auto_process` bar let the case through.
 
 GOLD-TMP-17 replayed across the two question sets:
 
@@ -1434,41 +1453,56 @@ ACTIONS
 ACTION UNCHANGED: HUMAN_REVIEW
 ```
 
-**Where the interrupted-course accuracy comes from.** The dev/holdout `step_therapy` accuracy gap
-concentrates on interrupted-course cases, not old-course ones. Recomputed offline from the committed
-`gen-v0.3-dev` and `gen-v0.3-holdout` traces and ground truth, joined against the deterministic
-generation facts (`relay.generation.scenarios.sample_facts`, same seed, no network) to tag each case
-as interrupted, old-course or neither, `step_therapy` accuracy (prediction = `p_yes >= 0.5` vs
-`ground_truth.step_therapy_satisfied`) splits as:
+**Where the interrupted-course accuracy comes from.** The q-v0.2 → q-v0.3 `step_therapy` accuracy
+gain, on both dev and holdout, concentrates on interrupted-course cases, not old-course ones.
+[`scripts/phase3d_course_split.py`](scripts/phase3d_course_split.py) tags each case from its
+committed `ground_truth.json` `notes` field (written at generation time by
+`relay/generation/labels.py`: `"interrupted ("` for an interrupted-and-restarted course, `"ended
+Nd before as-of"` with N > 365 for an old course) — no dataset regeneration, no random draw, just
+the committed files — and reports `step_therapy` accuracy (prediction = `p_yes >= 0.5` vs
+`ground_truth.step_therapy_satisfied`) per tag, run offline against the committed traces:
 
 ```text
+$ uv run python -m scripts.phase3d_course_split evals/generated/gen-v0.3-dev \
+    evals/baselines/gen-v0.3-dev/run_20260927T071846Z_e950c0/traces.jsonl.gz q-v0.2 \
+    evals/baselines/gen-v0.3-dev/run_20260927T071912Z_cdaf0c/traces.jsonl.gz q-v0.3
 gen-v0.3-dev (n=400): interrupted 73, old_course 58, other 269
-  interrupted  q-v0.2 50/73  = 0.6849   q-v0.3 72/73  = 0.9863
-  old_course   q-v0.2 57/58  = 0.9828   q-v0.3 56/58  = 0.9655
-  other        q-v0.2 265/269 = 0.9851  q-v0.3 261/269 = 0.9703
+  interrupted  q-v0.2 50/73 = 0.6849   q-v0.3 72/73 = 0.9863
+  old_course   q-v0.2 57/58 = 0.9828   q-v0.3 56/58 = 0.9655
+  other        q-v0.2 265/269 = 0.9851   q-v0.3 261/269 = 0.9703
 
+$ uv run python -m scripts.phase3d_course_split evals/generated/gen-v0.3-holdout \
+    evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/baseline.jsonl.gz q-v0.2 \
+    evals/baselines/gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz q-v0.3
 gen-v0.3-holdout (n=1000): interrupted 188, old_course 142, other 670
-  interrupted  q-v0.2 147/188 = 0.7819  q-v0.3 188/188 = 1.0000
-  old_course   q-v0.2 142/142 = 1.0000  q-v0.3 137/142 = 0.9648
-  other        q-v0.2 658/670 = 0.9821  q-v0.3 653/670 = 0.9746
+  interrupted  q-v0.2 147/188 = 0.7819   q-v0.3 188/188 = 1.0000
+  old_course   q-v0.2 142/142 = 1.0000   q-v0.3 137/142 = 0.9648
+  other        q-v0.2 658/670 = 0.9821   q-v0.3 653/670 = 0.9746
 ```
 
-(The overall `per_question_accuracy.step_therapy` figures this reproduces — 0.947/0.978 on holdout
-for q-v0.2/q-v0.3 — match the committed `results.json` files exactly, confirming the method.)
+q-v0.3 is not a uniform win: on both dev and holdout, its `step_therapy` accuracy is slightly
+*lower* than q-v0.2's on old-course and other cases (dev old-course 57/58 → 56/58, other
+265/269 → 261/269; holdout old-course 142/142 → 137/142, other 658/670 → 653/670) — a small
+negative result alongside the large interrupted-course gain.
 
 **Findings.** The dev gate passed (0 newly unsafe, 3 regressed, 108 improved) with q-v0.3's correct-action
 rate higher than q-v0.2's (373/400 vs 268/400), so the fixed-in-advance rule ADOPTed q-v0.3. Holdout,
 run once, confirmed the direction at much larger scale: 921/1000 correct and 244/1000 automated for
 q-v0.3@0.81 against 694/1000 correct and 17/1000 automated for q-v0.2@0.97, with the one q-v0.2 unsafe
 automation (1/17) resolved and 0/244 unsafe under q-v0.3; the 10 regressed cases are correctness
-regressions, not safety regressions. The GOLD-TMP-17 replay shows the read Jev was designed to fix:
+regressions, not safety regressions. The GOLD-TMP-17 replay shows the read q-v0.3 was designed to fix:
 `step_therapy` drops from p_yes=0.932 to p_yes=0.027 once the question set can represent an
-interruption, though the action stays `HUMAN_REVIEW` (correct) on both sides at gold's `q-v0.2`
-threshold of 0.95. The negative result: on gold (not blind for this change) the regression gate
-FAILED, with GOLD-TMP-16 newly unsafe — not because any raw judgment moved much, but because the
-dev-selected `auto_process` bar dropped from 0.97 to 0.81 and let diagnosis (0.94), documentation
-(0.91) and step therapy (about 0.84) all clear it, while the `missing_evidence` gate's own
-`NONE`-confidence distribution (0.78 → 0.81) never reached its separate 0.7 request-info bar.
+interruption, though the action stays `HUMAN_REVIEW` (correct) on both sides at the traces'
+recorded `auto_process` of 0.95 (q-v0.2 automated it only at Phase 2's 0.89; at q-v0.3's
+`step_therapy` p_yes of 0.027 it is `HUMAN_REVIEW` at every threshold, including 0.81). By
+contrast, the committed `GOLD-TMP-18` replay (also recorded at 0.95) moves from wrong-safe
+`HUMAN_REVIEW` under q-v0.2 to correct `AUTO_PROCESS` under q-v0.3, since its later segment alone
+clears the 12-week bar once q-v0.3 can see it. The negative result: on gold (not blind for this
+change) the regression gate FAILED, with GOLD-TMP-16 newly unsafe — not because any raw judgment
+moved much, but because the dev-selected `auto_process` bar dropped from 0.97 to 0.81 and let
+diagnosis (0.94), documentation (0.91) and step therapy (about 0.84) all clear it, while the
+`missing_evidence` gate never had anything to act on: Jev's answer was `NONE` both times, and the
+gate only fires on a non-`NONE` answer at ≥ 0.7.
 
 ## Policy shift (immunara-v0.2)
 
@@ -1478,7 +1512,9 @@ handoff): *"The qualifying methotrexate course must have been ongoing, or have e
 in code, so the policy engine needed no new gate. One paid q-v0.3 Jev run on `gen-v0.3-shift`
 (ground truth labelled under v0.2) was recomposed twice from the same stored answers with
 `relay recompose`: **stale** composes under immunara-v0.1 (policy-unaware), and **aware** under
-immunara-v0.2. Both are scored against the v0.2 ground truth at auto_process 0.95.
+immunara-v0.2. Both are scored against the v0.2 ground truth at auto_process 0.95 (the recorded
+default, not q-v0.3's `gen-v0.3-dev` t\* of 0.81, so that no threshold chosen on another dataset
+enters the stale/aware comparison).
 
 From [`evals/baselines/gen-v0.3-shift/shift-summary.md`](evals/baselines/gen-v0.3-shift/shift-summary.md):
 
@@ -1547,18 +1583,19 @@ Total estimated cost: $0.0155
 **Findings.** The "size order rotated per case" note above describes a cyclic Latin square (each
 case's call order is a fixed rotation of `1, 5, 10, 20` by `(sample seed + case index) mod 4`), not
 a Williams design (which balances first-order carryover pairs); this run only balances position,
-not adjacency, and n = 40 per size. p50 latency is flat from 1 to 10 questions (178 → 177 → 186 ms)
-and rises modestly at 20 (191 ms); p95 is similarly flat through 10 (230 → 225 → 207 ms) and rises
-more at 20 (290 ms). Estimated cost per case scales with the token count, from $0.000041 at 1
-question to $0.000177 at 20 — about 4.3× for 20× the questions, since the fixed per-call overhead
-is amortized. All differences are small relative to the ~180-200 ms baseline call latency.
+not adjacency, and n = 40 per size. p50 latency and the mean rise only about 7-9% from 1 to 20
+questions (p50 178 → 191 ms, mean 186 → 202 ms). p95 rises more at size 20 (230 → 290 ms, +26%),
+but at n = 40 the nearest-rank p95 is the 38th of 40 calls, and the three slowest size-20 calls are
+290, 304 and 404 ms — a thin tail, so that figure is not a stable estimate. Estimated cost per case
+scales with the token count, from $0.000041 at 1 question to $0.000177 at 20 — about 4.3× for 20×
+the questions, since the fixed per-call overhead is amortized.
 
 ## Phase 3D Jev spend
 
 Every paid Phase 3D run went through the Jev spend counter (cap $1.00). The committed copy of the ledger
 is [`evals/baselines/jev-spend-3d.json`](evals/baselines/jev-spend-3d.json). No Claude calls were made.
 
-From `env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env budget show --ledger evals/baselines/jev-spend-3d.json`:
+From `env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env budget show --ledger evals/baselines/jev-spend-3d.json` (`budget show` labels every ledger "Claude spend ledger"; this one is Jev's):
 
 ```text
 Claude spend ledger — evals/baselines/jev-spend-3d.json
@@ -1572,7 +1609,8 @@ run_20260927T072915Z_007c7c  gen-v0.3-shift    sync  400    settled  $0.0696  �
 run_20260927T073246Z_3a5f87  gen-v0.3-dev      sync  40     settled  $0.0155  —
 ```
 
-Total: Settled $0.501850 of the $1.00 cap. Total Claude spend is unchanged at $8.710495 of the
+Total: $0.501850 (sum of the ledger's `cost_usd` entries; the CLI's own summary line, omitted
+above, rounds it to "Settled $0.5018") of the $1.00 cap. Total Claude spend is unchanged at $8.710495 of the
 $10.00 default budget (`results/claude-spend.json`, `evals/baselines/claude-spend.json`); no Claude
 calls were made in Phase 3.
 
@@ -1623,8 +1661,12 @@ calls were made in Phase 3.
 - The `q-v0.2` question set asks for one treatment start date and one end date, so it cannot
   represent an interrupted course with a gap (two segments). `GOLD-TMP-17` is exactly this case,
   and it is the only unsafe automation either Jev or Claude has on gold at its own threshold (see
-  "Gold set" above). This is a finding for a future gold or question-set version (Phase 3), not a
-  gold-motivated change to `q-v0.2` itself.
+  "Gold set" above). `q-v0.3` adds interruption and restart questions and was adopted on
+  `gen-v0.3-dev` and confirmed on `gen-v0.3-holdout` (see "Question set q-v0.3" below). It still
+  models only one interruption per course (the generator's variants (a)/(b)/(c)), not multiple
+  holds and restarts, and it is not blind for `GOLD-TMP-17`/`GOLD-TMP-18` on gold. At its adopted
+  dev threshold (0.81) it automates `GOLD-TMP-16` unsafely, a new negative result of the change
+  (see "Question set q-v0.3" below).
 - The authors, blind reviewer and adjudicator of `gold-v0.1` are all Claude agents, and
   `claude-opus-5` is also an evaluated provider on that same set (see "Gold set" above). The 100%
   blind agreement reflects one model family applying one guide consistently, not independent human
