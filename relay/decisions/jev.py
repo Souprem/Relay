@@ -1,8 +1,9 @@
-"""Jev decision provider: one TypeSafe System One call per case, 12 typed questions.
+"""Jev decision provider: one TypeSafe System One call per case, 12 or 19 typed questions.
 
 Jev answers narrow questions; this adapter maps them into an AnswerSet, and composition.py turns
 that into the five decisions the policy engine consumes (step_therapy is composed in code from
-the date-part answers, see step_therapy.py).
+the date-part answers, see step_therapy.py). answer_set_from_raw rebuilds the same AnswerSet from
+a trace's stored raw_answers, for recomposition without a call.
 """
 
 import math
@@ -12,19 +13,18 @@ from decimal import Decimal
 from importlib.metadata import version
 from typing import Any, Protocol
 
-from pydantic import ValidationError
-from typesafe_sdk import ChoiceAnswer, NoulAnswer, SystemOneResponse, TypeSafeError
+from pydantic import TypeAdapter, ValidationError
+from typesafe_sdk import Answer, ChoiceAnswer, NoulAnswer, SystemOneResponse, TypeSafeError
 
 from relay.cases.models import CaseInput
 from relay.cases.policies import AuthorizationPolicy, load_policy
 from relay.decisions.base import DecisionBundle
 from relay.decisions.composition import (
-    CHOICE_QUESTIONS,
-    YES_NO_QUESTIONS,
     AnswerSet,
     ChoiceResult,
     MalformedAnswers,
     compose_decisions,
+    question_groups,
 )
 from relay.decisions.questions import (
     DEFAULT_QUESTION_SET_VERSION,
@@ -50,6 +50,9 @@ class _MalformedResponse(Exception):
     pass
 
 
+_ANSWER = TypeAdapter(Answer)
+
+
 def build_state(case: CaseInput, policy: AuthorizationPolicy) -> dict[str, Any]:
     return {
         "policy": policy.text,
@@ -63,8 +66,8 @@ def build_state(case: CaseInput, policy: AuthorizationPolicy) -> dict[str, Any]:
     }
 
 
-def _noul(response: SystemOneResponse, qid: str) -> float:
-    answer = response.answers.get(qid)
+def _noul(answers: Mapping[str, Any], qid: str) -> float:
+    answer = answers.get(qid)
     if not isinstance(answer, NoulAnswer):
         raise _MalformedResponse(f"{qid}: expected noul answer, got {type(answer).__name__}")
     value = answer.noul
@@ -73,8 +76,8 @@ def _noul(response: SystemOneResponse, qid: str) -> float:
     return value
 
 
-def _choice(response: SystemOneResponse, qid: str) -> ChoiceAnswer:
-    answer = response.answers.get(qid)
+def _choice(answers: Mapping[str, Any], qid: str) -> ChoiceAnswer:
+    answer = answers.get(qid)
     if not isinstance(answer, ChoiceAnswer):
         raise _MalformedResponse(f"{qid}: expected choice answer, got {type(answer).__name__}")
     for label, probability in answer.probabilities.items():
@@ -85,14 +88,25 @@ def _choice(response: SystemOneResponse, qid: str) -> ChoiceAnswer:
     return answer
 
 
-def _answer_set(response: SystemOneResponse) -> AnswerSet:
+def _answer_set(answers: Mapping[str, Any], version: str) -> AnswerSet:
+    yes_no_ids, choice_ids = question_groups(version)
     choices = {}
-    for qid in CHOICE_QUESTIONS:
-        answer = _choice(response, qid)
+    for qid in choice_ids:
+        answer = _choice(answers, qid)
         choices[qid] = ChoiceResult(answer.choice, answer.probabilities, answer.confidence)
-    return AnswerSet(
-        yes_no={qid: _noul(response, qid) for qid in YES_NO_QUESTIONS}, choices=choices
-    )
+    return AnswerSet(yes_no={qid: _noul(answers, qid) for qid in yes_no_ids}, choices=choices)
+
+
+def answer_set_from_raw(raw_answers: Mapping[str, Any], version: str) -> AnswerSet:
+    """The AnswerSet a Jev call's stored raw_answers held (the same one decide() composed).
+
+    Raises MalformedAnswers if an answer is missing, unparseable or out of range.
+    """
+    try:
+        parsed = {qid: _ANSWER.validate_python(raw) for qid, raw in raw_answers.items()}
+        return _answer_set(parsed, version)
+    except (ValidationError, _MalformedResponse) as error:
+        raise MalformedAnswers(str(error)) from error
 
 
 class JevProvider:
@@ -149,7 +163,7 @@ class JevProvider:
         }
         try:
             decisions, derivations = compose_decisions(
-                _answer_set(response), case, policy, PROVIDER_NAME
+                _answer_set(response.answers, version), case, policy, PROVIDER_NAME, version
             )
         except (_MalformedResponse, MalformedAnswers, ValidationError) as error:
             return DecisionBundle(**common, error=f"malformed response: {error}")
