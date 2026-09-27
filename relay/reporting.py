@@ -742,6 +742,20 @@ def replay_summary(diff: TraceDiff) -> str:
     return base if flag is None else f"{base} ({flag})"
 
 
+def _ablation_names(names: list[str] | None) -> str:
+    return "none" if not names else "+".join(names)
+
+
+def ablation_line(diff: TraceDiff) -> str | None:
+    """The "ABLATION: ..." line when either side ran with disabled engine gates (Phase 3E)."""
+    o, c = diff.ablation_original, diff.ablation_candidate
+    if not o and not c:
+        return None
+    if o == c:
+        return f"ABLATION: {_ablation_names(o)} (both sides)"
+    return f"ABLATION: {_ablation_names(o)} → {_ablation_names(c)}"
+
+
 def render_trace_diff(diff: TraceDiff, all_gates: bool = False, *, reproduce: bool = False) -> str:
     """Terminal output for `relay replay`: header, expected action, decisions, thresholds,
     gates, actions and a summary line. In reproduce mode the REPRODUCED / ENGINE DRIFT verdict
@@ -771,6 +785,9 @@ def render_trace_diff(diff: TraceDiff, all_gates: bool = False, *, reproduce: bo
         ]
     if diff.policy is not None:
         lines += ["", f"POLICY CHANGED: {diff.policy[0]} → {diff.policy[1]}"]
+    ablation = ablation_line(diff)
+    if ablation is not None:
+        lines += ["", ablation]
     lines += [""] + _gate_lines(diff.gates, all_gates)
     lines += ["", "ACTIONS"]
     lines += _action_lines(

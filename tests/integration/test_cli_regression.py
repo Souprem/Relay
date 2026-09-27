@@ -168,8 +168,8 @@ def test_reproduce_passes_and_engine_drift_exits_3(tmp_path, smoke_runs, monkeyp
     assert ok.exit_code == 0, ok.output
     real = tracediff.determine_action
 
-    def drifted(case, bundle, policy, thresholds):
-        outcome = real(case, bundle, policy, thresholds)
+    def drifted(case, bundle, policy, thresholds, **kwargs):
+        outcome = real(case, bundle, policy, thresholds, **kwargs)
         if case.id != "AUTO-01":
             return outcome
         return outcome.model_copy(update={"reasons": [*outcome.reasons, "a new reason"]})

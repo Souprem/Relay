@@ -148,6 +148,9 @@ class TraceDiff(BaseModel):
     unsafe_resolved: bool | None
     unsafe_both: bool | None  # UNSAFE on both sides: not newly unsafe, invisible to the gate
     identical: bool  # same action, reasons, gate path and decisions (volatile fields ignored)
+    # Phase 3E: each side's disabled engine gates (WorkflowTrace.ablation); None when not ablated.
+    ablation_original: list[str] | None = None
+    ablation_candidate: list[str] | None = None
 
 
 def classify(action: WorkflowAction, expected: WorkflowAction) -> Verdict:
@@ -355,6 +358,8 @@ def diff_traces(
             and original.gate_path == candidate.gate_path
             and _comparable(original.decisions) == _comparable(candidate.decisions)
         ),
+        ablation_original=original.ablation,
+        ablation_candidate=candidate.ablation,
     )
 
 
@@ -457,11 +462,16 @@ def replay_exit_code(diff: TraceDiff, *, reproduce: bool) -> int:
     return code
 
 
+def ablation_suffix(trace: WorkflowTrace) -> str:
+    """The label suffix " · ablate=<names>" for an ablated trace (Phase 3E), else ""."""
+    return f" · ablate={'+'.join(trace.ablation)}" if trace.ablation else ""
+
+
 def original_label(trace: WorkflowTrace) -> str:
     return (
         f"{trace.run_id} · {trace.provider} {trace.question_set_version} · policy "
         f"{trace.policy_id} ({trace.policy_version}) · thresholds "
-        f"auto_process={trace.thresholds.auto_process:g}"
+        f"auto_process={trace.thresholds.auto_process:g}{ablation_suffix(trace)}"
     )
 
 
@@ -496,7 +506,10 @@ def replay_thresholds(
 
 
 def candidate_trace_label(trace: WorkflowTrace) -> str:
-    return f"candidate trace {trace.run_id} · {trace.provider} {trace.question_set_version}"
+    return (
+        f"candidate trace {trace.run_id} · {trace.provider} {trace.question_set_version}"
+        f"{ablation_suffix(trace)}"
+    )
 
 
 def live_label(trace: WorkflowTrace) -> str:
@@ -521,14 +534,17 @@ def replay_trace(
     Returns a new trace: new trace_id, run_id `run_id` (default "replay-<original run_id>"),
     replay_of the original trace_id, the given policy (and its current policy_text_hash) and
     thresholds, and `mode` (default "simulated"; relay run --workflow shadow passes "shadow").
-    `git_sha` defaults to current_git_sha(); replay_run passes it once for a whole run. Raises
+    `git_sha` defaults to current_git_sha(); replay_run passes it once for a whole run. The
+    trace's own ablation (Phase 3E) is re-applied, so an ablated trace reproduces. Raises
     ValueError if `case` is not the trace's case or its inputs changed.
     """
     if case.input.id != trace.case_id:
         raise ValueError(f"case {case.input.id} is not the trace's case {trace.case_id}")
     if case.input.content_hash() != trace.case_content_hash:
         raise ValueError(f"{trace.case_id}: case content hash changed since run {trace.run_id}")
-    outcome = determine_action(case.input, trace.decisions, policy, thresholds)
+    outcome = determine_action(
+        case.input, trace.decisions, policy, thresholds, ablate=frozenset(trace.ablation or ())
+    )
     return trace.model_copy(
         update={
             "trace_id": new_trace_id(),

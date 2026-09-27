@@ -138,8 +138,8 @@ def test_every_committed_gold_trace_reproduces(trace_path):
 def test_the_reproduce_guard_detects_engine_drift(monkeypatch):
     real = tracediff.determine_action
 
-    def drifted_engine(case, bundle, policy, thresholds):
-        outcome = real(case, bundle, policy, thresholds)
+    def drifted_engine(case, bundle, policy, thresholds, **kwargs):
+        outcome = real(case, bundle, policy, thresholds, **kwargs)
         if case.id != "GOLD-TMP-17":
             return outcome
         return outcome.model_copy(update={"reasons": [*outcome.reasons, "a new reason"]})

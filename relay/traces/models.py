@@ -41,6 +41,9 @@ class WorkflowTrace(BaseModel):
     # The trace_id this trace was replayed from (relay replay); None for ordinary runs and for
     # every trace written before Phase 3A.
     replay_of: str | None = None
+    # Phase 3E: the engine gates disabled when this trace's action was decided (sorted names from
+    # relay.workflow.engine.ABLATIONS); None for every ordinary run and every pre-3E trace.
+    ablation: list[str] | None = None
 
 
 class RunManifest(BaseModel):
@@ -64,3 +67,5 @@ class RunManifest(BaseModel):
     # The run whose stored decisions this run re-issued (relay run --from-traces, and the
     # regression gate's re-decided runs); None for a run that called a provider.
     source_run_id: str | None = None
+    # Phase 3E: the engine gates this run disabled (relay ablate); None for an ordinary run.
+    ablation: list[str] | None = None
