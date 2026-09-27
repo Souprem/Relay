@@ -30,7 +30,7 @@ from relay.decisions.claude_batch import ClaudeBatchProvider
 from relay.decisions.claude_prompt import CLAUDE_QUESTION_SETS
 from relay.decisions.composition import MalformedAnswers
 from relay.decisions.ground_truth import GroundTruthProvider
-from relay.decisions.jev import JevProvider
+from relay.decisions.jev import JEV_MODEL, JevProvider
 from relay.decisions.questions import (
     DEFAULT_QUESTION_SET_VERSION,
     Q_V0_2,
@@ -39,6 +39,14 @@ from relay.decisions.questions import (
 )
 from relay.decisions.rules_baseline import RulesBaselineProvider
 from relay.evaluation.artifacts import write_eval_bundle
+from relay.evaluation.bench import (
+    DEFAULT_SIZES,
+    BenchCall,
+    build_bench_result,
+    parse_sizes,
+    render_bench,
+    run_bench,
+)
 from relay.evaluation.budget import (
     DEFAULT_BUDGET_USD,
     DEFAULT_LEDGER,
@@ -1946,6 +1954,81 @@ def recompose(
     )
     typer.echo(f"Simulated run: {first.run_id}")
     typer.echo(f"Traces: {trace_path}\nManifest: {manifest_path}")
+
+
+@app.command()
+def bench(
+    dataset: Dataset,
+    jev_budget_usd: Annotated[
+        float,
+        typer.Option(
+            min=0.0,
+            help="Required: the Jev spend counter's cap on the ledger's total Jev spend.",
+        ),
+    ],
+    limit: Limit = None,
+    sample_seed: SampleSeed = None,
+    sizes: Annotated[
+        str, typer.Option(help="Comma-separated questions per call, each 1-20.")
+    ] = ",".join(str(s) for s in DEFAULT_SIZES),
+    jev_ledger: JevLedgerOption = None,
+    out: Annotated[
+        Path, typer.Option(help="Where parallelism.json and parallelism.md are written.")
+    ] = Path("evals/baselines/bench"),
+) -> None:
+    """Latency vs narrow decisions per call: one Jev call per case and size (paid, sequential).
+
+    Prints the estimate first and refuses (exit 2) if it could break the Jev cap.
+    """
+    try:
+        size_list = parse_sizes(sizes)
+    except ValueError as error:
+        raise _fail(str(error)) from error
+    json_path, md_path = out / "parallelism.json", out / "parallelism.md"
+    existing = [str(p) for p in (json_path, md_path) if p.exists()]
+    if existing:
+        raise _fail(f"{', '.join(existing)} already exist; refusing to overwrite")
+    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
+    if not os.environ.get("TYPESAFE_API_KEY"):
+        raise _fail("TYPESAFE_API_KEY is not set (add it to .env or the environment)")
+    jev = _resolve_jev(ProviderName.jev, jev_budget_usd, jev_ledger)
+    assert jev is not None
+    estimate = sum((estimate_jev_cost(len(cases), size) for size in size_list), Decimal("0"))
+    per_case = "(" + "+".join(str(s) for s in size_list) + ")"
+    _jev_budget_check(jev, len(cases), per_case, estimate)
+    run_id = new_run_id()
+    dataset_id = cases[0].input.dataset_id
+    _jev_reserve(jev, run_id, dataset_id, len(cases), estimate)
+    calls: list[BenchCall] = []
+
+    async def go() -> None:
+        async with AsyncTypeSafeClient(timeout=30.0) as client:
+            await run_bench([c.input for c in cases], client, sizes=size_list, on_call=calls.append)
+
+    try:
+        asyncio.run(go())
+    finally:
+        actual = sum((c.cost_usd or Decimal("0") for c in calls), Decimal("0"))
+        ledger = settle_jev(_load_jev_ledger(jev), run_id, actual)
+        write_ledger(jev.ledger, ledger)
+        typer.echo(
+            f"Jev spend: this bench ${actual:.4f}; total ${ledger.spent_usd:.4f} of the "
+            f"${jev.budget_usd:.2f} cap ({jev.ledger})"
+        )
+    result = build_bench_result(
+        calls,
+        dataset_id=dataset_id,
+        case_count=len(cases),
+        sizes=size_list,
+        sample=sample,
+        model=JEV_MODEL,
+    )
+    rendered = render_bench(result)
+    out.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    md_path.write_text(rendered, encoding="utf-8")
+    typer.echo(rendered)
+    typer.echo(f"Bench: {json_path}\nMarkdown: {md_path}")
 
 
 GatesFile = Annotated[
