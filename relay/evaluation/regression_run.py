@@ -384,6 +384,7 @@ def _write_simulated_run(
         sample_seed=None if source is None else source.sample_seed,
         mode="simulated",
         source_run_id=first.run_id.removeprefix("replay-"),
+        ablation=first.ablation,
     )
     data = manifest.model_dump(mode="json") | {
         "policy_id": first.policy_id,

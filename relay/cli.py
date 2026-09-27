@@ -1,5 +1,5 @@
 """relay run / eval / generate, and the offline analyses sweep / report / compare / replay /
-regression."""
+regression / recompose / ablate."""
 
 import asyncio
 import contextlib
@@ -38,6 +38,7 @@ from relay.decisions.questions import (
     question_ids,
 )
 from relay.decisions.rules_baseline import RulesBaselineProvider
+from relay.evaluation.ablate_run import ablate_run, ablation_name, parse_disable
 from relay.evaluation.artifacts import write_eval_bundle
 from relay.evaluation.bench import (
     DEFAULT_SIZES,
@@ -1984,6 +1985,82 @@ def recompose(
         f"({first.provider} {first.question_set_version}) under policy {target.id} "
         f"({target.version}), thresholds {first.thresholds.version}: step_therapy changed on "
         f"{step_changed} case(s), action changed on {action_changed} case(s)."
+    )
+    typer.echo(f"Simulated run: {first.run_id}")
+    typer.echo(f"Traces: {trace_path}\nManifest: {manifest_path}")
+
+
+@app.command()
+def ablate(
+    traces: TraceFile,
+    dataset: Dataset,
+    disable: Annotated[
+        str,
+        typer.Option(
+            help="Engine gate(s) to disable, comma-separated: contradiction, missing_evidence."
+        ),
+    ],
+    out: Annotated[
+        Path, typer.Option(help="Directory for traces.jsonl.gz and run-manifest.json (new).")
+    ],
+    at: Annotated[
+        float | None,
+        typer.Option(
+            min=0.0,
+            max=1.0,
+            help="Re-decide at this auto_process threshold (the provider's operating point).",
+        ),
+    ] = None,
+) -> None:
+    """Re-decide a stored run with engine gates disabled, as a simulated run (offline).
+
+    The gate-ablation experiment (Phase 3E): the stored decisions go through today's engine with
+    the --disable gates skipped; nothing is called. Exit 2 on any input problem (unknown gate,
+    cases changed, an already-ablated run, non-empty --out).
+    """
+    try:
+        names = parse_disable(disable)
+    except ValueError as error:
+        raise _fail(str(error)) from error
+    if at is not None and at <= 0.0:
+        raise _fail("--at must be > 0 (auto_process must be > 0)")
+    cases = _load_cases(dataset)
+    source = _read_trace_file(traces)
+    if not source:
+        raise _fail(f"{traces}: no traces")
+    try:
+        manifest = find_run_manifest(traces)
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    if manifest is not None and manifest.run_id != source[0].run_id:
+        manifest = None  # a manifest left over from another run: carry nothing over
+    if manifest is not None and manifest.sample_limit is not None:
+        if manifest.sample_seed is None:
+            raise _fail(f"{traces}: run manifest has sample_limit but no sample_seed")
+        cases = sample_cases(cases, manifest.sample_limit, manifest.sample_seed)
+    try:
+        ablated = ablate_run(source, cases, disable=names, auto_process=at)
+        unablated = replay_run(source, cases, policy_id=None, auto_process=at)
+    except (EvalError, ValueError) as error:
+        raise _fail(f"--traces {traces}: {error}") from error
+    first = ablated[0]
+    try:
+        trace_path, manifest_path = write_simulated_bundle(
+            out,
+            ablated,
+            dataset=dataset,
+            source=source,
+            source_manifest=manifest,
+            extra={"auto_process": first.thresholds.auto_process},
+        )
+    except FileExistsError as error:
+        raise _fail(str(error)) from error
+    changed = sum(a.action != u.action for a, u in zip(ablated, unablated, strict=True))
+    typer.echo(
+        f"Ablated run {source[0].run_id} ({first.provider} {first.question_set_version}): "
+        f"{ablation_name(names)} disabled at auto_process={first.thresholds.auto_process:g}, "
+        f"thresholds {first.thresholds.version}: action changed on {changed} of "
+        f"{len(ablated)} case(s) versus the same run at the same threshold."
     )
     typer.echo(f"Simulated run: {first.run_id}")
     typer.echo(f"Traces: {trace_path}\nManifest: {manifest_path}")
