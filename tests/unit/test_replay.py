@@ -143,6 +143,8 @@ def register_v0_2(monkeypatch, *, with_thresholds: bool = True):
     monkeypatch.setitem(policies_module._POLICIES, "immunara-v0.2", spec)
     if with_thresholds:
         monkeypatch.setitem(thresholds_module._BY_VERSION, "v0.2", THRESHOLDS_V2)
+    else:
+        monkeypatch.delitem(thresholds_module._BY_VERSION, "v0.2")
 
 
 def test_same_version_keeps_the_traces_own_thresholds_even_when_overridden():

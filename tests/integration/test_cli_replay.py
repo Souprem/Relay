@@ -132,13 +132,14 @@ def test_at_shows_the_crossed_threshold(tmp_path, smoke_runs):
     assert row(diff, "diagnosis_support").crossed == []
 
 
-def test_latest_policy_and_explicit_policy_resolve_today_to_immunara_v0_1(tmp_path, smoke_runs):
-    for flags in (["--latest-policy"], ["--policy", "immunara-v0.1"]):
+def test_explicit_policy_is_v0_1_and_latest_policy_resolves_to_immunara_v0_2(tmp_path, smoke_runs):
+    for flags, policy in (
+        (["--policy", "immunara-v0.1"], "immunara-v0.1 (v0.1), thresholds v0.1"),
+        (["--latest-policy"], "immunara-v0.2 (v0.2), thresholds v0.2"),
+    ):
         result = replay(tmp_path, "AUTO-01", smoke_runs["groundtruth"], *flags)
         assert result.exit_code == 0, result.output
-        assert (
-            "STORED DECISIONS under policy immunara-v0.1 (v0.1), thresholds v0.1 — judgments"
-        ) in result.output
+        assert f"STORED DECISIONS under policy {policy} — judgments" in result.output
         assert "ACTION UNCHANGED: AUTO_PROCESS" in result.output
         assert REPRODUCED_LINE not in result.output  # policy replay never claims reproduction
 
@@ -482,6 +483,8 @@ def register_v0_2(monkeypatch, *, with_thresholds: bool = True):
     if with_thresholds:
         v2 = THRESHOLDS_V0_1.model_copy(update={"version": "v0.2", "auto_process": 0.9})
         monkeypatch.setitem(thresholds_module._BY_VERSION, "v0.2", v2)
+    else:
+        monkeypatch.delitem(thresholds_module._BY_VERSION, "v0.2")
 
 
 def test_policy_replay_onto_another_version_uses_its_thresholds(tmp_path, smoke_runs, monkeypatch):

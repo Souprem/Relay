@@ -23,7 +23,11 @@ THRESHOLDS_V0_1 = Thresholds(
     missing_evidence_request_info=0.70,
 )
 
-_BY_VERSION = {THRESHOLDS_V0_1.version: THRESHOLDS_V0_1}
+# immunara-v0.2 changes only the step-therapy rule (recency), which is composed in code, so its
+# thresholds are v0.1's values under the v0.2 version: nothing was tuned.
+THRESHOLDS_V0_2 = THRESHOLDS_V0_1.model_copy(update={"version": "v0.2"})
+
+_BY_VERSION = {t.version: t for t in (THRESHOLDS_V0_1, THRESHOLDS_V0_2)}
 
 
 def load_thresholds(version: str) -> Thresholds:

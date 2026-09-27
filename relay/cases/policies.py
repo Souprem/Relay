@@ -18,6 +18,9 @@ class AuthorizationPolicy(BaseModel):
     required_therapy: str
     min_weeks: int
     text: str
+    # Recency (immunara-v0.2): the qualifying course must be ongoing or have ended at most this
+    # many days before the request's as_of_date. None (immunara-v0.1) means no recency rule.
+    max_days_since_therapy: int | None = None
 
 
 _POLICIES: dict[str, dict[str, object]] = {
@@ -29,6 +32,16 @@ _POLICIES: dict[str, dict[str, object]] = {
         "required_therapy": "methotrexate",
         "min_weeks": 12,
         "text_file": "immunara-v0.1.md",
+    },
+    "immunara-v0.2": {
+        "version": "v0.2",
+        "medication": "Immunara",
+        "indication": "rheumatoid arthritis",
+        "min_age": 18,
+        "required_therapy": "methotrexate",
+        "min_weeks": 12,
+        "max_days_since_therapy": 365,
+        "text_file": "immunara-v0.2.md",
     },
 }
 
