@@ -3,6 +3,7 @@ evaluation-only promotion check (PROMOTE exit 0, HOLD exit 4). Offline: smoke ru
 and the committed gold traces used as frozen inputs. State files live under tmp_path only."""
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -299,6 +300,95 @@ def test_traces_dir_colliding_with_state_is_rejected(tmp_path, smoke_runs):
     assert result.exit_code == 2, result.output
     assert "--traces-dir" in result.output
     assert not (tmp_path / "traces").exists()
+
+
+def test_out_hard_linked_to_state_is_rejected(tmp_path, smoke_runs):
+    """I1b: resolved-path equality alone misses a hard link — out/shadow.json can be a different
+    path that names the same file (same (st_dev, st_ino)) as --state. samefile must catch it
+    before anything is written."""
+    state = tmp_path / "state" / "case-status.json"
+    sim = workflow(tmp_path, SMOKE, "simulated", "--from-traces", smoke_runs["groundtruth"])
+    assert sim.exit_code == 0, sim.output
+    incumbent_file = trace_file_of(sim)
+    before = state_digest(state)
+    out_dir = tmp_path / "o"
+    out_dir.mkdir()
+    os.link(state, out_dir / "shadow.json")
+    result = workflow(
+        tmp_path,
+        SMOKE,
+        "shadow",
+        "--from-traces",
+        smoke_runs["rules"],
+        "--incumbent",
+        incumbent_file,
+        "--out",
+        out_dir,
+    )
+    assert result.exit_code == 2, result.output
+    assert "--out" in result.output
+    assert state_digest(state) == before
+    assert not (out_dir / "shadow.md").exists()
+
+
+def _is_case_insensitive_fs(tmp_path: Path) -> bool:
+    probe = tmp_path / "CaSeProbeTmp"
+    probe.write_text("x", encoding="utf-8")
+    try:
+        return (tmp_path / "caseprobetmp").exists()
+    finally:
+        probe.unlink()
+
+
+def test_out_case_variant_of_state_is_rejected_on_a_case_insensitive_filesystem(
+    tmp_path, smoke_runs
+):
+    """I1b: on a case-insensitive filesystem (macOS default), --state O/SHADOW.JSON and --out O
+    (which always writes lowercase shadow.json) name the same file even though the spellings
+    differ, so resolved-path equality alone misses it too. Skipped on a case-sensitive fs, where
+    this pair is genuinely two different files."""
+    if not _is_case_insensitive_fs(tmp_path):
+        pytest.skip("filesystem is case-sensitive; --state and --out don't collide here")
+    out_dir = tmp_path / "o"
+    state = out_dir / "SHADOW.JSON"
+    sim = invoke(
+        tmp_path,
+        "run",
+        "--dataset",
+        SMOKE,
+        "--workflow",
+        "simulated",
+        "--from-traces",
+        smoke_runs["groundtruth"],
+        "--traces-dir",
+        tmp_path / "traces",
+        "--state",
+        state,
+    )
+    assert sim.exit_code == 0, sim.output
+    incumbent_file = trace_file_of(sim)
+    before = state_digest(state)
+    result = invoke(
+        tmp_path,
+        "run",
+        "--dataset",
+        SMOKE,
+        "--workflow",
+        "shadow",
+        "--from-traces",
+        smoke_runs["rules"],
+        "--traces-dir",
+        tmp_path / "traces",
+        "--state",
+        state,
+        "--incumbent",
+        incumbent_file,
+        "--out",
+        out_dir,
+    )
+    assert result.exit_code == 2, result.output
+    assert "--out" in result.output
+    assert state_digest(state) == before
 
 
 # ---- incumbent and flag errors ----

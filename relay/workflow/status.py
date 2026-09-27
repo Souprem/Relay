@@ -192,12 +192,22 @@ def apply_transition(
 
 def reset_state(path: Path, now: datetime | None = None) -> Path | None:
     """Archive the state file to <state>.bak-<UTC timestamp> (os.replace, so the state is then
-    absent). Returns the archive path, or None when there was no state file."""
+    absent), or <state>.bak-<UTC timestamp>-<n> (n = 1, 2, ...) when that name is already taken
+    (two resets in the same second, or --reset-state run twice against `now`). Returns the
+    archive path, or None when there was no state file.
+
+    N1: this never raises for a name collision. `_run_simulated` calls this only after the run's
+    inputs (and, for a live provider, its spend) are already committed to, so a raise here would
+    otherwise discard a run that already happened for nothing.
+    """
     if not path.exists():
         return None
     when = now or datetime.now(UTC)
-    backup = path.with_name(f"{path.name}.bak-{when:%Y%m%dT%H%M%SZ}")
-    if backup.exists():
-        raise StatusStoreError(f"{backup} already exists; not overwriting an archive")
+    base = f"{path.name}.bak-{when:%Y%m%dT%H%M%SZ}"
+    backup = path.with_name(base)
+    suffix = 1
+    while backup.exists():
+        backup = path.with_name(f"{base}-{suffix}")
+        suffix += 1
     os.replace(path, backup)
     return backup

@@ -3,6 +3,7 @@ in tmp by the groundtruth and rules providers. The live provider path uses fakes
 state file is under tmp_path; nothing here touches state/ or the real spend ledger."""
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from typer.testing import CliRunner
 from typesafe_sdk import SystemOneResponse
 
 import relay.cli as cli_module
+import relay.workflow.status as status_module
 from relay.cli import app
 from relay.evaluation.tracediff import replay_run as real_replay_run
 from relay.traces.store import read_traces
@@ -162,6 +164,36 @@ def test_reset_state_with_a_bad_from_traces_leaves_the_state_file_in_place(tmp_p
     assert "State archived" not in result.output
     assert state.exists() and state.read_bytes() == before
     assert not list((tmp_path / "state").glob("case-status.json.bak-*"))
+
+
+def test_reset_state_twice_in_the_same_second_picks_a_unique_archive_name(
+    tmp_path, smoke_runs, monkeypatch
+):
+    """N1: reset_state's archive name is <state>.bak-<UTC timestamp>, one-second resolution. Two
+    --reset-state runs that land in the same second used to raise StatusStoreError only after
+    that run's traces (and, live, its spend) were already written. It must now pick a unique
+    suffix instead, so a run that already happened is never discarded for nothing."""
+    fixed = datetime(2026, 9, 27, 5, 0, 0, tzinfo=UTC)
+
+    class _FixedDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return fixed
+
+    monkeypatch.setattr(status_module, "datetime", _FixedDatetime)
+    first = workflow(tmp_path, "simulated", "--from-traces", smoke_runs["groundtruth"])
+    assert first.exit_code == 0, first.output
+    second = workflow(tmp_path, "simulated", "--from-traces", smoke_runs["rules"], "--reset-state")
+    assert second.exit_code == 0, second.output
+    third = workflow(
+        tmp_path, "simulated", "--from-traces", smoke_runs["groundtruth"], "--reset-state"
+    )
+    assert third.exit_code == 0, third.output
+    backups = sorted(p.name for p in (tmp_path / "state").glob("case-status.json.bak-*"))
+    assert backups == [
+        "case-status.json.bak-20260927T050000Z",
+        "case-status.json.bak-20260927T050000Z-1",
+    ]
 
 
 # ---- shadow ----

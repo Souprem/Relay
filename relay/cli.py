@@ -259,6 +259,21 @@ def _fail(message: str) -> typer.Exit:
     return typer.Exit(code=2)
 
 
+def _same_file(a: Path, b: Path) -> bool:
+    """True if `a` and `b` name the same file. Resolved-path equality alone misses two cases: a
+    case-variant spelling on a case-insensitive filesystem (macOS default), and a hard link — in
+    both, the paths differ but the bytes are the same file. When both paths exist, (st_dev,
+    st_ino) identity (os.path.samefile) catches those too; a path that doesn't exist yet can't
+    be hard-linked or case-collide with anything, so resolved-path equality is all there is to
+    check for it."""
+    if a.resolve() == b.resolve():
+        return True
+    try:
+        return a.exists() and b.exists() and os.path.samefile(a, b)
+    except OSError:
+        return False
+
+
 def _load_cases(dataset: Path) -> list[PriorAuthCase]:
     try:
         return load_dataset(dataset)
@@ -1198,13 +1213,15 @@ def run(
     # named after a fresh run id, so a collision there would need a deliberately matching
     # --state name; --out always writes shadow.json/shadow.md, so a colliding --out is a much
     # easier accident (and is exactly the reviewer's reproduction). Both are refused up front,
-    # exit 2, before any provider call or write.
-    if resolved_state.resolve() == traces_dir.resolve():
+    # exit 2, before any provider call or write. _same_file also catches a case-variant spelling
+    # on a case-insensitive filesystem and a hard link, which plain path resolution would miss
+    # (I1b).
+    if _same_file(resolved_state, traces_dir):
         raise _fail(f"--traces-dir must not be the --state file ({resolved_state})")
-    if out is not None:
-        out_writes = {(out / "shadow.json").resolve(), (out / "shadow.md").resolve()}
-        if resolved_state.resolve() in out_writes:
-            raise _fail(f"--out must not write to the --state file ({resolved_state})")
+    if out is not None and any(
+        _same_file(resolved_state, out / name) for name in ("shadow.json", "shadow.md")
+    ):
+        raise _fail(f"--out must not write to the --state file ({resolved_state})")
     resolved_provider = provider or ProviderName.jev
     claude = (
         None

@@ -197,8 +197,12 @@ def test_reset_state_archives_the_file(tmp_path):
     assert backup.read_bytes() == content
     assert not path.exists()
     apply_transition(path, trace(run_id="run_b"), now=NOW)  # no conflict after a reset
-    with pytest.raises(StatusStoreError, match="already exists"):
-        reset_state(path, NOW)
+    content_b = path.read_bytes()
+    again = reset_state(path, NOW)  # N1: a same-second archive name picks a unique suffix
+    assert again == tmp_path / "s.json.bak-20260926T120000Z-1"
+    assert again.read_bytes() == content_b
+    assert backup.read_bytes() == content  # the first archive is untouched
+    assert not path.exists()
 
 
 def test_a_malformed_state_file_is_a_store_error(tmp_path):
