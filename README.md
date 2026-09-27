@@ -1622,8 +1622,9 @@ calls were made in Phase 3.
 Handoff experiment 6 asks what the contradiction and missing-evidence gates are worth.
 `relay ablate` re-decides a committed run's stored decisions with one gate or both disabled, at
 the run's own operating point (its dev-selected `--at`, or the recorded 0.95 for ground truth and
-the aware shift run), and writes a simulated bundle whose traces record the ablation. `relay regression` then gates the ablated run against the same run at the same
-threshold, case by case. Expected actions always come from the full engine, so an ablated run is
+the aware shift run), and writes a simulated bundle whose traces record the ablation.
+`relay regression` then gates the ablated run against the same run at the same threshold, case
+by case. Expected actions always come from the full engine, so an ablated run is
 scored against what the policy actually requires. Nothing is called: the experiment cost $0.
 
 - `contradiction` removes contradiction detection entirely: the contradiction review gate
@@ -1740,24 +1741,25 @@ Pairs whose gate FAILs (a newly unsafe automation): 6
   Limitations), so the holdouts have few of the kinds of contradiction that fooled providers on
   gold.
 - **The missing-evidence gate never changes an automation.** In all ten runs, removing it leaves
-  automation and UAR exactly as they were and creates no newly unsafe case. This is zero by
-  construction, not a coincidence: the documentation gate runs before the missing-evidence gate,
-  and `GroundTruth`'s validator (`relay/cases/models.py`) ties `missing_evidence != NONE` to
-  `documentation_complete: false`, so ground truth always hits the documentation gate first —
-  its policy-level effect on gold is 0/100 actions changed on any dataset, not just gold. The gate
-  can therefore only act on a *provider* bundle that is internally inconsistent — calling
-  documentation complete (`p_yes >= 0.6`) while separately naming a missing item at
-  `p_yes >= 0.7` — which is exactly the REQUEST_INFO → HUMAN_REVIEW moves below. For Jev on the
-  generated sets more of those moves are corrections than errors (q-v0.2 on gen-v0.2-holdout: 67
-  improved, 32 regressed of 100 changed; q-v0.3 on gen-v0.3-holdout: 53 and 40 of 93; the aware
-  shift run: 26 and 15 of 41); for Claude's 150-case sample it is the other way round (3 improved,
-  7 regressed of 10), and on gold it only regresses (Jev q-v0.2 5, Claude 6, Jev q-v0.3 4).
+  automation and UAR exactly as they were and creates no newly unsafe case. For ground truth that
+  is guaranteed: the documentation gate runs before the missing-evidence gate, and `GroundTruth`'s
+  validator (`relay/cases/models.py`) ties `missing_evidence != NONE` to
+  `documentation_complete: false`, so ground truth always stops at the documentation gate. Its
+  missing-evidence ablation therefore changes 0 actions on any dataset (0/100 on gold). For
+  providers the gate can act only on a bundle that calls documentation complete
+  (`p_yes >= 0.6`) while naming a missing item at probability ≥ 0.7. In these runs every such
+  case moved REQUEST_INFO → HUMAN_REVIEW and none became an automation, but that is an observed
+  result, not a structural one. For Jev on the generated sets more of those moves are corrections
+  than errors (q-v0.2 on gen-v0.2-holdout: 67 improved, 32 regressed of 100 changed; q-v0.3 on
+  gen-v0.3-holdout: 53 and 40 of 93; the aware shift run: 26 and 15 of 41); for Claude's 150-case
+  sample it is the other way round (3 improved, 7 regressed of 10), and on gold it only regresses
+  (Jev q-v0.2 5, Claude 6, Jev q-v0.3 4).
 - **Null results.** Five pairs change no action at all: rules × missing_evidence on
   gen-v0.2-holdout, ground truth × missing_evidence on gold, and all three rules ablations on
   gold. The rules baseline's 6 unsafe gold automations (6/20) are already automated with both gates
   in place, so removing a gate cannot add or remove them. The two missing_evidence nulls (rules,
   ground truth) follow the documentation-gate ordering above: every rules bundle that names a
-  missing item at `p_yes >= 0.7` also reports `documentation_complete < 0.6` (28/28 on gold,
+  missing item at probability ≥ 0.7 also reports `documentation_complete < 0.6` (28/28 on gold,
   219/219 on the gen-v0.2 holdout), so the documentation gate always fires first and
   missing_evidence never gets a chance to change the outcome. The rules × contradiction nulls on
   gold follow a similar pattern: rules reports `material_contradiction p_yes=0.0` on 97/100 gold
