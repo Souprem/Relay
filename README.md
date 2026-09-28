@@ -173,3 +173,7 @@ docs/       RESULTS.md: detailed results and methods
 The known limits (template-generated wording, AI-authored gold labels, a gate that is relative to
 its baseline, simulated actions) are listed in
 [docs/RESULTS.md#limitations](docs/RESULTS.md#limitations).
+
+## License
+
+[MIT](LICENSE). The synthetic data, policies and cases in this repository are fictional.
