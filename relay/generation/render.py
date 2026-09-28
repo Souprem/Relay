@@ -75,6 +75,35 @@ TAKEN_ONGOING_SPLIT: tuple[str, ...] = (
     "The patient continues {mtx} {dose} at this time.",
     "{Mtx} {dose} is ongoing and the patient continues to take it.",
 )
+# gen-v0.3 interrupted courses (rule D8). The hold reason is never a response or an intolerance:
+# the drug was resumed afterwards, so the hold says nothing about whether it worked.
+HOLD_REASONS: dict[str, tuple[str, ...]] = {
+    "infection": ("a respiratory infection", "a urinary tract infection"),
+    "surgery": ("a planned knee surgery", "a scheduled dental surgery"),
+    "travel": ("several weeks of travel abroad", "an extended work trip"),
+    "lab": (
+        "a routine lab result that needed rechecking, which came back normal",
+        "a repeat of routine monitoring labs, which were normal",
+    ),
+}
+HOLD_REASONS_SHORT: dict[str, str] = {
+    "infection": "infection",
+    "surgery": "surgery",
+    "travel": "travel",
+    "lab": "lab recheck",
+}
+TAKEN_INTERRUPTED_ENDED: tuple[str, ...] = (
+    "{Mtx} {dose} was started {start} and held {pause} because of {reason}. It was restarted "
+    "{restart} and stopped {end}{outcome}.",
+    "The patient began {mtx} {dose} {start}; it was paused {pause} for {reason}, resumed "
+    "{restart}, and discontinued {end}{outcome}.",
+)
+TAKEN_INTERRUPTED_ONGOING: tuple[str, ...] = (
+    "The patient started {mtx} {dose} {start}; it was held {pause} because of {reason} and "
+    "restarted {restart}, and the patient continues it today.",
+    "{Mtx} {dose} was begun {start}, paused {pause} for {reason}, and resumed {restart}; the "
+    "patient remains on it.",
+)
 OUTCOME_ENDED: dict[str, tuple[str, ...]] = {
     "inadequate_response": (
         " because joint pain and morning stiffness did not improve despite dose escalation",
@@ -154,7 +183,9 @@ def _treatment_narrative(facts: CaseFacts, rng: Random, mtx: str, dose: str) -> 
         return [rng.choice(NEVER_TAKEN).format(mtx=mtx)]
     assert facts.mtx_start is not None and facts.start_precision is not None
     score = rng.randint(22, 38)
-    if facts.mtx_end is None:
+    if facts.mtx_segments is not None:
+        narrative = [_interrupted_sentence(facts, rng, mtx, dose, score)]
+    elif facts.mtx_end is None:
         outcome = rng.choice(OUTCOME_ONGOING[facts.mtx_outcome]).format(mtx=mtx, score=score)
         if facts.split_across_documents:
             sentence = rng.choice(TAKEN_ONGOING_SPLIT)
@@ -182,6 +213,54 @@ def _treatment_narrative(facts: CaseFacts, rng: Random, mtx: str, dose: str) -> 
     if facts.other_dmards:
         narrative.append(rng.choice(CO_DMARD).format(dmard=facts.other_dmards[0]))
     return narrative
+
+
+def _interrupted_sentence(facts: CaseFacts, rng: Random, mtx: str, dose: str, score: int) -> str:
+    """The note's account of an interrupted course: start, hold (with its reason), restart, and
+    the final stop or 'continues today'. Every date is at day precision."""
+    assert facts.mtx_segments is not None and facts.interruption_reason is not None
+    (start, pause), (restart, end) = facts.mtx_segments
+    reason = rng.choice(HOLD_REASONS[facts.interruption_reason])
+    dates = {
+        "start": date_phrase(start, "day", rng, bound="start"),
+        "pause": date_phrase(pause, "day", rng, bound="end"),
+        "restart": date_phrase(restart, "day", rng, bound="start"),
+    }
+    if end is None:
+        template = rng.choice(TAKEN_INTERRUPTED_ONGOING)
+        outcome = rng.choice(OUTCOME_ONGOING[facts.mtx_outcome]).format(mtx=mtx, score=score)
+        return template.format(mtx=mtx, Mtx=_cap(mtx), dose=dose, reason=reason, **dates) + outcome
+    outcome = rng.choice(OUTCOME_ENDED[facts.mtx_outcome]).format(score=score)
+    return rng.choice(TAKEN_INTERRUPTED_ENDED).format(
+        mtx=mtx,
+        Mtx=_cap(mtx),
+        dose=dose,
+        reason=reason,
+        end=date_phrase(end, "day", rng, bound="end"),
+        outcome=outcome,
+        **dates,
+    )
+
+
+def _interrupted_history_lines(facts: CaseFacts, rng: Random, dose_upper: str) -> list[str]:
+    """Two medication-history rows: the held first segment and the restarted one."""
+    assert facts.mtx_segments is not None and facts.interruption_reason is not None
+    (start, pause), (restart, end) = facts.mtx_segments
+    held = HOLD_REASONS_SHORT[facts.interruption_reason]
+    first = (
+        f"METHOTREXATE {dose_upper} - status: inactive - start "
+        f"{format_date(start, 'day', rng, bound='start')} - end "
+        f"{format_date(pause, 'day', rng, bound='end')} - reason: held for {held}"
+    )
+    restarted = format_date(restart, "day", rng, bound="start")
+    if end is None:
+        second = f"METHOTREXATE {dose_upper} - status: active - start {restarted}"
+    else:
+        second = (
+            f"METHOTREXATE {dose_upper} - status: inactive - start {restarted} - end "
+            f"{format_date(end, 'day', rng, bound='end')}"
+        )
+    return [first, second]
 
 
 def _physician_note(facts: CaseFacts, rng: Random, dose: str) -> Document:
@@ -212,7 +291,9 @@ def _physician_note(facts: CaseFacts, rng: Random, dose: str) -> Document:
 
 def _medication_history(facts: CaseFacts, rng: Random, dose_upper: str) -> Document:
     lines = [f"{SYNTHETIC_PREFIX}MEDICATION HISTORY"]
-    if facts.mtx_status == "taken":
+    if facts.mtx_segments is not None:
+        lines += _interrupted_history_lines(facts, rng, dose_upper)
+    elif facts.mtx_status == "taken":
         assert facts.mtx_start is not None and facts.start_precision is not None
         start_date = facts.history_start or facts.mtx_start
         start = format_date(start_date, facts.start_precision, rng, bound="start")

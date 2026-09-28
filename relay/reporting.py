@@ -1,17 +1,24 @@
 """Human-readable output: run table and report, eval summary, frontier, and the eval report."""
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
 from relay.cases.models import CaseInput
 from relay.decisions.base import DecisionBundle, DecisionId
+from relay.evaluation.budget import SpendLedger, ledger_totals
 from relay.evaluation.calibration import CalibrationReport, RunCalibration
 from relay.evaluation.compare import Comparison
 from relay.evaluation.confusion import ConfusionMatrix
 from relay.evaluation.frontier import SELECTION_RULE, FrontierPoint, SweepResult
 from relay.evaluation.metrics import EvalSummary, RunIdentity
+from relay.evaluation.regression import CHANGE_ORDER, CaseEntry, Rate, RegressionResult
+from relay.evaluation.shadow import ShadowReport
+from relay.evaluation.tracediff import GateDelta, TraceDiff, classify
 from relay.traces.models import RunManifest, WorkflowTrace
+from relay.workflow.outcomes import WorkflowAction
+from relay.workflow.status import ACTION_STATUS, CaseStatus, Transition
 
 DISCLAIMER = (
     "Relay uses synthetic data only and is an engineering/evaluation prototype. "
@@ -623,4 +630,483 @@ def render_comparison(c: Comparison) -> str:
                 f"  {d.case_id:<14}{d.expected:<14}{d.action_a:<{a_width}}"
                 f"{d.action_b:<{b_width}}{flag}".rstrip()
             )
+    return "\n".join(lines)
+
+
+REPRODUCED_LINE = "REPRODUCED: identical action, reasons and gate path"
+DRIFT_LINE = "ENGINE DRIFT: today's policy engine no longer reproduces this trace"
+
+
+def _short_hash(value: str | None) -> str:
+    return "unknown" if value is None else value.split(":", 1)[-1][:8]
+
+
+UNLABELLED_LINE = "EXPECTED: not available (unlabelled)"
+
+REPORTED_ONLY_LEGEND = "  ((name) = reported-only comparison: no engine gate acts on it)"
+
+
+def _expected_line(diff: TraceDiff) -> str:
+    if diff.expected_original is None:
+        return UNLABELLED_LINE
+    if diff.expected_original == diff.expected_candidate:
+        return f"EXPECTED (evaluation-only): {diff.expected_original}"
+    if diff.policy is not None:
+        before, after = diff.policy
+    else:
+        before, after = "original thresholds", "candidate thresholds"
+    return (
+        f"EXPECTED (evaluation-only) under {before}: {diff.expected_original} · "
+        f"under {after}: {diff.expected_candidate}"
+    )
+
+
+def _table(rows: list[list[str]]) -> list[str]:
+    widths = [max(len(r[i]) for r in rows) + 2 for i in range(len(rows[0]))]
+    return [
+        "".join(cell.ljust(w) for cell, w in zip(r, widths, strict=True)).rstrip() for r in rows
+    ]
+
+
+def _decision_lines(diff: TraceDiff) -> list[str]:
+    rows = [["", "DECISION", "ORIGINAL", "CANDIDATE", "Δ", "CROSSED"]]
+    for d in diff.decisions:
+        rows.append(
+            [
+                "*" if d.answer_changed else "",
+                d.question_id.value,
+                d.original,
+                d.candidate,
+                "—" if d.delta is None else f"{d.delta:+.3f}",
+                ", ".join(n if n in d.crossed_gated else f"({n})" for n in d.crossed),
+            ]
+        )
+    legend = []
+    if any(d.answer_changed for d in diff.decisions):
+        legend.append("  (* = answer changed)")
+    if any(set(d.crossed) - set(d.crossed_gated) for d in diff.decisions):
+        legend.append(REPORTED_ONLY_LEGEND)
+    return [" " + line for line in _table(rows)] + legend
+
+
+def _gate_lines(gates: list[GateDelta], all_gates: bool) -> list[str]:
+    shown = gates if all_gates else [g for g in gates if g.original != g.candidate]
+    if not all_gates and not shown:
+        return ["GATES: same outcome at every gate (--all-gates shows every row)"]
+    title = "all rows" if all_gates else "rows whose outcome differs; --all-gates shows every row"
+    lines = [f"GATES ({title})"]
+    for g in shown:
+        status = g.original if g.original == g.candidate else f"{g.original} → {g.candidate}"
+        lines.append(f"  {g.gate:<18}{status}")
+        if g.detail_original == g.detail_candidate:
+            if g.detail_original is not None:
+                lines.append(f"      {g.detail_original}")
+            continue
+        if g.detail_original is not None:
+            lines.append(f"      original:  {g.detail_original}")
+        if g.detail_candidate is not None:
+            lines.append(f"      candidate: {g.detail_candidate}")
+    return lines
+
+
+def _action_lines(
+    side: str, action: WorkflowAction, expected: WorkflowAction | None, reasons: list[str]
+) -> list[str]:
+    verdict = "" if expected is None else f" ({classify(action, expected)})"
+    return [f"  {side:<10}{action}{verdict}"] + [f"      - {reason}" for reason in reasons]
+
+
+def replay_summary(diff: TraceDiff) -> str:
+    """ACTION CHANGED: A → B (flag), or ACTION UNCHANGED: A (flag).
+
+    NEWLY UNSAFE / UNSAFE RESOLVED can happen even when the action itself is unchanged (for
+    example different policies on the two sides), so both forms carry the flag rather than only
+    the changed one (Minor 1). "(unchanged)" is never shown for two differing actions that are
+    each correct under their own side's expectation; that prints "(both correct)" instead.
+    """
+    unchanged = diff.action_original == diff.action_candidate
+    if diff.newly_unsafe:
+        flag = "NEWLY UNSAFE"
+    elif diff.unsafe_resolved:
+        flag = "UNSAFE RESOLVED"
+    elif unchanged or diff.change is None:
+        flag = None
+    elif diff.change == "unchanged":
+        flag = "both correct"
+    else:
+        flag = diff.change
+    if unchanged:
+        base = f"ACTION UNCHANGED: {diff.action_original}"
+    else:
+        base = f"ACTION CHANGED: {diff.action_original} → {diff.action_candidate}"
+    return base if flag is None else f"{base} ({flag})"
+
+
+def _ablation_names(names: list[str] | None) -> str:
+    return "none" if not names else "+".join(names)
+
+
+def ablation_line(diff: TraceDiff) -> str | None:
+    """The "ABLATION: ..." line when either side ran with disabled engine gates (Phase 3E)."""
+    o, c = diff.ablation_original, diff.ablation_candidate
+    if not o and not c:
+        return None
+    if o == c:
+        return f"ABLATION: {_ablation_names(o)} (both sides)"
+    return f"ABLATION: {_ablation_names(o)} → {_ablation_names(c)}"
+
+
+def render_trace_diff(diff: TraceDiff, all_gates: bool = False, *, reproduce: bool = False) -> str:
+    """Terminal output for `relay replay`: header, expected action, decisions, thresholds,
+    gates, actions and a summary line. In reproduce mode the REPRODUCED / ENGINE DRIFT verdict
+    is printed under the header and again as the last line."""
+    verdict = (REPRODUCED_LINE if diff.identical else DRIFT_LINE) if reproduce else None
+    lines = [
+        f"Relay replay — {diff.case_id}",
+        f"ORIGINAL {diff.original_label}",
+        f"CANDIDATE {diff.candidate_label}",
+    ]
+    if verdict is not None:
+        lines.append(verdict)
+    if diff.policy_text_changed is None:
+        lines.append("policy text hash not recorded")
+    elif diff.policy_text_changed:
+        lines.append(
+            "POLICY TEXT CHANGED since the original run "
+            f"({_short_hash(diff.policy_text_hash_original)} → "
+            f"{_short_hash(diff.policy_text_hash_current)})"
+        )
+    lines += [_expected_line(diff), ""]
+    lines += _decision_lines(diff)
+    if diff.thresholds:
+        lines += ["", "THRESHOLDS CHANGED"]
+        lines += [
+            f"  {name}  {before:g} → {after:g}" for name, (before, after) in diff.thresholds.items()
+        ]
+    if diff.policy is not None:
+        lines += ["", f"POLICY CHANGED: {diff.policy[0]} → {diff.policy[1]}"]
+    ablation = ablation_line(diff)
+    if ablation is not None:
+        lines += ["", ablation]
+    lines += [""] + _gate_lines(diff.gates, all_gates)
+    lines += ["", "ACTIONS"]
+    lines += _action_lines(
+        "ORIGINAL", diff.action_original, diff.expected_original, diff.reasons_original
+    )
+    lines += _action_lines(
+        "CANDIDATE", diff.action_candidate, diff.expected_candidate, diff.reasons_candidate
+    )
+    lines += ["", replay_summary(diff)]
+    if verdict is not None:
+        lines.append(verdict)
+    return "\n".join(lines)
+
+
+# ---- relay regression ----
+
+REGRESSED_SHOWN = 20
+PASS_LINE = "REGRESSION GATE: PASS"
+REPRODUCE_NOTE = (
+    "REPRODUCE: the baseline's stored decisions under the current engine, policy and "
+    "thresholds; any case that is not identical is ENGINE DRIFT"
+)
+
+
+def _rate_cell(r: Rate) -> str:
+    return "n/a" if r.rate is None else f"{r.count}/{r.n} ({r.rate:.1%})"
+
+
+def _ci_cell(r: Rate) -> str:
+    return "n/a" if r.ci95 is None else f"[{r.ci95.low:.1%}, {r.ci95.high:.1%}]"
+
+
+def _pp(before: Rate, after: Rate) -> str:
+    if before.rate is None or after.rate is None:
+        return "n/a"
+    return f"{(after.rate - before.rate) * 100:+.1f} pp"
+
+
+def _signed(value: float | None) -> str:
+    return "—" if value is None else f"{value:+.3f}"
+
+
+def _metrics_lines(result: RegressionResult) -> list[str]:
+    b, c = result.baseline, result.candidate
+    rows = [["METRIC", "BASELINE", "CANDIDATE", "Δ", "BASELINE 95% CI", "CANDIDATE 95% CI"]]
+    for name, before, after in (
+        ("Correct action rate", b.correct, c.correct),
+        ("Automation rate", b.automation, c.automation),
+        ("Request-info rate", b.request_info, c.request_info),
+        ("Human escalation rate", b.human_review, c.human_review),
+        ("Unsafe automation rate", b.uar, c.uar),
+    ):
+        rows.append(
+            [
+                name,
+                _rate_cell(before),
+                _rate_cell(after),
+                _pp(before, after),
+                _ci_cell(before),
+                _ci_cell(after),
+            ]
+        )
+    rows.append(
+        [
+            "Invalid outputs",
+            str(b.invalid_outputs),
+            str(c.invalid_outputs),
+            f"{c.invalid_outputs - b.invalid_outputs:+d}",
+            "",
+            "",
+        ]
+    )
+    return _table(rows)
+
+
+def _entry_lines(entry: CaseEntry) -> list[str]:
+    expected = f"expected {entry.expected}"
+    if entry.expected_candidate is not None:
+        expected += f" (candidate policy: {entry.expected_candidate})"
+    crossed = "; ".join(f"{q}: {', '.join(names)}" for q, names in entry.crossed_gated.items())
+    lines = [
+        f"  {entry.case_id}  {expected}  {entry.action_baseline} → {entry.action_candidate}",
+        f"      answer changed: {', '.join(entry.answer_changed) or 'none'}"
+        f" · gated crossings: {crossed or 'none'}",
+    ]
+    if entry.replay_command is not None:
+        lines.append(f"      replay: {entry.replay_command}")
+    else:
+        lines.append("      replay: re-run with --out DIR for a replayable command")
+    return lines
+
+
+def _section(title: str, entries: Sequence[CaseEntry], limit: int | None = None) -> list[str]:
+    if not entries:
+        return []
+    shown = entries if limit is None else entries[:limit]
+    header = f"{title} ({len(entries)})"
+    if len(shown) < len(entries):
+        header += f" — showing {len(shown)}; --all shows every case"
+    lines = ["", header]
+    for entry in shown:
+        lines += _entry_lines(entry)
+    return lines
+
+
+def _calibration_lines(result: RegressionResult) -> list[str]:
+    rows = [["DECISION", "BRIER (BASE → CAND)", "Δ BRIER", "ECE (BASE → CAND)", "Δ ECE"]]
+    for c in result.calibration:
+        rows.append(
+            [
+                c.decision,
+                f"{_num(c.brier_baseline)} → {_num(c.brier_candidate)}",
+                _signed(c.brier_delta),
+                f"{_num(c.ece_baseline)} → {_num(c.ece_candidate)}",
+                _signed(c.ece_delta),
+            ]
+        )
+    return ["", "CALIBRATION (Δ = candidate − baseline)"] + [" " + line for line in _table(rows)]
+
+
+def gate_line(result: RegressionResult) -> str:
+    if result.verdict == "PASS":
+        return PASS_LINE
+    return "REGRESSION GATE: FAIL — " + "; ".join(result.failures)
+
+
+def render_regression(result: RegressionResult, *, show_all: bool = False) -> str:
+    """Terminal output for `relay regression` (and regression.md): header, metrics with 95%
+    Clopper-Pearson intervals, change counts, then NEWLY UNSAFE first (G7), STILL UNSAFE, ENGINE
+    DRIFT, waived and stale waivers, UNSAFE RESOLVED, REGRESSED (20 unless show_all), calibration
+    deltas and the gate line last."""
+    title = f"Relay regression — dataset {result.dataset_id} · n={result.n}"
+    if result.gate is not None:
+        title = (
+            f"Relay regression — gate {result.gate} · dataset {result.dataset_id} · n={result.n}"
+        )
+    lines = [title, f"BASELINE  {result.baseline.label}", f"CANDIDATE {result.candidate.label}"]
+    if result.reproduce:
+        lines.append(REPRODUCE_NOTE)
+    lines += [""] + _metrics_lines(result)
+    counts = " · ".join(f"{name} {result.change_counts[name]}" for name in CHANGE_ORDER)
+    lines += ["", f"CHANGES: {counts} · not identical {result.not_identical}"]
+    limit = None if show_all else REGRESSED_SHOWN
+    lines += _section("NEWLY UNSAFE", result.newly_unsafe)
+    if result.still_unsafe:
+        lines += [
+            "",
+            f"STILL UNSAFE ({len(result.still_unsafe)}) — also unsafe in the baseline; "
+            "not a gate failure",
+        ]
+        for entry in result.still_unsafe:
+            lines += _entry_lines(entry)
+    lines += _section("ENGINE DRIFT", result.drifted, limit)
+    if result.waived:
+        lines += ["", f"WAIVED NEWLY UNSAFE ({len(result.waived)}) — reviewed, not failures"]
+        for waived in result.waived:
+            w = waived.waiver
+            lines += _entry_lines(waived.entry)
+            lines.append(
+                f"      waiver: {w.reason} (approved by {w.approved_by}, {w.date}, gate {w.gate})"
+            )
+    if result.stale_waivers:
+        lines += [
+            "",
+            f"STALE WAIVERS ({len(result.stale_waivers)}) — warning: no newly unsafe case",
+        ]
+        lines += [
+            f"  {w.case_id} (gate {w.gate}, approved by {w.approved_by}, {w.date})"
+            for w in result.stale_waivers
+        ]
+    lines += _section("UNSAFE RESOLVED", result.unsafe_resolved)
+    lines += _section("REGRESSED", result.regressed, limit)
+    lines += _calibration_lines(result)
+    lines += ["", gate_line(result)]
+    return "\n".join(lines)
+
+
+@dataclass(frozen=True)
+class GateRow:
+    """One row of the `relay regression --config` summary."""
+
+    name: str
+    verdict: str  # PASS, FAIL, SKIPPED or ERROR
+    newly_unsafe: int | None
+    regressed: int | None
+    exit_code: int
+    still_unsafe: int | None = None
+    waived: int | None = None  # M1: a gate that only passes because of a waiver looks like PASS 0
+    note: str | None = None  # M11: kept out of VERDICT so a long SKIPPED/ERROR note stays narrow
+
+
+def render_gate_summary(rows: Sequence[GateRow]) -> str:
+    table = [
+        ["GATE", "VERDICT", "NEWLY UNSAFE", "STILL UNSAFE", "WAIVED", "REGRESSED", "EXIT", "NOTE"]
+    ]
+    for r in rows:
+        table.append(
+            [
+                r.name,
+                r.verdict,
+                "—" if r.newly_unsafe is None else str(r.newly_unsafe),
+                "—" if r.still_unsafe is None else str(r.still_unsafe),
+                "—" if r.waived is None else str(r.waived),
+                "—" if r.regressed is None else str(r.regressed),
+                str(r.exit_code),
+                r.note or "—",
+            ]
+        )
+    return "\n".join(["REGRESSION GATES", *_table(table)])
+
+
+# ---- relay budget show ----
+
+
+def render_ledger(ledger: SpendLedger, path: str, budget: Decimal) -> str:
+    """`relay budget show`: every entry, then settled / reserved / total against the budget."""
+    lines = [f"Claude spend ledger — {path}"]
+    if not ledger.entries:
+        lines.append("no entries")
+    else:
+        rows = [["RUN", "DATASET", "MODE", "CASES", "STATUS", "COST", "BATCH", "NOTE"]]
+        for e in ledger.entries:
+            rows.append(
+                [
+                    e.run_id,
+                    e.dataset_id,
+                    e.mode,
+                    str(e.cases),
+                    e.status,
+                    f"${e.cost_usd:.4f}",
+                    e.batch_id or "—",
+                    e.note or "",
+                ]
+            )
+        lines += _table(rows)
+    settled, reserved, total = ledger_totals(ledger)
+    lines += [
+        "",
+        f"Settled ${settled:.4f} · reserved ${reserved:.4f} · total ${total:.4f} of the "
+        f"${budget:.2f} default budget",
+    ]
+    return "\n".join(lines)
+
+
+# ---- relay run --workflow simulated | shadow (Phase 3C) ----
+
+# The handoff's exact wording for a shadow proposal, per action.
+SHADOW_PROPOSALS: dict[WorkflowAction, str] = {
+    WorkflowAction.AUTO_PROCESS: "Would auto-process {case_id}",
+    WorkflowAction.REQUEST_INFO: "Would request information for {case_id}",
+    WorkflowAction.HUMAN_REVIEW: "Would send {case_id} to human review",
+}
+EVALUATION_ONLY_HEADER = (
+    "EVALUATION-ONLY (uses ground truth; not available in a real shadow deployment)"
+)
+
+
+def simulated_line(transition: Transition, case_id: str) -> str:
+    """`SIMULATED: CASE-ID RECEIVED → AUTO_APPROVED (AUTO_PROCESS)`."""
+    return f"SIMULATED: {case_id} {transition.from_status} → {transition.to} ({transition.action})"
+
+
+def simulated_summary(run_id: str, transitions: Sequence[Transition]) -> str:
+    counts = " · ".join(
+        f"{status} {sum(t.to == status for t in transitions)}" for status in ACTION_STATUS.values()
+    )
+    return f"SIMULATED RUN {run_id}: {len(transitions)} transitions applied — {counts}"
+
+
+def shadow_line(trace: WorkflowTrace, current: tuple[CaseStatus, str | None] | None = None) -> str:
+    """`SHADOW: Would auto-process CASE-ID; no action was taken.`, plus
+    ` (current status: <STATUS> by <run_id>)` when a state file exists (`current` is the case's
+    status there and the run that set it, None for a case still RECEIVED)."""
+    proposal = SHADOW_PROPOSALS[trace.action].format(case_id=trace.case_id)
+    line = f"SHADOW: {proposal}; no action was taken."
+    if current is not None:
+        status, run_id = current
+        line += f" (current status: {status}" + ("" if run_id is None else f" by {run_id}") + ")"
+    return line
+
+
+def shadow_trailer(run_id: str, proposals: int) -> str:
+    return f"SHADOW RUN {run_id}: {proposals} proposals recorded; case state unchanged (verified)."
+
+
+def promotion_line(report: ShadowReport) -> str:
+    if report.decision == "PROMOTE":
+        return "PROMOTION CHECK: PROMOTE"
+    return "PROMOTION CHECK: HOLD — " + "; ".join(report.promotion.failures)
+
+
+def _case_list(title: str, case_ids: Sequence[str]) -> list[str]:
+    return [f"  {title} ({len(case_ids)}): " + (", ".join(case_ids) if case_ids else "none")]
+
+
+def render_shadow_report(report: ShadowReport) -> str:
+    """The shadow comparison (and shadow.md): the unlabelled agreement section, then the
+    evaluation-only promotion check (the full 3B regression report) and the PROMOTION CHECK
+    line last."""
+    a = report.agreement
+    rows = [["INCUMBENT \\ CANDIDATE", *[str(action) for action in a.matrix]]]
+    for before, row in a.matrix.items():
+        rows.append([str(before), *[str(count) for count in row.values()]])
+    lines = [
+        f"Relay shadow comparison — dataset {report.dataset_id} · n={report.n}",
+        f"INCUMBENT {report.incumbent_label}",
+        f"CANDIDATE {report.candidate_label}",
+        "",
+        "AGREEMENT (unlabelled; what a real shadow deployment sees)",
+        f"  Action agreement: {_rate_cell(a.agreed)}  95% CI {_ci_cell(a.agreed)}",
+        "",
+        *["  " + line for line in _table(rows)],
+        "",
+        *_case_list("Would newly auto-process", a.newly_auto),
+        *_case_list("Would stop auto-processing", a.stopped_auto),
+        "",
+        EVALUATION_ONLY_HEADER,
+        render_regression(report.promotion),
+        "",
+        promotion_line(report),
+    ]
     return "\n".join(lines)

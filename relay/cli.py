@@ -1,7 +1,10 @@
-"""relay run / eval / generate, and the offline analyses sweep / report / compare."""
+"""relay run / eval / generate, and the offline analyses sweep / report / compare / replay /
+regression / recompose / ablate."""
 
 import asyncio
+import contextlib
 import os
+import sys
 from collections.abc import Callable
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
@@ -18,28 +21,48 @@ from dotenv import load_dotenv
 from pydantic import ValidationError
 from typesafe_sdk import AsyncTypeSafeClient
 
-from relay.cases.loader import CaseLoadError, load_dataset
+from relay.cases.loader import CaseLoadError, load_case, load_dataset
 from relay.cases.models import PriorAuthCase
+from relay.cases.policies import AuthorizationPolicy, latest_policy_for, load_policy
 from relay.decisions.base import DecisionProvider
 from relay.decisions.claude import ClaudeProvider, Mode
 from relay.decisions.claude_batch import ClaudeBatchProvider
 from relay.decisions.claude_prompt import CLAUDE_QUESTION_SETS
+from relay.decisions.composition import MalformedAnswers
 from relay.decisions.ground_truth import GroundTruthProvider
-from relay.decisions.jev import JevProvider
-from relay.decisions.questions import DEFAULT_QUESTION_SET_VERSION, Q_V0_2, QUESTION_SET_VERSIONS
+from relay.decisions.jev import JEV_MODEL, JevProvider
+from relay.decisions.questions import (
+    DEFAULT_QUESTION_SET_VERSION,
+    Q_V0_2,
+    QUESTION_SET_VERSIONS,
+    question_ids,
+)
 from relay.decisions.rules_baseline import RulesBaselineProvider
+from relay.evaluation.ablate_run import ablate_run, ablation_name, parse_disable
 from relay.evaluation.artifacts import write_eval_bundle
+from relay.evaluation.bench import (
+    DEFAULT_SIZES,
+    BenchCall,
+    bench_rotation_seed,
+    build_bench_result,
+    parse_sizes,
+    render_bench,
+    run_bench,
+)
 from relay.evaluation.budget import (
     DEFAULT_BUDGET_USD,
     DEFAULT_LEDGER,
     BudgetExceeded,
+    LedgerRefusal,
     SpendEntry,
     SpendLedger,
     attach_batch,
+    backup_ledger,
     check_budget,
     find_batch,
     load_ledger,
     project_cost,
+    release,
     reserve,
     settle,
     write_ledger,
@@ -48,13 +71,48 @@ from relay.evaluation.calibration import calibrate_run
 from relay.evaluation.compare import compare_runs
 from relay.evaluation.confusion import confusion_matrices
 from relay.evaluation.frontier import DEFAULT_CEILING, frontier_csv, run_sweep
-from relay.evaluation.metrics import EvalError, run_identity, score_run
+from relay.evaluation.jev_spend import (
+    DEFAULT_JEV_LEDGER,
+    JevBudget,
+    check_jev_budget,
+    estimate_jev_cost,
+    estimate_line,
+    reserve_jev,
+    settle_jev,
+)
+from relay.evaluation.metrics import EvalError, paired_cases, run_identity, score_run
+from relay.evaluation.recompose_run import changed_counts, recompose_run, write_simulated_bundle
+from relay.evaluation.regression import RegressionResult
+from relay.evaluation.regression_run import (
+    CandidateSpec,
+    RegressionInputError,
+    RegressionRequest,
+    find_run_manifest,
+    load_gates,
+    load_waivers,
+    run_regression,
+    write_outputs,
+)
 from relay.evaluation.runner import (
     RunConfigError,
     run_dataset,
     sample_cases,
     validate_run_config,
 )
+from relay.evaluation.shadow import build_shadow_report
+from relay.evaluation.tracediff import (
+    REPRODUCE_LABEL,
+    candidate_trace_label,
+    diff_case,
+    live_label,
+    original_label,
+    policy_replay_label,
+    replay_exit_code,
+    replay_run,
+    replay_thresholds,
+    replay_trace,
+)
+from relay.generation.facts import GEN_V0_2, GENERATOR_VERSIONS
 from relay.generation.generator import generate_dataset, verify_dataset
 from relay.generation.manifest import MANIFEST_DIR, dataset_hash, read_manifest, write_manifest
 from relay.reporting import (
@@ -62,15 +120,34 @@ from relay.reporting import (
     DISCLAIMER,
     GROUNDTRUTH_NOTE,
     RULES_NOTE,
+    GateRow,
     describe_selection,
     render_comparison,
     render_eval_summary,
     render_frontier_table,
+    render_gate_summary,
+    render_ledger,
+    render_regression,
     render_run_report,
     render_run_table,
+    render_shadow_report,
+    render_trace_diff,
+    shadow_line,
+    shadow_trailer,
+    simulated_line,
+    simulated_summary,
 )
-from relay.traces.models import RunManifest, WorkflowTrace
+from relay.traces.models import RunManifest, WorkflowMode, WorkflowTrace
 from relay.traces.store import TraceStore, current_git_sha, new_run_id, read_traces
+from relay.workflow.status import (
+    DEFAULT_STATE,
+    StatusStoreError,
+    apply_transitions,
+    ensure_unclaimed,
+    load_store,
+    reset_state,
+    state_digest,
+)
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -184,6 +261,19 @@ BatchId = Annotated[
     typer.Option(help="claude --mode batch only: re-attach to this submitted Message Batch."),
 ]
 
+JevBudgetUsd = Annotated[
+    float | None,
+    typer.Option(
+        min=0.0,
+        help="jev only: the Jev spend counter. Print the estimate and refuse to start if the "
+        "ledger's Jev spend + the estimate exceeds this cap.",
+    ),
+]
+JevLedgerOption = Annotated[
+    Path | None,
+    typer.Option(help=f"jev only: Jev spend ledger (default {DEFAULT_JEV_LEDGER})."),
+]
+
 TraceFile = Annotated[
     Path, typer.Option(exists=True, dir_okay=False, help="Trace file (.jsonl or .jsonl.gz).")
 ]
@@ -208,6 +298,21 @@ def main(
 def _fail(message: str) -> typer.Exit:
     typer.echo(f"error: {message}", err=True)
     return typer.Exit(code=2)
+
+
+def _same_file(a: Path, b: Path) -> bool:
+    """True if `a` and `b` name the same file. Resolved-path equality alone misses two cases: a
+    case-variant spelling on a case-insensitive filesystem (macOS default), and a hard link — in
+    both, the paths differ but the bytes are the same file. When both paths exist, (st_dev,
+    st_ino) identity (os.path.samefile) catches those too; a path that doesn't exist yet can't
+    be hard-linked or case-collide with anything, so resolved-path equality is all there is to
+    check for it."""
+    if a.resolve() == b.resolve():
+        return True
+    try:
+        return a.exists() and b.exists() and os.path.samefile(a, b)
+    except OSError:
+        return False
 
 
 def _load_cases(dataset: Path) -> list[PriorAuthCase]:
@@ -558,6 +663,104 @@ def _is_ambiguous_submission_error(error: BaseException) -> bool:
     return False
 
 
+def _resolve_jev(
+    provider: ProviderName, budget_usd: float | None, ledger: Path | None
+) -> JevBudget | None:
+    """The Jev spend counter's settings, or None when --jev-budget-usd is not given.
+
+    Both flags need --provider jev, and --jev-ledger needs --jev-budget-usd.
+    """
+    given = [
+        flag
+        for flag, value in (("--jev-budget-usd", budget_usd), ("--jev-ledger", ledger))
+        if value is not None
+    ]
+    if given and provider is not ProviderName.jev:
+        raise _fail(f"{', '.join(given)} applies only to --provider jev")
+    if budget_usd is None:
+        if ledger is not None:
+            raise _fail("--jev-ledger needs --jev-budget-usd")
+        return None
+    return JevBudget(
+        budget_usd=Decimal(str(budget_usd)),
+        ledger=DEFAULT_JEV_LEDGER if ledger is None else ledger,
+    )
+
+
+def _load_jev_ledger(jev: JevBudget) -> SpendLedger:
+    try:
+        return load_ledger(jev.ledger)
+    except (ValidationError, OSError) as error:
+        raise _fail(f"{jev.ledger}: {error}") from error
+
+
+def _jev_budget_check(jev: JevBudget, cases: int, questions: int | str, estimate: Decimal) -> None:
+    """Print the estimate and the ledger's spend; exit 2 if the run could break the cap."""
+    ledger = _load_jev_ledger(jev)
+    typer.echo(estimate_line(cases, questions, estimate))
+    typer.echo(
+        f"Jev budget: spent ${ledger.spent_usd:.4f} of the ${jev.budget_usd:.2f} cap ({jev.ledger})"
+    )
+    try:
+        check_jev_budget(ledger, estimate, jev.budget_usd)
+    except BudgetExceeded as error:
+        raise _fail(str(error)) from error
+
+
+def _jev_reserve(
+    jev: JevBudget, run_id: str, dataset_id: str, cases: int, estimate: Decimal
+) -> None:
+    ledger = reserve_jev(
+        _load_jev_ledger(jev),
+        run_id=run_id,
+        dataset_id=dataset_id,
+        cases=cases,
+        estimate=estimate,
+    )
+    write_ledger(jev.ledger, ledger)
+
+
+def _jev_settle(
+    jev: JevBudget,
+    run_id: str,
+    traces: list[WorkflowTrace] | None,
+    *,
+    per_case_estimate: Decimal = Decimal("0"),
+    in_flight: int = 0,
+) -> None:
+    """Settle at the traces' summed estimated cost. None (an unreadable partial trace file)
+    leaves the reservation counted, as for a Claude sync run.
+
+    M1: never under-record. A trace whose estimated_cost_usd is None (its call errored before any
+    tokens were billed) is charged at `per_case_estimate` instead of $0, and so is each of
+    `in_flight` calls that were still running (up to --concurrency) when a run died or was
+    interrupted, since their real cost is unknown too.
+    """
+    if traces is None:
+        typer.echo(
+            f"error: Jev run {run_id}'s trace file could not be parsed; its reservation stays "
+            f"counted in {jev.ledger} until this is resolved by hand.",
+            err=True,
+        )
+        return
+    known = sum(
+        (
+            t.decisions.estimated_cost_usd
+            for t in traces
+            if t.decisions.estimated_cost_usd is not None
+        ),
+        Decimal("0"),
+    )
+    unknown = sum(1 for t in traces if t.decisions.estimated_cost_usd is None)
+    actual = known + per_case_estimate * (unknown + in_flight)
+    ledger = settle_jev(_load_jev_ledger(jev), run_id, actual)
+    write_ledger(jev.ledger, ledger)
+    typer.echo(
+        f"Jev spend: this run ${actual:.4f}; total ${ledger.spent_usd:.4f} of the "
+        f"${jev.budget_usd:.2f} cap ({jev.ledger})"
+    )
+
+
 def _preflight(cases: list[PriorAuthCase], provider: ProviderName, policy: str) -> None:
     try:
         validate_run_config(cases, policy)
@@ -618,11 +821,17 @@ async def _execute(
     sample: tuple[int, int] | None = None,
     claude: ClaudeRun | None = None,
     projected: Decimal = Decimal("0"),
+    mode: WorkflowMode = "evaluate",
+    jev: JevBudget | None = None,
+    jev_estimate: Decimal = Decimal("0"),
 ) -> tuple[RunManifest, list[WorkflowTrace]]:
     run_id = new_run_id()
     store = TraceStore.create(traces_dir, run_id)
     git_sha = current_git_sha()
     on_submitted = None
+    per_case_jev_estimate = jev_estimate / len(cases) if jev is not None and cases else Decimal("0")
+    if jev is not None:
+        _jev_reserve(jev, run_id, cases[0].input.dataset_id, len(cases), jev_estimate)
     if claude is not None:
         _reserve(claude, run_id, cases, projected)
 
@@ -644,6 +853,7 @@ async def _execute(
                 run_id=run_id,
                 concurrency=concurrency,
                 git_sha=git_sha,
+                mode=mode,
             )
     except BaseException as error:
         # Account even for a failed run (API error, batch submission failure, Ctrl-C, ...) so its
@@ -663,12 +873,25 @@ async def _execute(
                 and _is_ambiguous_submission_error(error)
             )
             _settle_interrupted(claude, run_id, store, batch_id, ambiguous_submission=ambiguous)
+        if jev is not None:
+            partial = _partial_traces(store)
+            # M1: up to `concurrency` cases could have been in flight (dispatched, not yet
+            # written) when this died or was interrupted; their real cost is unknown, so charge
+            # them at the per-case estimate rather than $0. Skipped when the trace file itself is
+            # unreadable (partial is None): that path already leaves the whole reservation
+            # counted, which is even more conservative.
+            in_flight = 0 if partial is None else min(concurrency, len(cases) - len(partial))
+            _jev_settle(
+                jev, run_id, partial, per_case_estimate=per_case_jev_estimate, in_flight=in_flight
+            )
         if store.path.exists() and store.path.stat().st_size == 0:
             store.path.unlink()
         raise
     if claude is not None:
         batch_id = getattr(provider, "batch_id", None) or claude.batch_id
         _settle(claude, run_id, traces, batch_id, collected=True)
+    if jev is not None:
+        _jev_settle(jev, run_id, traces, per_case_estimate=per_case_jev_estimate)
     manifest = RunManifest(
         run_id=run_id,
         created_at=datetime.now(UTC),
@@ -682,9 +905,55 @@ async def _execute(
         relay_git_sha=git_sha,
         sample_limit=None if sample is None else sample[0],
         sample_seed=None if sample is None else sample[1],
+        mode=mode,
     )
     store.write_manifest(manifest)
     return manifest, traces
+
+
+def _run_provider(
+    cases: list[PriorAuthCase],
+    provider: ProviderName,
+    policy: str,
+    concurrency: int,
+    traces_dir: Path,
+    dataset: Path,
+    questions: str | None,
+    sample: tuple[int, int] | None = None,
+    claude: ClaudeRun | None = None,
+    mode: WorkflowMode = "evaluate",
+    jev: JevBudget | None = None,
+) -> tuple[RunManifest, list[WorkflowTrace]]:
+    """A provider run with every guard: question set, policy and key preflight, the Claude budget
+    check and ledger, the Jev spend counter (with jev), and the provider's NOTE."""
+    resolved = _resolve_questions(provider, questions)
+    _preflight(cases, provider, policy)
+    projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
+    jev_estimate = Decimal("0")
+    if jev is not None:
+        assert resolved is not None  # _resolve_jev allows the counter only for --provider jev
+        per_case = len(question_ids(resolved))
+        jev_estimate = estimate_jev_cost(len(cases), per_case)
+        _jev_budget_check(jev, len(cases), per_case, jev_estimate)
+    if provider in PROVIDER_NOTES:
+        typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
+    return asyncio.run(
+        _execute(
+            cases,
+            provider,
+            policy,
+            concurrency,
+            traces_dir,
+            dataset,
+            resolved,
+            sample,
+            claude,
+            projected,
+            mode,
+            jev,
+            jev_estimate,
+        )
+    )
 
 
 def _run_and_report(
@@ -698,25 +967,19 @@ def _run_and_report(
     questions: str | None,
     sample: tuple[int, int] | None = None,
     claude: ClaudeRun | None = None,
+    jev: JevBudget | None = None,
 ) -> list[WorkflowTrace]:
-    resolved = _resolve_questions(provider, questions)
-    _preflight(cases, provider, policy)
-    projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
-    if provider in PROVIDER_NOTES:
-        typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
-    manifest, traces = asyncio.run(
-        _execute(
-            cases,
-            provider,
-            policy,
-            concurrency,
-            traces_dir,
-            dataset,
-            resolved,
-            sample,
-            claude,
-            projected,
-        )
+    manifest, traces = _run_provider(
+        cases,
+        provider,
+        policy,
+        concurrency,
+        traces_dir,
+        dataset,
+        questions,
+        sample,
+        claude,
+        jev=jev,
     )
     reports_dir.mkdir(parents=True, exist_ok=True)
     report_path = reports_dir / f"{manifest.run_id}.md"
@@ -729,11 +992,249 @@ def _run_and_report(
     return traces
 
 
+class Workflow(StrEnum):
+    simulated = "simulated"
+    shadow = "shadow"
+
+
+def _reissue(
+    from_traces: Path,
+    cases: list[PriorAuthCase],
+    dataset: Path,
+    traces_dir: Path,
+    mode: WorkflowMode,
+    at: float | None,
+    sample: tuple[int, int] | None,
+) -> tuple[RunManifest, list[WorkflowTrace]]:
+    """--from-traces: the stored run's decisions re-issued as a new run in `mode` (replay_run,
+    re-decided at `at` if given), written like any run. No provider is called."""
+    source = _read_trace_file(from_traces)
+    if not source:
+        raise _fail(f"{from_traces}: no traces")
+    run_id = new_run_id()
+    try:
+        traces = replay_run(
+            source, cases, policy_id=None, auto_process=at, mode=mode, run_id=run_id
+        )
+    except (EvalError, ValueError) as error:
+        raise _fail(f"--from-traces {from_traces}: {error}") from error
+    store = TraceStore.create(traces_dir, run_id)
+    for trace in traces:
+        store.append(trace)
+    first = traces[0]
+    manifest = RunManifest(
+        run_id=run_id,
+        created_at=datetime.now(UTC),
+        dataset_id=first.dataset_id,
+        dataset_path=str(dataset),
+        provider=first.provider,
+        policy_version=first.policy_version,
+        question_set_version=first.question_set_version,
+        case_count=len(traces),
+        trace_file=str(store.path),
+        relay_git_sha=first.relay_git_sha,
+        sample_limit=None if sample is None else sample[0],
+        sample_seed=None if sample is None else sample[1],
+        mode=mode,
+        source_run_id=source[0].run_id,
+    )
+    store.write_manifest(manifest)
+    return manifest, traces
+
+
+@dataclass(frozen=True)
+class WorkflowRequest:
+    """Everything `relay run --workflow` needs beyond the cases (flags already validated)."""
+
+    workflow: Workflow
+    dataset: Path
+    traces_dir: Path
+    state: Path
+    from_traces: Path | None = None
+    at: float | None = None
+    provider: ProviderName = ProviderName.jev
+    policy: str = "v0.1"
+    concurrency: int = 4
+    questions: str | None = None
+    claude: ClaudeRun | None = None
+    reset_state: bool = False
+    incumbent: Path | None = None
+    waivers: Path | None = None
+    max_regressed: int | None = None
+    out: Path | None = None
+
+
+def _workflow_traces(
+    request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
+) -> tuple[RunManifest, list[WorkflowTrace]]:
+    mode: WorkflowMode = request.workflow.value
+    if request.from_traces is not None:
+        return _reissue(
+            request.from_traces,
+            cases,
+            request.dataset,
+            request.traces_dir,
+            mode,
+            request.at,
+            sample,
+        )
+    return _run_provider(
+        cases,
+        request.provider,
+        request.policy,
+        request.concurrency,
+        request.traces_dir,
+        request.dataset,
+        request.questions,
+        sample,
+        request.claude,
+        mode,
+    )
+
+
+def _run_paths(manifest: RunManifest) -> list[str]:
+    trace_file = Path(manifest.trace_file)
+    return [f"Traces: {trace_file}", f"Manifest: {trace_file.with_suffix('.manifest.json')}"]
+
+
+def _run_simulated(
+    request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
+) -> None:
+    """The incumbent: every action becomes a simulated case-status transition in --state."""
+    try:
+        if not request.reset_state:
+            ensure_unclaimed(load_store(request.state), [c.input.id for c in cases])
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    # M1: the run's inputs (--from-traces / the provider call) are validated before the state
+    # file is archived, so a bad run (e.g. --from-traces that doesn't pair with the dataset)
+    # leaves the state file untouched instead of resetting it for nothing.
+    manifest, traces = _workflow_traces(request, cases, sample)
+    try:
+        if request.reset_state:
+            backup = reset_state(request.state)
+            typer.echo(
+                f"State archived: {backup}"
+                if backup is not None
+                else f"State: nothing to archive at {request.state}"
+            )
+        _, transitions = apply_transitions(request.state, traces)
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    by_case = {t.trace_id: t.case_id for t in traces}
+    for transition in sorted(transitions, key=lambda t: by_case[t.trace_id]):
+        typer.echo(simulated_line(transition, by_case[transition.trace_id]))
+    typer.echo("")
+    typer.echo(simulated_summary(manifest.run_id, transitions))
+    for line in [*_run_paths(manifest), f"State: {request.state}"]:
+        typer.echo(line)
+
+
+def _load_incumbent(path: Path, cases: list[PriorAuthCase]) -> list[WorkflowTrace]:
+    """The run a shadow candidate is compared with: a simulated or evaluate run covering the same
+    cases. Checked before the shadow run starts, so a bad incumbent costs no provider call."""
+    traces = _read_trace_file(path)
+    if any(t.mode == "shadow" for t in traces):
+        raise _fail(
+            f"--incumbent {path} is a shadow run; the incumbent must be a simulated or evaluate run"
+        )
+    try:
+        paired_cases(traces, cases)
+    except EvalError as error:
+        raise _fail(f"--incumbent {path}: {error}") from error
+    return traces
+
+
+def _run_shadow(
+    request: WorkflowRequest, cases: list[PriorAuthCase], sample: tuple[int, int] | None
+) -> None:
+    """A candidate in shadow: its proposals are recorded and never applied. The state file is
+    read, never written, and hashed before and after to prove it (exit 3 if it changed)."""
+    before = state_digest(request.state)
+    try:
+        store = load_store(request.state)
+    except StatusStoreError as error:
+        raise _fail(str(error)) from error
+    incumbent = None if request.incumbent is None else _load_incumbent(request.incumbent, cases)
+    try:
+        waivers = [] if request.waivers is None else load_waivers(request.waivers)
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    manifest, traces = _workflow_traces(request, cases, sample)
+
+    # I1: everything the command can write is done before the digest is taken a second time, so
+    # the verification (and the "(verified)" trailer that reports it) covers the --out writes
+    # too, not just the traced-run writes above. The report's own text output is deferred until
+    # after the digest check, to keep stdout in the same order as before this fix.
+    report = None
+    rendered = None
+    if incumbent is not None:
+        try:
+            report = build_shadow_report(
+                incumbent,
+                traces,
+                cases,
+                incumbent_label=f"{incumbent[0].mode} {original_label(incumbent[0])}",
+                candidate_label=f"shadow {original_label(traces[0])}",
+                waivers=waivers,
+                max_regressed=request.max_regressed,
+                dataset_hash=_manifest_hash(request.dataset, cases),
+                replay_command=lambda case_id: (
+                    f"relay replay {case_id} --traces {request.incumbent} --dataset "
+                    f"{request.dataset} --candidate-traces {manifest.trace_file}"
+                ),
+            )
+        except EvalError as error:
+            raise _fail(str(error)) from error
+        rendered = render_shadow_report(report)
+        if request.out is not None:
+            request.out.mkdir(parents=True, exist_ok=True)
+            (request.out / "shadow.json").write_text(
+                report.model_dump_json(indent=2) + "\n", encoding="utf-8"
+            )
+            (request.out / "shadow.md").write_text(rendered + "\n", encoding="utf-8")
+
+    after = state_digest(request.state)
+    if after != before:
+        typer.echo(
+            f"SHADOW VIOLATION: {request.state} changed during shadow run {manifest.run_id} "
+            f"({before} → {after})",
+            err=True,
+        )
+        raise typer.Exit(code=3)
+    for trace in sorted(traces, key=lambda t: t.case_id):
+        current = None
+        if before != "absent":
+            last = store.last_transition(trace.case_id)
+            current = (store.status_of(trace.case_id), None if last is None else last.run_id)
+        typer.echo(shadow_line(trace, current))
+    typer.echo("")
+    typer.echo(shadow_trailer(manifest.run_id, len(traces)))
+    for line in _run_paths(manifest):
+        typer.echo(line)
+    if report is None:
+        return
+    if request.out is not None:
+        typer.echo(f"Shadow report: {request.out / 'shadow.json'}, {request.out / 'shadow.md'}")
+    typer.echo("")
+    typer.echo(rendered)
+    if report.exit_code:
+        raise typer.Exit(code=report.exit_code)
+
+
+RunProvider = Annotated[
+    ProviderName | None, typer.Option("--provider", help="Decision provider (default jev).")
+]
+RunPolicy = Annotated[
+    str | None, typer.Option("--policy", help="Policy/threshold version (default v0.1).")
+]
+
+
 @app.command()
 def run(
     dataset: Dataset,
-    provider: Provider = ProviderName.jev,
-    policy: Policy = "v0.1",
+    provider: RunProvider = None,
+    policy: RunPolicy = None,
     concurrency: Concurrency = 4,
     traces_dir: TracesDir = Path("traces"),
     reports_dir: ReportsDir = Path("reports"),
@@ -744,22 +1245,188 @@ def run(
     budget_usd: BudgetUsd = None,
     ledger: LedgerOption = None,
     batch_id: BatchId = None,
+    workflow: Annotated[
+        Workflow | None,
+        typer.Option(
+            help="simulated: the incumbent; its actions become simulated case-status transitions "
+            "in --state. shadow: a candidate; its proposals are recorded and case state is never "
+            "changed. Without it, an ordinary traced run with a Markdown report."
+        ),
+    ] = None,
+    from_traces: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            dir_okay=False,
+            help="--workflow only: re-issue this stored run's decisions instead of calling a "
+            "provider (offline).",
+        ),
+    ] = None,
+    at: Annotated[
+        float | None,
+        typer.Option(
+            help="With --from-traces: re-decide at this auto_process threshold, in (0, 1]."
+        ),
+    ] = None,
+    state: Annotated[
+        Path | None,
+        typer.Option(
+            dir_okay=False,
+            help=f"--workflow only: the case-status store (default {DEFAULT_STATE}).",
+        ),
+    ] = None,
+    reset_state_flag: Annotated[
+        bool,
+        typer.Option(
+            "--reset-state",
+            help="--workflow simulated only: archive the state file to <state>.bak-<UTC "
+            "timestamp> and start from RECEIVED.",
+        ),
+    ] = False,
+    incumbent: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            dir_okay=False,
+            help="--workflow shadow only: compare with this simulated or evaluate run.",
+        ),
+    ] = None,
+    waivers: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True, dir_okay=False, help="With --incumbent: waivers for the promotion check."
+        ),
+    ] = None,
+    max_regressed: Annotated[
+        int | None,
+        typer.Option(min=0, help="With --incumbent: HOLD when more cases than this regress."),
+    ] = None,
+    out: Annotated[
+        Path | None, typer.Option(help="With --incumbent: write shadow.json and shadow.md here.")
+    ] = None,
 ) -> None:
-    """Decide every case in DATASET; write traces and a Markdown report."""
-    claude = _resolve_claude(provider, mode, budget_usd, ledger, batch_id)
-    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
-    _run_and_report(
-        cases,
-        provider,
-        policy,
-        concurrency,
-        traces_dir,
-        reports_dir,
-        dataset,
-        questions,
-        sample,
-        claude,
+    """Decide every case in DATASET; write traces and a Markdown report.
+
+    With --workflow: simulated (the incumbent's actions change simulated case status) or shadow
+    (a candidate's proposals are recorded, never applied, optionally compared with --incumbent).
+    Exit codes: 0 ok / PROMOTE; 2 usage/input error; 3 SHADOW VIOLATION; 4 HOLD.
+    """
+    if workflow is None:
+        given = [
+            flag
+            for flag, value in (
+                ("--from-traces", from_traces),
+                ("--at", at),
+                ("--state", state),
+                ("--reset-state", reset_state_flag or None),
+                ("--incumbent", incumbent),
+                ("--waivers", waivers),
+                ("--max-regressed", max_regressed),
+                ("--out", out),
+            )
+            if value is not None
+        ]
+        if given:
+            raise _fail(f"{', '.join(given)} needs --workflow simulated or --workflow shadow")
+        resolved_provider = provider or ProviderName.jev
+        claude = _resolve_claude(resolved_provider, mode, budget_usd, ledger, batch_id)
+        cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
+        _run_and_report(
+            cases,
+            resolved_provider,
+            policy or "v0.1",
+            concurrency,
+            traces_dir,
+            reports_dir,
+            dataset,
+            questions,
+            sample,
+            claude,
+        )
+        return
+    if at is not None and from_traces is None:
+        raise _fail("--at needs --from-traces")
+    if at is not None and not 0.0 < at <= 1.0:
+        raise _fail(f"--at must be in (0, 1], got {at:g}")
+    if from_traces is not None:
+        given = [
+            flag
+            for flag, value in (
+                ("--provider", provider),
+                ("--policy", policy),
+                ("--questions", questions),
+                ("--mode", mode),
+                ("--budget-usd", budget_usd),
+                ("--ledger", ledger),
+                ("--batch-id", batch_id),
+            )
+            if value is not None
+        ]
+        if given:
+            raise _fail(
+                f"{', '.join(given)} cannot be combined with --from-traces (the stored run's "
+                "decisions are re-issued; no provider is called)"
+            )
+    shadow_only = [
+        flag
+        for flag, value in (
+            ("--incumbent", incumbent),
+            ("--waivers", waivers),
+            ("--max-regressed", max_regressed),
+            ("--out", out),
+        )
+        if value is not None
+    ]
+    if workflow is Workflow.simulated and shadow_only:
+        raise _fail(f"{', '.join(shadow_only)} applies only to --workflow shadow")
+    if workflow is Workflow.shadow:
+        if reset_state_flag:
+            raise _fail("--reset-state applies only to --workflow simulated")
+        if incumbent is None and shadow_only:
+            raise _fail(f"{', '.join(shadow_only)} needs --incumbent")
+    resolved_state = DEFAULT_STATE if state is None else state
+    # I1: nothing this command writes may land on the state file. --traces-dir writes files
+    # named after a fresh run id, so a collision there would need a deliberately matching
+    # --state name; --out always writes shadow.json/shadow.md, so a colliding --out is a much
+    # easier accident (and is exactly the reviewer's reproduction). Both are refused up front,
+    # exit 2, before any provider call or write. _same_file also catches a case-variant spelling
+    # on a case-insensitive filesystem and a hard link, which plain path resolution would miss
+    # (I1b).
+    if _same_file(resolved_state, traces_dir):
+        raise _fail(f"--traces-dir must not be the --state file ({resolved_state})")
+    if out is not None and any(
+        _same_file(resolved_state, out / name) for name in ("shadow.json", "shadow.md")
+    ):
+        raise _fail(f"--out must not write to the --state file ({resolved_state})")
+    resolved_provider = provider or ProviderName.jev
+    claude = (
+        None
+        if from_traces is not None
+        else _resolve_claude(resolved_provider, mode, budget_usd, ledger, batch_id)
     )
+    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
+    request = WorkflowRequest(
+        workflow=workflow,
+        dataset=dataset,
+        traces_dir=traces_dir,
+        state=resolved_state,
+        from_traces=from_traces,
+        at=at,
+        provider=resolved_provider,
+        policy=policy or "v0.1",
+        concurrency=concurrency,
+        questions=questions,
+        claude=claude,
+        reset_state=reset_state_flag,
+        incumbent=incumbent,
+        waivers=waivers,
+        max_regressed=max_regressed,
+        out=out,
+    )
+    if workflow is Workflow.simulated:
+        _run_simulated(request, cases, sample)
+    else:
+        _run_shadow(request, cases, sample)
 
 
 @app.command("eval")
@@ -788,11 +1455,14 @@ def eval_command(
     budget_usd: BudgetUsd = None,
     ledger: LedgerOption = None,
     batch_id: BatchId = None,
+    jev_budget_usd: JevBudgetUsd = None,
+    jev_ledger: JevLedgerOption = None,
 ) -> None:
     """Run (or re-score) DATASET and print action-level and decision-level metrics."""
     cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
     if traces is None:
         claude = _resolve_claude(provider, mode, budget_usd, ledger, batch_id)
+        jev = _resolve_jev(provider, jev_budget_usd, jev_ledger)
         trace_list = _run_and_report(
             cases,
             provider,
@@ -804,8 +1474,11 @@ def eval_command(
             questions,
             sample,
             claude,
+            jev,
         )
     else:
+        if jev_budget_usd is not None or jev_ledger is not None:
+            raise _fail("--jev-budget-usd and --jev-ledger need a run, not --traces")
         trace_list = _read_trace_file(traces)
     try:
         summary = score_run(trace_list, cases)
@@ -959,11 +1632,35 @@ def generate(
     force: Annotated[
         bool, typer.Option("--force", help="Overwrite an existing manifest for this dataset id.")
     ] = False,
+    generator: Annotated[
+        str | None,
+        typer.Option(
+            "--generator",
+            help=f"Generator version: {', '.join(GENERATOR_VERSIONS)} (default {GEN_V0_2}).",
+        ),
+    ] = None,
+    policy: Annotated[
+        str | None,
+        typer.Option(
+            "--policy",
+            help="Policy version every case uses and is labelled under: v0.1 (default) or v0.2.",
+        ),
+    ] = None,
 ) -> None:
     """Generate a seeded synthetic dataset, or verify one against its manifest."""
     if verify is not None:
-        if count is not None or seed is not None or dataset_id is not None:
-            raise _fail("--verify cannot be combined with --count, --seed or --dataset-id")
+        given = {
+            "--count": count,
+            "--seed": seed,
+            "--dataset-id": dataset_id,
+            "--generator": generator,
+            "--policy": policy,
+        }
+        if any(value is not None for value in given.values()):
+            raise _fail(
+                "--verify cannot be combined with --count, --seed, --dataset-id, --generator or "
+                "--policy (they are read from the manifest)"
+            )
         if out is not None and not out.exists():
             raise _fail(f"--out path does not exist: {out}")
         try:
@@ -987,7 +1684,14 @@ def generate(
     if manifest_path.exists() and not force:
         raise _fail(f"manifest {manifest_path} already exists; pass --force to overwrite it")
     try:
-        manifest = generate_dataset(count, seed, dataset_id, out)
+        manifest = generate_dataset(
+            count,
+            seed,
+            dataset_id,
+            out,
+            generator_version=generator or GEN_V0_2,
+            policy_version=policy or "v0.1",
+        )
     except (FileExistsError, ValueError) as error:
         raise _fail(str(error)) from error
     write_manifest(manifest, manifest_path)
@@ -998,3 +1702,747 @@ def generate(
         "Expected actions: "
         + ", ".join(f"{k} {v}" for k, v in manifest.expected_action_counts.items())
     )
+
+
+ReplayQuestions = Annotated[
+    str | None,
+    typer.Option(
+        "--questions",
+        "--question-set",
+        help="Live candidate only: the provider's question set (as for run/eval).",
+    ),
+]
+
+
+def _one_trace(path: Path, case_id: str, flag: str) -> WorkflowTrace:
+    """The single trace for case_id in a trace file; zero or several is a usage error."""
+    matches = [t for t in _read_trace_file(path) if t.case_id == case_id]
+    if len(matches) != 1:
+        raise _fail(
+            f"{flag} {path}: expected exactly one trace for {case_id}, found {len(matches)}"
+        )
+    return matches[0]
+
+
+def _frozen_case(dataset: Path, trace: WorkflowTrace) -> PriorAuthCase:
+    """The trace's case from the dataset, refused unless its inputs hash to the stored hash."""
+    case_dir = dataset / trace.case_id
+    if not case_dir.is_dir():
+        raise _fail(f"{trace.case_id} is not a case folder in {dataset}")
+    try:
+        case = load_case(case_dir)
+    except CaseLoadError as error:
+        raise _fail(str(error)) from error
+    actual = case.input.content_hash()
+    if actual != trace.case_content_hash:
+        raise _fail(
+            f"{trace.case_id}: the case inputs changed since run {trace.run_id} (trace "
+            f"{trace.case_content_hash}, dataset {actual}); replaying altered inputs is not replay"
+        )
+    return case
+
+
+def _policy(policy_id: str) -> AuthorizationPolicy:
+    try:
+        return load_policy(policy_id)
+    except KeyError as error:
+        raise _fail(str(error.args[0])) from error
+
+
+def _live_candidate(
+    case: PriorAuthCase,
+    original: WorkflowTrace,
+    dataset: Path,
+    provider: ProviderName,
+    questions: str | None,
+    mode: ClaudeMode | None,
+    budget_usd: float | None,
+    ledger: Path | None,
+    traces_dir: Path,
+    quiet: bool,
+) -> WorkflowTrace:
+    """A fresh provider call on the frozen input, written as an ordinary one-case run.
+
+    With --json, the run's own messages (budget, notes, spend, run id) go to stderr so stdout
+    stays pure JSON.
+
+    Uses `load_thresholds(original.policy_version)` (an ordinary run, via `_execute`/`run_dataset`),
+    not `original.thresholds` (Minor 4). This only differs when `original` is itself an overridden
+    or replayed trace, in which case the diff will show a thresholds change the user didn't ask for.
+    """
+    if mode is ClaudeMode.batch:
+        raise _fail("replay decides one case; --mode batch is not supported (use --mode sync)")
+    claude = _resolve_claude(provider, mode, budget_usd, ledger)
+    resolved = _resolve_questions(provider, questions)
+    cases = [case]
+    _preflight(cases, provider, original.policy_version)
+    chatter = contextlib.redirect_stdout(sys.stderr) if quiet else contextlib.nullcontext()
+    with chatter:
+        projected = _claude_budget_check(claude, cases) if claude is not None else Decimal("0")
+        if provider in PROVIDER_NOTES:
+            typer.echo(f"NOTE: {PROVIDER_NOTES[provider]}")
+        manifest, traces = asyncio.run(
+            _execute(
+                cases,
+                provider,
+                original.policy_version,
+                1,
+                traces_dir,
+                dataset,
+                resolved,
+                None,
+                claude,
+                projected,
+            )
+        )
+        typer.echo(f"Live candidate run {manifest.run_id}: {manifest.trace_file}")
+    return traces[0]
+
+
+@app.command()
+def replay(
+    case_id: Annotated[str, typer.Argument(help="The case to replay, e.g. GOLD-TMP-17.")],
+    traces: TraceFile,
+    dataset: Dataset,
+    policy_id: Annotated[
+        str | None,
+        typer.Option("--policy", help="Policy replay: the stored decisions under this policy id."),
+    ] = None,
+    latest_policy: Annotated[
+        bool,
+        typer.Option(
+            "--latest-policy",
+            help="Policy replay: under the newest registered policy for the same medication.",
+        ),
+    ] = False,
+    at: Annotated[
+        float | None,
+        typer.Option(min=0.0, max=1.0, help="Policy replay: override the auto_process threshold."),
+    ] = None,
+    candidate_traces: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True, dir_okay=False, help="Candidate: this case's trace from another run."
+        ),
+    ] = None,
+    provider: Annotated[
+        ProviderName | None,
+        typer.Option(help="Live candidate: a fresh call to this provider on the frozen inputs."),
+    ] = None,
+    questions: ReplayQuestions = None,
+    mode: ModeOption = None,
+    budget_usd: BudgetUsd = None,
+    ledger: LedgerOption = None,
+    traces_dir: Annotated[
+        Path, typer.Option(help="Live candidate only: where its trace file is written.")
+    ] = Path("traces"),
+    all_gates: Annotated[
+        bool, typer.Option("--all-gates", help="Show every gate row, not only changed ones.")
+    ] = False,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Print the TraceDiff as JSON and nothing else.")
+    ] = False,
+) -> None:
+    """Replay one stored trace beside a candidate and call out every difference.
+
+    Exit codes: 0 ok; 2 usage/input error; 3 ENGINE DRIFT (reproduce only); 4 NEWLY UNSAFE.
+    """
+    policy_replay = policy_id is not None or latest_policy or at is not None
+    sources = [
+        name
+        for name, used in (
+            ("policy replay (--policy/--latest-policy/--at)", policy_replay),
+            ("--candidate-traces", candidate_traces is not None),
+            ("--provider", provider is not None),
+        )
+        if used
+    ]
+    if len(sources) > 1:
+        raise _fail("choose one candidate source, not " + " and ".join(sources))
+    if policy_id is not None and latest_policy:
+        raise _fail("--policy and --latest-policy are mutually exclusive")
+    if at is not None and at <= 0.0:
+        raise _fail("--at must be > 0 (auto_process must be > 0)")
+    if provider is None:
+        live_only = {
+            "--questions": questions,
+            "--mode": mode,
+            "--budget-usd": budget_usd,
+            "--ledger": ledger,
+        }
+        given = [flag for flag, value in live_only.items() if value is not None]
+        if given:
+            raise _fail(f"{', '.join(given)} applies only to a live candidate (--provider)")
+
+    original = _one_trace(traces, case_id, "--traces")
+    case = _frozen_case(dataset, original)
+    original_policy = _policy(original.policy_id)
+    reproduce = False
+    if candidate_traces is not None:
+        candidate = _one_trace(candidate_traces, case_id, "--candidate-traces")
+        if candidate.case_content_hash != original.case_content_hash:
+            raise _fail(
+                f"--candidate-traces {candidate_traces}: its {case_id} trace was made on "
+                f"different case inputs ({candidate.case_content_hash}, original "
+                f"{original.case_content_hash})"
+            )
+        label = candidate_trace_label(candidate)
+    elif provider is not None:
+        candidate = _live_candidate(
+            case,
+            original,
+            dataset,
+            provider,
+            questions,
+            mode,
+            budget_usd,
+            ledger,
+            traces_dir,
+            json_output,
+        )
+        label = live_label(candidate)
+    elif policy_replay:
+        if latest_policy:
+            try:
+                target_id = latest_policy_for(original.policy_id)
+            except KeyError as error:
+                raise _fail(str(error.args[0])) from error
+        else:
+            target_id = policy_id or original.policy_id
+        target = _policy(target_id)
+        try:
+            thresholds = replay_thresholds(original, target, at)
+        except EvalError as error:
+            raise _fail(str(error)) from error
+        candidate = replay_trace(original, case, policy=target, thresholds=thresholds)
+        label = policy_replay_label(target, thresholds, at)
+        if latest_policy and target_id == original.policy_id:
+            label += " (already the trace's policy)"
+    else:
+        reproduce = True
+        candidate = replay_trace(
+            original, case, policy=original_policy, thresholds=original.thresholds
+        )
+        label = REPRODUCE_LABEL
+    policies = {original_policy.id: original_policy}
+    if candidate.policy_id not in policies:
+        policies[candidate.policy_id] = _policy(candidate.policy_id)
+    diff = diff_case(
+        original,
+        candidate,
+        case,
+        original_label=original_label(original),
+        candidate_label=label,
+        policies=policies,
+    )
+    if json_output:
+        typer.echo(diff.model_dump_json(indent=2))
+    else:
+        typer.echo(render_trace_diff(diff, all_gates, reproduce=reproduce))
+    code = replay_exit_code(diff, reproduce=reproduce)
+    if code:
+        raise typer.Exit(code=code)
+
+
+@app.command()
+def recompose(
+    traces: TraceFile,
+    dataset: Dataset,
+    policy_id: Annotated[
+        str, typer.Option("--policy", help="Policy id to recompose under, e.g. immunara-v0.1.")
+    ],
+    out: Annotated[
+        Path, typer.Option(help="Directory for traces.jsonl.gz and run-manifest.json (new).")
+    ],
+) -> None:
+    """Recompose a stored Jev run's raw answers under POLICY as a simulated run (offline).
+
+    step_therapy is composed again from the stored date-part answers; nothing is called. Exit 2
+    on any input problem (not a Jev run, cases changed, unknown policy, non-empty --out).
+    """
+    cases = _load_cases(dataset)
+    source = _read_trace_file(traces)
+    if not source:
+        raise _fail(f"{traces}: no traces")
+    target = _policy(policy_id)
+    try:
+        manifest = find_run_manifest(traces)
+        recomposed = recompose_run(source, cases, policy=target)
+    except (EvalError, RegressionInputError, MalformedAnswers, ValueError) as error:
+        raise _fail(f"--traces {traces}: {error}") from error
+    if manifest is not None and manifest.run_id != source[0].run_id:
+        manifest = None  # a manifest left over from another run: carry nothing over
+    try:
+        trace_path, manifest_path = write_simulated_bundle(
+            out, recomposed, dataset=dataset, source=source, source_manifest=manifest
+        )
+    except FileExistsError as error:
+        raise _fail(str(error)) from error
+    step_changed, action_changed = changed_counts(source, recomposed)
+    first = recomposed[0]
+    typer.echo(
+        f"Recomposed {len(recomposed)} traces of run {source[0].run_id} "
+        f"({first.provider} {first.question_set_version}) under policy {target.id} "
+        f"({target.version}), thresholds {first.thresholds.version}: step_therapy changed on "
+        f"{step_changed} case(s), action changed on {action_changed} case(s)."
+    )
+    typer.echo(f"Simulated run: {first.run_id}")
+    typer.echo(f"Traces: {trace_path}\nManifest: {manifest_path}")
+
+
+@app.command()
+def ablate(
+    traces: TraceFile,
+    dataset: Dataset,
+    disable: Annotated[
+        str,
+        typer.Option(
+            help="Engine gate(s) to disable, comma-separated: contradiction, missing_evidence."
+        ),
+    ],
+    out: Annotated[
+        Path, typer.Option(help="Directory for traces.jsonl.gz and run-manifest.json (new).")
+    ],
+    at: Annotated[
+        float | None,
+        typer.Option(
+            min=0.0,
+            max=1.0,
+            help="Re-decide at this auto_process threshold (the provider's operating point).",
+        ),
+    ] = None,
+) -> None:
+    """Re-decide a stored run with engine gates disabled, as a simulated run (offline).
+
+    The gate-ablation experiment (Phase 3E): the stored decisions go through today's engine with
+    the --disable gates skipped; nothing is called. Exit 2 on any input problem (unknown gate,
+    cases changed, an already-ablated run, non-empty --out).
+    """
+    try:
+        names = parse_disable(disable)
+    except ValueError as error:
+        raise _fail(str(error)) from error
+    if at is not None and at <= 0.0:
+        raise _fail("--at must be > 0 (auto_process must be > 0)")
+    cases = _load_cases(dataset)
+    source = _read_trace_file(traces)
+    if not source:
+        raise _fail(f"{traces}: no traces")
+    try:
+        manifest = find_run_manifest(traces)
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    if manifest is not None and manifest.run_id != source[0].run_id:
+        manifest = None  # a manifest left over from another run: carry nothing over
+    if manifest is not None and manifest.sample_limit is not None:
+        if manifest.sample_seed is None:
+            raise _fail(f"{traces}: run manifest has sample_limit but no sample_seed")
+        cases = sample_cases(cases, manifest.sample_limit, manifest.sample_seed)
+    try:
+        ablated = ablate_run(source, cases, disable=names, auto_process=at)
+        unablated = replay_run(source, cases, policy_id=None, auto_process=at)
+    except (EvalError, ValueError) as error:
+        raise _fail(f"--traces {traces}: {error}") from error
+    first = ablated[0]
+    try:
+        trace_path, manifest_path = write_simulated_bundle(
+            out,
+            ablated,
+            dataset=dataset,
+            source=source,
+            source_manifest=manifest,
+            extra={"auto_process": first.thresholds.auto_process},
+        )
+    except FileExistsError as error:
+        raise _fail(str(error)) from error
+    changed = sum(a.action != u.action for a, u in zip(ablated, unablated, strict=True))
+    typer.echo(
+        f"Ablated run {source[0].run_id} ({first.provider} {first.question_set_version}): "
+        f"{ablation_name(names)} disabled at auto_process={first.thresholds.auto_process:g}, "
+        f"thresholds {first.thresholds.version}: action changed on {changed} of "
+        f"{len(ablated)} case(s) versus the same run at the same threshold."
+    )
+    typer.echo(f"Simulated run: {first.run_id}")
+    typer.echo(f"Traces: {trace_path}\nManifest: {manifest_path}")
+
+
+@app.command()
+def bench(
+    dataset: Dataset,
+    jev_budget_usd: Annotated[
+        float,
+        typer.Option(
+            min=0.0,
+            help="Required: the Jev spend counter's cap on the ledger's total Jev spend.",
+        ),
+    ],
+    limit: Limit = None,
+    sample_seed: SampleSeed = None,
+    sizes: Annotated[
+        str, typer.Option(help="Comma-separated questions per call, each 1-20.")
+    ] = ",".join(str(s) for s in DEFAULT_SIZES),
+    jev_ledger: JevLedgerOption = None,
+    out: Annotated[
+        Path, typer.Option(help="Where parallelism.json and parallelism.md are written.")
+    ] = Path("evals/baselines/bench"),
+) -> None:
+    """Latency vs narrow decisions per call: one Jev call per case and size (paid, sequential).
+
+    Prints the estimate first and refuses (exit 2) if it could break the Jev cap.
+    """
+    try:
+        size_list = parse_sizes(sizes)
+    except ValueError as error:
+        raise _fail(str(error)) from error
+    json_path, md_path = out / "parallelism.json", out / "parallelism.md"
+    existing = [str(p) for p in (json_path, md_path) if p.exists()]
+    if existing:
+        raise _fail(f"{', '.join(existing)} already exist; refusing to overwrite")
+    cases, sample = _apply_limit(_load_cases(dataset), limit, sample_seed)
+    if not os.environ.get("TYPESAFE_API_KEY"):
+        raise _fail("TYPESAFE_API_KEY is not set (add it to .env or the environment)")
+    jev = _resolve_jev(ProviderName.jev, jev_budget_usd, jev_ledger)
+    assert jev is not None
+    estimate = sum((estimate_jev_cost(len(cases), size) for size in size_list), Decimal("0"))
+    per_case = "(" + "+".join(str(s) for s in size_list) + ")"
+    _jev_budget_check(jev, len(cases), per_case, estimate)
+    run_id = new_run_id()
+    dataset_id = cases[0].input.dataset_id
+    _jev_reserve(jev, run_id, dataset_id, len(cases), estimate)
+    calls: list[BenchCall] = []
+    seed = bench_rotation_seed(sample)
+
+    async def go() -> None:
+        async with AsyncTypeSafeClient(timeout=30.0) as client:
+            await run_bench(
+                [c.input for c in cases],
+                client,
+                sizes=size_list,
+                sample_seed=seed,
+                on_call=calls.append,
+            )
+
+    try:
+        asyncio.run(go())
+    finally:
+        # M1: never under-record. A call whose cost is unknown (it errored, so cost_usd is None)
+        # is charged at that size's per-call estimate; bench never runs concurrently, so at most
+        # one more call — the priciest size in --sizes, as an upper bound — could have been in
+        # flight when this ran (an error partway through, or an interruption).
+        known = sum((c.cost_usd for c in calls if c.cost_usd is not None), Decimal("0"))
+        errored = sum(
+            (estimate_jev_cost(1, c.size) for c in calls if c.cost_usd is None), Decimal("0")
+        )
+        in_flight = (
+            estimate_jev_cost(1, max(size_list))
+            if len(calls) < len(cases) * len(size_list)
+            else Decimal("0")
+        )
+        actual = known + errored + in_flight
+        ledger = settle_jev(_load_jev_ledger(jev), run_id, actual)
+        write_ledger(jev.ledger, ledger)
+        typer.echo(
+            f"Jev spend: this bench ${actual:.4f}; total ${ledger.spent_usd:.4f} of the "
+            f"${jev.budget_usd:.2f} cap ({jev.ledger})"
+        )
+    result = build_bench_result(
+        calls,
+        dataset_id=dataset_id,
+        case_count=len(cases),
+        sizes=size_list,
+        sample=sample,
+        model=JEV_MODEL,
+    )
+    rendered = render_bench(result)
+    out.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(result.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    md_path.write_text(rendered, encoding="utf-8")
+    typer.echo(rendered)
+    typer.echo(f"Bench: {json_path}\nMarkdown: {md_path}")
+
+
+GatesFile = Annotated[
+    Path | None,
+    typer.Option(
+        "--config",
+        exists=True,
+        dir_okay=False,
+        help="Run every gate in this gates file (e.g. evals/regression/gates.json).",
+    ),
+]
+
+
+def _gate_row(name: str, result: RegressionResult) -> GateRow:
+    return GateRow(
+        name=name,
+        verdict=result.verdict,
+        newly_unsafe=len(result.newly_unsafe),
+        regressed=len(result.regressed),
+        exit_code=result.exit_code,
+        still_unsafe=len(result.still_unsafe),
+        waived=len(result.waived),
+    )
+
+
+def _run_gate(
+    request: RegressionRequest, out: Path | None, show_all: bool
+) -> tuple[RegressionResult, str]:
+    """Run one gate, write its --out files, return the result and its rendered report."""
+    run = run_regression(request, out=out)
+    rendered = render_regression(run.result, show_all=show_all)
+    if out is not None:
+        write_outputs(out, run, request, rendered)
+    return run.result, rendered
+
+
+def _regression_config(
+    config: Path,
+    names: list[str],
+    out: Path | None,
+    show_all: bool,
+    *,
+    strict_generated: bool = False,
+) -> int:
+    """Config mode: every gate (or the --gate ones), each report, then a summary. Returns the
+    highest exit code. A gate with requires_generated whose dataset is missing is SKIPPED; with
+    --strict-generated it is an ERROR (exit 2) instead, so a failed or skipped regeneration step
+    cannot leave a holdout drift gate silently green. Any other input error is that gate's ERROR
+    (exit 2) and the remaining gates still run."""
+    try:
+        gates = load_gates(config).gates
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    unknown = sorted(set(names) - {g.name for g in gates})
+    if unknown:
+        raise _fail(f"no gate named {', '.join(unknown)} in {config}")
+    selected = [g for g in gates if not names or g.name in names]
+    rows: list[GateRow] = []
+    for spec in selected:
+        if spec.requires_generated and not Path(spec.dataset).is_dir():
+            note = f"dataset not generated; run relay generate to create {spec.dataset}"
+            if strict_generated:
+                typer.echo(f"Relay regression — gate {spec.name}: ERROR: {note}\n", err=True)
+                rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=note))
+                continue
+            typer.echo(f"Relay regression — gate {spec.name}: SKIPPED ({note})\n")
+            rows.append(GateRow(spec.name, "SKIPPED", None, None, 0, note=note))
+            continue
+        gate_out = None if out is None else out / spec.name
+        try:
+            result, rendered = _run_gate(RegressionRequest.from_gate(spec), gate_out, show_all)
+        except RegressionInputError as error:
+            typer.echo(f"Relay regression — gate {spec.name}: ERROR: {error}\n", err=True)
+            rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=str(error)[:80]))
+            continue
+        except OSError as error:
+            # M10: an unwritable --out (or other filesystem failure) is this gate's ERROR row,
+            # not an uncaught traceback that aborts the remaining gates and writes no summary.
+            typer.echo(f"Relay regression — gate {spec.name}: ERROR: {error}\n", err=True)
+            rows.append(GateRow(spec.name, "ERROR", None, None, 2, note=str(error)[:80]))
+            continue
+        typer.echo(rendered + "\n")
+        rows.append(_gate_row(spec.name, result))
+    summary = render_gate_summary(rows)
+    typer.echo(summary)
+    if out is not None:
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "summary.md").write_text(summary + "\n", encoding="utf-8")
+    return max((r.exit_code for r in rows), default=0)
+
+
+@app.command()
+def regression(
+    dataset: Annotated[
+        Path | None, typer.Option(file_okay=False, help="Directory of case folders.")
+    ] = None,
+    baseline: Annotated[
+        Path | None, typer.Option(dir_okay=False, help="The accepted baseline's trace file.")
+    ] = None,
+    candidate_traces: Annotated[
+        Path | None, typer.Option(dir_okay=False, help="Candidate: another run's trace file.")
+    ] = None,
+    candidate_policy: Annotated[
+        str | None,
+        typer.Option(help="Candidate: the baseline's stored decisions under this policy id."),
+    ] = None,
+    candidate_latest_policy: Annotated[
+        bool,
+        typer.Option(
+            "--candidate-latest-policy",
+            help="Candidate: the stored decisions under the newest policy for the medication.",
+        ),
+    ] = False,
+    candidate_at: Annotated[
+        float | None,
+        typer.Option(
+            help="Candidate auto_process threshold, in (0, 1]. Alone: a policy replay of the "
+            "baseline under its own policy at this threshold."
+        ),
+    ] = None,
+    reproduce: Annotated[
+        bool,
+        typer.Option(
+            "--reproduce",
+            help="Engine-drift gate: the stored decisions under today's engine; any "
+            "difference fails with exit 3.",
+        ),
+    ] = False,
+    baseline_at: Annotated[
+        float | None,
+        typer.Option(help="Re-decide the baseline at this auto_process threshold, in (0, 1]."),
+    ] = None,
+    waivers: Annotated[
+        Path | None,
+        typer.Option(exists=True, dir_okay=False, help="Waiver file for newly unsafe cases."),
+    ] = None,
+    max_regressed: Annotated[
+        int | None, typer.Option(min=0, help="Fail when more cases than this regress.")
+    ] = None,
+    out: Annotated[
+        Path | None,
+        typer.Option(help="Write regression.json, regression.md and any replayed runs here."),
+    ] = None,
+    json_output: Annotated[
+        bool, typer.Option("--json", help="Print the RegressionResult as JSON and nothing else.")
+    ] = False,
+    show_all: Annotated[
+        bool, typer.Option("--all", help="List every regressed case, not only the first 20.")
+    ] = False,
+    config: GatesFile = None,
+    gate: Annotated[
+        list[str] | None,
+        typer.Option("--gate", help="Config mode: run only this gate (repeatable)."),
+    ] = None,
+    strict_generated: Annotated[
+        bool,
+        typer.Option(
+            "--strict-generated",
+            help="Config mode: a requires_generated gate whose dataset is missing is an ERROR "
+            "(exit 2) instead of SKIPPED.",
+        ),
+    ] = False,
+) -> None:
+    """Gate a candidate against an accepted baseline on the same frozen dataset (offline).
+
+    Exit codes: 0 PASS; 2 usage/input error; 3 ENGINE DRIFT (--reproduce); 4 FAIL (a newly
+    unsafe case without a waiver, or more regressions than --max-regressed).
+    """
+    if config is not None:
+        single = {
+            "--dataset": dataset,
+            "--baseline": baseline,
+            "--candidate-traces": candidate_traces,
+            "--candidate-policy": candidate_policy,
+            "--candidate-latest-policy": candidate_latest_policy or None,
+            "--candidate-at": candidate_at,
+            "--reproduce": reproduce or None,
+            "--baseline-at": baseline_at,
+            "--waivers": waivers,
+            "--max-regressed": max_regressed,
+            "--json": json_output or None,
+        }
+        given = [flag for flag, value in single.items() if value is not None]
+        if given:
+            raise _fail(f"{', '.join(given)} cannot be combined with --config")
+        code = _regression_config(
+            config, gate or [], out, show_all, strict_generated=strict_generated
+        )
+        if code:
+            raise typer.Exit(code=code)
+        return
+    if gate:
+        raise _fail("--gate needs --config")
+    if strict_generated:
+        raise _fail("--strict-generated needs --config")
+    if dataset is None or baseline is None:
+        raise _fail("give --dataset and --baseline, or --config")
+    request = RegressionRequest(
+        dataset=dataset,
+        baseline=baseline,
+        candidate=CandidateSpec(
+            traces=None if candidate_traces is None else str(candidate_traces),
+            policy=candidate_policy,
+            latest_policy=candidate_latest_policy,
+            at=candidate_at,
+            reproduce=reproduce,
+        ),
+        baseline_at=baseline_at,
+        waivers=waivers,
+        max_regressed=max_regressed,
+    )
+    if waivers is not None:
+        # M2: without --config there is no gate name, so only "*" waivers ever apply; a waiver
+        # scoped to a specific gate name is silently out of scope (fails closed) but easy to miss.
+        try:
+            ignored = sum(1 for w in load_waivers(waivers) if w.gate != "*")
+        except RegressionInputError as error:
+            raise _fail(str(error)) from error
+        if ignored:
+            # N1: stderr, not stdout — --json must give stdout that parses as JSON and nothing
+            # else.
+            typer.echo(
+                f"{ignored} waiver(s) for other gates ignored (no --config here)\n", err=True
+            )
+    try:
+        result, rendered = _run_gate(request, out, show_all)
+    except RegressionInputError as error:
+        raise _fail(str(error)) from error
+    typer.echo(result.model_dump_json(indent=2) if json_output else rendered)
+    if result.exit_code:
+        raise typer.Exit(code=result.exit_code)
+
+
+budget_app = typer.Typer(
+    no_args_is_help=True, help="Inspect the Claude spend ledger and release a stuck reservation."
+)
+app.add_typer(budget_app, name="budget")
+
+LedgerPath = Annotated[
+    Path, typer.Option("--ledger", dir_okay=False, help=f"Spend ledger (default {DEFAULT_LEDGER}).")
+]
+
+
+def _read_ledger(path: Path) -> SpendLedger:
+    try:
+        return load_ledger(path)
+    except (ValidationError, OSError) as error:
+        raise _fail(f"{path}: {error}") from error
+
+
+@budget_app.command("show")
+def budget_show(ledger: LedgerPath = DEFAULT_LEDGER) -> None:
+    """Print every ledger entry and the settled / reserved / total spend."""
+    typer.echo(render_ledger(_read_ledger(ledger), str(ledger), DEFAULT_BUDGET_USD))
+
+
+@budget_app.command("release")
+def budget_release(
+    run_id: Annotated[str, typer.Argument(help="The run whose reservation is released.")],
+    reason: Annotated[str, typer.Option(help="Why; stored on the entry as its note.")],
+    ledger: LedgerPath = DEFAULT_LEDGER,
+    yes: Annotated[bool, typer.Option("--yes", help="Confirm rewriting the ledger.")] = False,
+    force_batch: Annotated[
+        bool,
+        typer.Option("--force-batch", help="Release an entry that carries a batch id anyway."),
+    ] = False,
+) -> None:
+    """Settle a reserved entry at $0 (after an ambiguous submission that never ran).
+
+    Backs the ledger up to <ledger>.bak-<UTC timestamp> first. Refuses (exit 2) a settled entry,
+    an unknown run, and an entry with a batch id unless --force-batch.
+    """
+    if not yes:
+        raise _fail("release rewrites the spend ledger; pass --yes to confirm")
+    if not ledger.exists():
+        raise _fail(f"{ledger} does not exist")
+    now = datetime.now(UTC)
+    try:
+        updated = release(
+            _read_ledger(ledger), run_id, reason=reason, force_batch=force_batch, now=now
+        )
+    except LedgerRefusal as error:
+        raise _fail(str(error)) from error
+    backup = backup_ledger(ledger, now)
+    write_ledger(ledger, updated)
+    typer.echo(f"Released run {run_id}: settled at $0. Backup: {backup}")
+    typer.echo(render_ledger(updated, str(ledger), DEFAULT_BUDGET_USD))

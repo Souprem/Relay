@@ -6,16 +6,17 @@ on the documents a decision provider would actually see, not only on the latent 
 
 import re
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from random import Random
 
 import pytest
 
 from relay.cases.models import Document, GroundTruth
+from relay.cases.policies import load_policy
 from relay.generation.dates import MONTH_NAMES
 from relay.generation.facts import DIFFICULTIES, CaseFacts
 from relay.generation.generator import generate_case
-from relay.generation.labels import MIN_DAYS, label_case
+from relay.generation.labels import MIN_DAYS, days_since_end, label_case
 from relay.generation.render import NEVER_TAKEN, NEVER_TAKEN_OTHER_DMARD, render_documents
 from relay.generation.scenarios import sample_facts
 
@@ -197,3 +198,128 @@ def test_older_clinic_note_predates_every_rendered_start(rendered):
         starts = [parse_day_date(m) for m in DAY_DATE.findall(r.history_mtx_line or "")]
         starts.append(r.facts.mtx_start)
         assert older_date < min(starts), r.seed
+
+
+# ---- Phase 3D: gen-v0.3 (interrupted courses, old courses) ----
+
+V3_FORBIDDEN_SUBSTRINGS = (*FORBIDDEN_SUBSTRINGS, "interrupt", "pattern", "segment", "variant")
+
+
+def render_v3(seed: int) -> Rendered:
+    rng = Random(seed)
+    facts = sample_facts(
+        rng,
+        case_id=f"GEN-{seed:08d}",
+        difficulty=DIFFICULTIES[seed % 4],
+        generator_version="gen-v0.3",
+    )
+    documents = render_documents(facts, rng)
+    return Rendered(seed, facts, {d.id: d for d in documents}, label_case(facts))
+
+
+@pytest.fixture(scope="module")
+def rendered_v3() -> list[Rendered]:
+    return [render_v3(seed) for seed in SEEDS]
+
+
+def taken(rendered: list[Rendered]) -> list[Rendered]:
+    return [r for r in rendered if r.facts.mtx_status == "taken"]
+
+
+def test_v3_draws_match_generate_case(rendered_v3):
+    for r in rendered_v3[:40]:
+        case = generate_case(r.seed, r.facts.difficulty, generator_version="gen-v0.3")
+        assert {d.id: d for d in case.input.documents} == r.documents
+        assert case.ground_truth == r.truth
+
+
+def test_v3_documents_name_no_label_or_scenario(rendered_v3):
+    for r in rendered_v3:
+        assert set(r.documents) <= ALLOWED_DOCUMENT_IDS, (r.seed, list(r.documents))
+        for doc_id, document in r.documents.items():
+            lowered = document.text.lower()
+            for word in V3_FORBIDDEN_SUBSTRINGS:
+                assert word not in lowered, (r.seed, doc_id, word)
+            assert "around" not in lowered, (r.seed, doc_id)
+
+
+def test_v3_no_yearless_treatment_dates(rendered_v3):
+    for r in rendered_v3:
+        for text in (r.treatment_paragraph, r.history_mtx_line or ""):
+            assert YEARLESS_MONTH.search(text) is None, (r.seed, text)
+
+
+def test_about_a_fifth_of_taken_courses_are_interrupted(rendered_v3):
+    courses = taken(rendered_v3)
+    interrupted = [r for r in courses if r.facts.mtx_segments is not None]
+    assert abs(len(interrupted) / len(courses) - 0.20) <= 0.05, len(interrupted) / len(courses)
+    for variant in ("a", "b", "c"):
+        share = sum(r.facts.interruption_variant == variant for r in interrupted) / len(interrupted)
+        assert abs(share - 1 / 3) <= 0.05, (variant, share)
+
+
+def test_about_a_quarter_of_taken_courses_ended_over_a_year_before_as_of(rendered_v3):
+    courses = taken(rendered_v3)
+    old = [r for r in courses if (days_since_end(r.facts) or 0) > 365]
+    assert abs(len(old) / len(courses) - 0.25) <= 0.05, len(old) / len(courses)
+
+
+def rendered_segments(r: Rendered) -> tuple[int, int]:
+    """Segment lengths read back from the note's day-precision dates (start, pause, restart,
+    end, or as_of when ongoing)."""
+    dates = [parse_day_date(m) for m in DAY_DATE.findall(r.treatment_paragraph)]
+    ongoing = r.facts.mtx_end is None
+    assert len(dates) == (3 if ongoing else 4), (r.seed, r.treatment_paragraph)
+    start, pause, restart = dates[:3]
+    end = r.facts.as_of_date if ongoing else dates[3]
+    assert start < pause < restart <= end, r.seed
+    return (pause - start).days, (end - restart).days
+
+
+def test_v3_interrupted_labels_follow_rule_d8_from_the_rendered_dates(rendered_v3):
+    interrupted = [r for r in rendered_v3 if r.facts.mtx_segments is not None]
+    assert len(interrupted) > 200
+    for r in interrupted:
+        first, second = rendered_segments(r)
+        long_enough = max(first, second) >= MIN_DAYS
+        outcome = r.facts.mtx_outcome in ("inadequate_response", "intolerance")
+        assert r.truth.step_therapy_satisfied == (long_enough and outcome), r.seed
+        expected_variant = "a" if not long_enough else ("b" if second >= MIN_DAYS else "c")
+        assert r.facts.interruption_variant == expected_variant, r.seed
+        if expected_variant == "a":
+            assert (r.facts.mtx_end or r.facts.as_of_date) - r.facts.mtx_start >= timedelta(
+                days=MIN_DAYS
+            ), r.seed  # the TMP-17 trap: the whole span would pass
+
+
+def test_v3_medication_history_shows_both_segments(rendered_v3):
+    with_history = [
+        r
+        for r in rendered_v3
+        if r.facts.mtx_segments is not None and "medication_history" in r.documents
+    ]
+    assert with_history
+    for r in with_history:
+        rows = [
+            line
+            for line in r.documents["medication_history"].text.splitlines()
+            if line.startswith("METHOTREXATE")
+        ]
+        assert len(rows) == 2, r.seed
+        assert "reason: held for " in rows[0], r.seed
+        assert ("status: active" in rows[1]) == (r.facts.mtx_end is None), r.seed
+
+
+def test_v3_labels_under_v0_2_differ_only_by_recency(rendered_v3):
+    v1, v2 = load_policy("immunara-v0.1"), load_policy("immunara-v0.2")
+    changed = 0
+    for r in rendered_v3:
+        a, b = label_case(r.facts, v1), label_case(r.facts, v2)
+        if a != b:
+            changed += 1
+            assert a.model_dump(exclude={"step_therapy_satisfied"}) == b.model_dump(
+                exclude={"step_therapy_satisfied"}
+            ), r.seed
+            assert a.step_therapy_satisfied and not b.step_therapy_satisfied, r.seed
+            assert (days_since_end(r.facts) or 0) > 365 or r.facts.mtx_segments, r.seed
+    assert changed > 100

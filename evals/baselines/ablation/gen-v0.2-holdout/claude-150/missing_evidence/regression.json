@@ -1,0 +1,334 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gen-v0.2-holdout",
+  "n": 150,
+  "baseline": {
+    "label": "replay-run_20260925T212034Z_bbee49 · claude q-v0.2+claude-prompt-v1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.55",
+    "identity": {
+      "run_id": "replay-run_20260925T212034Z_bbee49",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "claude",
+      "provider_versions": [
+        "claude-opus-5"
+      ],
+      "client_versions": [
+        "anthropic==1.8.0"
+      ],
+      "question_set_versions": [
+        "q-v0.2+claude-prompt-v1"
+      ],
+      "question_set_hashes": [
+        "sha256:d24c74fa140ca4682e6202ea36a2bdc978085216c8b220fe413c4e09005cc9b6"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.55"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 150,
+    "correct": {
+      "count": 147,
+      "n": 150,
+      "rate": 0.98,
+      "ci95": {
+        "low": 0.9426657777117933,
+        "high": 0.9958563747187796
+      }
+    },
+    "automation": {
+      "count": 37,
+      "n": 150,
+      "rate": 0.24666666666666667,
+      "ci95": {
+        "low": 0.18000648527084157,
+        "high": 0.3236100200889078
+      }
+    },
+    "request_info": {
+      "count": 47,
+      "n": 150,
+      "rate": 0.31333333333333335,
+      "ci95": {
+        "low": 0.24015194609690654,
+        "high": 0.3940617135970532
+      }
+    },
+    "human_review": {
+      "count": 66,
+      "n": 150,
+      "rate": 0.44,
+      "ci95": {
+        "low": 0.3591347421999658,
+        "high": 0.5232826920068183
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 37,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.09489058741498982
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104803Z_efebe2 · claude q-v0.2+claude-prompt-v1 · ablate=missing_evidence",
+    "identity": {
+      "run_id": "run_20260927T104803Z_efebe2",
+      "dataset_id": "gen-v0.2-holdout",
+      "dataset_hash": "sha256:958fbfc3e42f7defe76e0a25bca4350e2b97083cc1470ea2e60bcd557c00c786",
+      "provider": "claude",
+      "provider_versions": [
+        "claude-opus-5"
+      ],
+      "client_versions": [
+        "anthropic==1.8.0"
+      ],
+      "question_set_versions": [
+        "q-v0.2+claude-prompt-v1"
+      ],
+      "question_set_hashes": [
+        "sha256:d24c74fa140ca4682e6202ea36a2bdc978085216c8b220fe413c4e09005cc9b6"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.55"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 150,
+    "correct": {
+      "count": 143,
+      "n": 150,
+      "rate": 0.9533333333333334,
+      "ci95": {
+        "low": 0.9062141350122033,
+        "high": 0.9810344303654228
+      }
+    },
+    "automation": {
+      "count": 37,
+      "n": 150,
+      "rate": 0.24666666666666667,
+      "ci95": {
+        "low": 0.18000648527084157,
+        "high": 0.3236100200889078
+      }
+    },
+    "request_info": {
+      "count": 37,
+      "n": 150,
+      "rate": 0.24666666666666667,
+      "ci95": {
+        "low": 0.18000648527084157,
+        "high": 0.3236100200889078
+      }
+    },
+    "human_review": {
+      "count": 76,
+      "n": 150,
+      "rate": 0.5066666666666667,
+      "ci95": {
+        "low": 0.42389681770114973,
+        "high": 0.589168006912562
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 37,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.09489058741498982
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.0021826666666666687,
+      "brier_candidate": 0.0021826666666666687,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.04053333333333327,
+      "ece_candidate": 0.04053333333333327,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.026974147474884125,
+      "brier_candidate": 0.026974147474884125,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.1012245026552767,
+      "ece_candidate": 0.1012245026552767,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.044420666666666664,
+      "brier_candidate": 0.044420666666666664,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.028866666666666714,
+      "ece_candidate": 0.028866666666666714,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.0021599999999999996,
+      "brier_candidate": 0.0021599999999999996,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.04120000000000009,
+      "ece_candidate": 0.04120000000000009,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.08341866666666667,
+      "brier_candidate": 0.08341866666666667,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.1370666666666667,
+      "ece_candidate": 0.1370666666666667,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 3,
+    "unchanged": 140,
+    "regressed": 7,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 98,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [],
+  "unsafe_resolved": [],
+  "regressed": [
+    {
+      "case_id": "GEN-02000023",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000023 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000092",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000092 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000351",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000351 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000476",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000476 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000570",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000570 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000713",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000713 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000988",
+      "expected": "REQUEST_INFO",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000988 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "improved": [
+    {
+      "case_id": "GEN-02000519",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000519 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000623",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000623 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GEN-02000711",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "REQUEST_INFO",
+      "action_candidate": "HUMAN_REVIEW",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GEN-02000711 --traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz --dataset evals/generated/gen-v0.2-holdout --candidate-traces evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}

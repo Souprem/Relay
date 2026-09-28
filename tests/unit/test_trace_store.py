@@ -164,3 +164,61 @@ def test_committed_v0_1_baseline_still_loads_without_new_fields():
     assert len(traces) == 10
     assert all(t.policy_text_hash is None for t in traces)
     assert all(t.decisions.client_version is None for t in traces)
+
+
+GOLD_JEV_TRACES = (
+    Path(__file__).resolve().parents[2]
+    / "evals"
+    / "baselines"
+    / "gold-v0.1"
+    / "run_20260925T170857Z_b95be9"
+    / "traces.jsonl.gz"
+)
+
+
+def test_replay_of_defaults_to_none_and_round_trips(tmp_path):
+    trace = make_trace(make_case())
+    assert trace.replay_of is None
+    replayed = trace.model_copy(update={"replay_of": trace.trace_id, "mode": "simulated"})
+    store = TraceStore.create(tmp_path, "run_x")
+    store.append(replayed)
+    assert read_traces(store.path) == [replayed]
+
+
+def test_committed_traces_written_before_replay_of_still_load():
+    traces = read_traces(GOLD_JEV_TRACES)
+    assert len(traces) == 100
+    assert all(t.replay_of is None for t in traces)
+
+
+# ---- Phase 3C: the workflow mode on manifests ----
+
+
+def test_run_manifest_mode_defaults_to_evaluate_and_round_trips(tmp_path):
+    assert (manifest().mode, manifest().source_run_id) == ("evaluate", None)
+    shadow = manifest().model_copy(update={"mode": "shadow", "source_run_id": "run_src"})
+    store = TraceStore.create(tmp_path, "run_x")
+    path = store.write_manifest(shadow)
+    loaded = RunManifest.model_validate_json(path.read_text())
+    assert (loaded.mode, loaded.source_run_id) == ("shadow", "run_src")
+
+
+def test_run_manifest_rejects_an_unknown_mode():
+    with pytest.raises(ValueError, match="mode"):
+        RunManifest.model_validate(manifest().model_dump() | {"mode": "live"})
+
+
+def test_every_committed_manifest_loads_as_an_evaluate_run():
+    """The 14 manifests committed before Phase 3C have no mode key and load as evaluate runs.
+    Manifests committed since (Phase 3D) carry a mode: evaluate, or simulated with a
+    source_run_id (relay recompose, and the re-decided runs of a regression --out)."""
+    paths = sorted((REPO / "evals" / "baselines").rglob("*manifest.json"))
+    legacy = [p for p in paths if '"mode"' not in p.read_text()]
+    assert len(legacy) == 14
+    for path in paths:
+        loaded = RunManifest.model_validate_json(path.read_text())
+        if path in legacy:
+            assert (loaded.mode, loaded.source_run_id) == ("evaluate", None), path
+        else:
+            assert loaded.mode in ("evaluate", "simulated"), path
+            assert (loaded.mode == "simulated") == (loaded.source_run_id is not None), path

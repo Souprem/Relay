@@ -1,0 +1,6 @@
+Adoption rule (Phase 3D spec §5 E1, dev only): adopt q-v0.3 iff its correct-action rate is higher than
+q-v0.2's and the dev regression gate q-v0.2 -> q-v0.3 passes (0 newly unsafe).
+  q-v0.2: run run_20260927T071846Z_e950c0 correct 268/400 (0.6700) at thresholds v0.1+at0.97, unsafe 0
+  q-v0.3: run run_20260927T071912Z_cdaf0c correct 373/400 (0.9325) at thresholds v0.1+at0.81, unsafe 0
+  gate: PASS (newly unsafe 0, regressed 3, improved 108)
+DECISION: ADOPT q-v0.3

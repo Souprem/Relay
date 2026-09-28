@@ -18,6 +18,7 @@ token (no cache-read discount) plus the output price, at that mode's price (half
 """
 
 import os
+import shutil
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_EVEN, Decimal
 from pathlib import Path
@@ -46,6 +47,9 @@ class SpendEntry(BaseModel):
     cost_usd: Decimal
     recorded_at: datetime
     batch_id: str | None = None
+    # Why an entry was changed by hand (`relay budget release`); None for every other entry and
+    # for ledgers written before Phase 3B.
+    note: str | None = None
 
 
 class SpendLedger(BaseModel):
@@ -59,10 +63,12 @@ class SpendLedger(BaseModel):
 
 
 class BudgetExceeded(Exception):
-    def __init__(self, spent: Decimal, projected: Decimal, budget: Decimal) -> None:
+    def __init__(
+        self, spent: Decimal, projected: Decimal, budget: Decimal, label: str = "Claude"
+    ) -> None:
         self.spent, self.projected, self.budget = spent, projected, budget
         super().__init__(
-            f"Claude budget exceeded: spent ${spent:.4f} + projected ${projected:.4f} "
+            f"{label} budget exceeded: spent ${spent:.4f} + projected ${projected:.4f} "
             f"= ${spent + projected:.4f}, over the ${budget:.2f} budget"
         )
 
@@ -135,9 +141,12 @@ def project_cost(ledger: SpendLedger, n_cases: int, mode: Mode) -> Decimal:
     return cost * BATCH_DISCOUNT if mode == "batch" else cost
 
 
-def check_budget(ledger: SpendLedger, projected: Decimal, budget: Decimal) -> None:
+def check_budget(
+    ledger: SpendLedger, projected: Decimal, budget: Decimal, *, label: str = "Claude"
+) -> None:
+    """BudgetExceeded (its message names `label`) if spend plus `projected` exceeds `budget`."""
     if ledger.spent_usd + projected > budget:
-        raise BudgetExceeded(ledger.spent_usd, projected, budget)
+        raise BudgetExceeded(ledger.spent_usd, projected, budget, label)
 
 
 def reserve(
@@ -203,3 +212,69 @@ def attach_batch(ledger: SpendLedger, run_id: str, batch_id: str) -> SpendLedger
 def find_batch(ledger: SpendLedger, batch_id: str) -> SpendEntry | None:
     """The first entry that submitted or settled this batch, if any."""
     return next((e for e in ledger.entries if e.batch_id == batch_id), None)
+
+
+class LedgerRefusal(ValueError):
+    """`relay budget release` will not change this entry (exit 2)."""
+
+
+def ledger_totals(ledger: SpendLedger) -> tuple[Decimal, Decimal, Decimal]:
+    """(settled, reserved, total) spend across every entry."""
+    settled = sum((e.cost_usd for e in ledger.entries if e.status == "settled"), Decimal("0"))
+    reserved = sum((e.cost_usd for e in ledger.entries if e.status == "reserved"), Decimal("0"))
+    return settled, reserved, settled + reserved
+
+
+def release(
+    ledger: SpendLedger,
+    run_id: str,
+    *,
+    reason: str,
+    force_batch: bool = False,
+    now: datetime | None = None,
+) -> SpendLedger:
+    """Settle run_id's still-reserved entry at $0, recording why in its note.
+
+    For a reservation that is known never to have been billed (an ambiguous submission that
+    never reached Anthropic). Refused with LedgerRefusal: an unknown run, an entry that is
+    already settled, an empty reason, and an entry carrying a batch id unless force_batch (that
+    batch may still bill; re-attach with --batch-id instead).
+    """
+    indices = [i for i, e in enumerate(ledger.entries) if e.run_id == run_id]
+    if not indices:
+        raise LedgerRefusal(f"no ledger entry for run {run_id}")
+    entry = ledger.entries[indices[-1]]
+    if entry.status != "reserved":
+        raise LedgerRefusal(
+            f"run {run_id} is already settled at ${entry.cost_usd:.4f}; only a reserved entry "
+            "can be released"
+        )
+    if entry.batch_id is not None and not force_batch:
+        raise LedgerRefusal(
+            f"run {run_id} carries Message Batch {entry.batch_id}, which may still bill: check "
+            f"the Console Batches page and re-attach with --mode batch --batch-id "
+            f"{entry.batch_id}; pass --force-batch only if that batch never ran"
+        )
+    if not reason.strip():
+        raise LedgerRefusal("--reason must say why this reservation is being released")
+    when = now or datetime.now(UTC)
+    entries = list(ledger.entries)
+    entries[indices[-1]] = entry.model_copy(
+        update={
+            "status": "settled",
+            "cost_usd": Decimal("0"),
+            "recorded_at": when,
+            "note": (
+                f"released by hand at $0 (was reserved at ${entry.cost_usd:.4f}): {reason.strip()}"
+            ),
+        }
+    )
+    return SpendLedger(entries=entries)
+
+
+def backup_ledger(path: Path, now: datetime | None = None) -> Path:
+    """Copy the ledger to <ledger>.bak-<UTC timestamp> before it is rewritten by hand."""
+    when = now or datetime.now(UTC)
+    backup = path.with_name(f"{path.name}.bak-{when:%Y%m%dT%H%M%SZ}")
+    shutil.copy2(path, backup)
+    return backup

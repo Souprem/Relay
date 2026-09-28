@@ -3,7 +3,7 @@
 Deterministic and network-free. Every probability is 1.0 (explicit cue for yes), 0.0 (explicit
 cue for no) or 0.5 (abstain): the rules are a transparent floor, not a calibrated model. They read
 `CaseInput` only (structured fields and document text), never ground truth. Rule definitions are
-in docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md section 3.
+in the pattern tables and helpers in this module.
 
 Scoping: documents are split into lines. A line that mentions a relative is excluded from every
 patient rule, and fax-cover lines are used only for the member-ID check, so injected fax text can

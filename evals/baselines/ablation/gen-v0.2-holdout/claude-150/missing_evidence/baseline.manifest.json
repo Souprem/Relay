@@ -1,0 +1,26 @@
+{
+  "run_id": "replay-run_20260925T212034Z_bbee49",
+  "created_at": "2026-09-27T10:48:04.597336Z",
+  "dataset_id": "gen-v0.2-holdout",
+  "dataset_path": "evals/generated/gen-v0.2-holdout",
+  "provider": "claude",
+  "policy_version": "v0.1",
+  "question_set_version": "q-v0.2+claude-prompt-v1",
+  "case_count": 150,
+  "trace_file": "evals/baselines/ablation/gen-v0.2-holdout/claude-150/missing_evidence/baseline.jsonl.gz",
+  "relay_git_sha": "680167382580073ad7624b2d17119ac0fd144717",
+  "sample_limit": 150,
+  "sample_seed": 7,
+  "mode": "simulated",
+  "source_run_id": "run_20260925T212034Z_bbee49",
+  "ablation": null,
+  "policy_id": "immunara-v0.1",
+  "thresholds": {
+    "version": "v0.1+at0.55",
+    "auto_process": 0.55,
+    "contradiction_review": 0.8,
+    "contradiction_auto_block": 0.2,
+    "documentation_request_info": 0.6,
+    "missing_evidence_request_info": 0.7
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "run_id": "run_20260927T072623Z_ad6f44",
+  "created_at": "2026-09-27T07:26:28.591433Z",
+  "dataset_id": "gold-v0.1",
+  "dataset_path": "evals/gold",
+  "provider": "jev",
+  "policy_version": "v0.1",
+  "question_set_version": "q-v0.3",
+  "case_count": 100,
+  "trace_file": "traces/run_20260927T072623Z_ad6f44.jsonl",
+  "relay_git_sha": "4424c54269ed01b1bb7c716ace42310aaa1e3e80",
+  "sample_limit": null,
+  "sample_seed": null,
+  "mode": "evaluate",
+  "source_run_id": null
+}

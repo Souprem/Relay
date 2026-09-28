@@ -32,7 +32,6 @@ addopts = "-m 'not live'"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["docs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -42,5 +41,6 @@ ignore = ["E501"]  # the formatter owns line length; long prompt strings are all
 dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
+    "pyyaml>=6.0.3",
     "ruff>=0.16.9",
 ]

@@ -1,0 +1,25 @@
+{
+  "run_id": "replay-run_20260927T072623Z_ad6f44",
+  "created_at": "2026-09-27T07:26:54.532879Z",
+  "dataset_id": "gold-v0.1",
+  "dataset_path": "evals/gold",
+  "provider": "jev",
+  "policy_version": "v0.1",
+  "question_set_version": "q-v0.3",
+  "case_count": 100,
+  "trace_file": "evals/baselines/gold-v0.1/regression-q-v0.2-vs-q-v0.3/candidate.jsonl.gz",
+  "relay_git_sha": "4424c54269ed01b1bb7c716ace42310aaa1e3e80",
+  "sample_limit": null,
+  "sample_seed": null,
+  "mode": "simulated",
+  "source_run_id": "run_20260927T072623Z_ad6f44",
+  "policy_id": "immunara-v0.1",
+  "thresholds": {
+    "version": "v0.1+at0.81",
+    "auto_process": 0.81,
+    "contradiction_review": 0.8,
+    "contradiction_auto_block": 0.2,
+    "documentation_request_info": 0.6,
+    "missing_evidence_request_info": 0.7
+  }
+}

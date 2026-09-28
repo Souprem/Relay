@@ -20,6 +20,7 @@ from relay.evaluation.metrics import (
 from relay.traces.models import WorkflowTrace
 from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import WorkflowAction
+from relay.workflow.thresholds import override_auto_process
 
 
 class RunColumn(BaseModel):
@@ -68,7 +69,7 @@ def _actions_at(
     actions = {}
     for trace, case in paired_cases(traces, cases):
         policy = load_policy(trace.policy_id)
-        thresholds = trace.thresholds.model_copy(update={"auto_process": auto_process})
+        thresholds = override_auto_process(trace.thresholds, auto_process)
         outcome = determine_action(case.input, trace.decisions, policy, thresholds)
         actions[trace.case_id] = outcome.action
     return actions

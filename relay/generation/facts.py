@@ -4,7 +4,12 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal
 
+# GENERATOR_VERSION names the frozen gen-v0.2 manifests and stays the default. gen-v0.3 (Phase 3D)
+# adds interrupted courses and old courses; generate with generator_version=GEN_V0_3.
 GENERATOR_VERSION = "gen-v0.2"
+GEN_V0_2 = GENERATOR_VERSION
+GEN_V0_3 = "gen-v0.3"
+GENERATOR_VERSIONS: tuple[str, ...] = (GEN_V0_2, GEN_V0_3)
 
 Difficulty = Literal["easy", "medium", "hard", "adversarial"]
 DIFFICULTIES: tuple[Difficulty, ...] = ("easy", "medium", "hard", "adversarial")
@@ -14,6 +19,11 @@ DiagnosisStatus = Literal["established", "pending", "absent"]
 MtxStatus = Literal["taken", "never", "undocumented", "relative_only"]
 MtxOutcome = Literal["inadequate_response", "intolerance", "not_stated"]
 ContradictionKind = Literal["history_vs_note", "dates_conflict"]
+# gen-v0.3 interrupted courses (gold guide rule D8): (a) no segment reaches the minimum although
+# the total span does (the GOLD-TMP-17 pattern); (b) the later segment qualifies (GOLD-TMP-18);
+# (c) the earlier segment qualifies.
+InterruptionVariant = Literal["a", "b", "c"]
+InterruptionReason = Literal["infection", "surgery", "travel", "lab"]
 
 
 @dataclass(frozen=True)
@@ -33,6 +43,10 @@ class CaseFacts:
     - start_precision and end_precision are never "no_year" from sample_facts (gen-v0.2); the
       value remains valid for hand-built facts.
     - stale_note_date is set exactly when stale_note is true.
+    - (gen-v0.3) mtx_segments is set only when mtx_status == "taken" and contradiction is None:
+      two (start, end) segments, the second end None when ongoing. Then mtx_start is the first
+      start, mtx_end the final end, both precisions are "day", split_across_documents is False,
+      and interruption_variant and interruption_reason are set (they are None otherwise).
     """
 
     case_id: str
@@ -63,3 +77,9 @@ class CaseFacts:
     stale_note: bool
     stale_note_date: date | None
     noise: float
+
+    # gen-v0.3 only; the defaults are every gen-v0.2 case.
+    generator_version: str = GEN_V0_2
+    mtx_segments: tuple[tuple[date, date | None], ...] | None = None
+    interruption_variant: InterruptionVariant | None = None
+    interruption_reason: InterruptionReason | None = None

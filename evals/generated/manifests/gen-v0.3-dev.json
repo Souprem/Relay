@@ -1,0 +1,24 @@
+{
+  "dataset_id": "gen-v0.3-dev",
+  "generator_version": "gen-v0.3",
+  "seed": 3,
+  "count": 400,
+  "difficulty_counts": {
+    "adversarial": 100,
+    "easy": 100,
+    "hard": 100,
+    "medium": 100
+  },
+  "expected_action_counts": {
+    "AUTO_PROCESS": 122,
+    "HUMAN_REVIEW": 185,
+    "REQUEST_INFO": 93
+  },
+  "missing_evidence_counts": {
+    "DIAGNOSIS": 43,
+    "INSURANCE_INFORMATION": 44,
+    "NONE": 291,
+    "TREATMENT_HISTORY": 22
+  },
+  "dataset_hash": "sha256:ae3dc2f88e0966889aee2193dc822bee3389ade3ffce85641a9f59495557d5ad"
+}

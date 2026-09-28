@@ -16,6 +16,7 @@ from relay.evaluation.metrics import paired_cases
 from relay.traces.models import WorkflowTrace
 from relay.workflow.engine import determine_action
 from relay.workflow.outcomes import WorkflowAction
+from relay.workflow.thresholds import override_auto_process
 
 SWEEP_POINTS: tuple[float, ...] = tuple(round(0.50 + i / 100, 2) for i in range(50))
 DEFAULT_CEILING = 0.01
@@ -50,7 +51,7 @@ def sweep(
     for t in thresholds_to_try:
         auto = info = review = unsafe = correct = 0
         for trace, case, policy, expected in rows:
-            thresholds = trace.thresholds.model_copy(update={"auto_process": t})
+            thresholds = override_auto_process(trace.thresholds, t)
             action = determine_action(case.input, trace.decisions, policy, thresholds).action
             auto += action == WorkflowAction.AUTO_PROCESS
             info += action == WorkflowAction.REQUEST_INFO

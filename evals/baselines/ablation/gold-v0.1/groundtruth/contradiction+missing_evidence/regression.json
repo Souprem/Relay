@@ -1,0 +1,239 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gold-v0.1",
+  "n": 100,
+  "baseline": {
+    "label": "run_20260925T170825Z_440df0 · groundtruth groundtruth · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95",
+    "identity": {
+      "run_id": "run_20260925T170825Z_440df0",
+      "dataset_id": "gold-v0.1",
+      "dataset_hash": null,
+      "provider": "groundtruth",
+      "provider_versions": [
+        "groundtruth-v1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "groundtruth"
+      ],
+      "question_set_hashes": [
+        "n/a"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1"
+      ],
+      "relay_git_shas": [
+        "2dbcf2c9d24449c2faae54dda5467c69666aa63c"
+      ]
+    },
+    "n": 100,
+    "correct": {
+      "count": 100,
+      "n": 100,
+      "rate": 1.0,
+      "ci95": {
+        "low": 0.9637833073548239,
+        "high": 1.0
+      }
+    },
+    "automation": {
+      "count": 34,
+      "n": 100,
+      "rate": 0.34,
+      "ci95": {
+        "low": 0.24822350154484407,
+        "high": 0.4415332677509587
+      }
+    },
+    "request_info": {
+      "count": 34,
+      "n": 100,
+      "rate": 0.34,
+      "ci95": {
+        "low": 0.24822350154484407,
+        "high": 0.4415332677509587
+      }
+    },
+    "human_review": {
+      "count": 32,
+      "n": 100,
+      "rate": 0.32,
+      "ci95": {
+        "low": 0.23021991676157733,
+        "high": 0.4207668616316228
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 34,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.10281792425901268
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104851Z_799fe7 · groundtruth groundtruth · ablate=contradiction+missing_evidence",
+    "identity": {
+      "run_id": "run_20260927T104851Z_799fe7",
+      "dataset_id": "gold-v0.1",
+      "dataset_hash": null,
+      "provider": "groundtruth",
+      "provider_versions": [
+        "groundtruth-v1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "groundtruth"
+      ],
+      "question_set_hashes": [
+        "n/a"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 100,
+    "correct": {
+      "count": 99,
+      "n": 100,
+      "rate": 0.99,
+      "ci95": {
+        "low": 0.9455406146079199,
+        "high": 0.9997468539670227
+      }
+    },
+    "automation": {
+      "count": 34,
+      "n": 100,
+      "rate": 0.34,
+      "ci95": {
+        "low": 0.24822350154484407,
+        "high": 0.4415332677509587
+      }
+    },
+    "request_info": {
+      "count": 35,
+      "n": 100,
+      "rate": 0.35,
+      "ci95": {
+        "low": 0.2572937785314513,
+        "high": 0.4518493618239684
+      }
+    },
+    "human_review": {
+      "count": 31,
+      "n": 100,
+      "rate": 0.31,
+      "ci95": {
+        "low": 0.22128879213067115,
+        "high": 0.4103145541601989
+      }
+    },
+    "uar": {
+      "count": 0,
+      "n": 34,
+      "rate": 0.0,
+      "ci95": {
+        "low": 0.0,
+        "high": 0.10281792425901268
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.0,
+      "brier_candidate": 0.0,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0,
+      "ece_candidate": 0.0,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.0,
+      "brier_candidate": 0.0,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0,
+      "ece_candidate": 0.0,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.0,
+      "brier_candidate": 0.0,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0,
+      "ece_candidate": 0.0,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.0,
+      "brier_candidate": 0.0,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0,
+      "ece_candidate": 0.0,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.0,
+      "brier_candidate": 0.0,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.0,
+      "ece_candidate": 0.0,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 0,
+    "unchanged": 99,
+    "regressed": 1,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 98,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [],
+  "unsafe_resolved": [],
+  "regressed": [
+    {
+      "case_id": "GOLD-CON-12",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "HUMAN_REVIEW",
+      "action_candidate": "REQUEST_INFO",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-12 --traces evals/baselines/gold-v0.1/run_20260925T170825Z_440df0/traces.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/groundtruth/contradiction+missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "improved": [],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}

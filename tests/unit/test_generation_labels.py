@@ -5,7 +5,13 @@ import pytest
 from relay.cases.models import MissingEvidence
 from relay.cases.policies import load_policy
 from relay.evaluation.labels import expected_action
-from relay.generation.labels import MIN_DAYS, conservative_days, label_case
+from relay.generation.labels import (
+    MIN_DAYS,
+    conservative_days,
+    days_since_end,
+    label_case,
+    segment_days,
+)
 from relay.workflow.outcomes import WorkflowAction
 from relay.workflow.thresholds import THRESHOLDS_V0_1
 from tests.factories import make_case, make_facts
@@ -256,3 +262,117 @@ def test_notes_summarize_the_scenario():
     ).notes
     assert notes.startswith("gen-v0.2 hard: mtx taken 104d actual, 83d conservative")
     assert "near-miss" in notes
+
+
+# ---- Phase 3D: rule D8 (interrupted courses) and immunara-v0.2 recency ----
+
+V1, V2 = load_policy("immunara-v0.1"), load_policy("immunara-v0.2")
+
+
+def interrupted(first, second, variant, **overrides):
+    """A gen-v0.3 interrupted course; `first`/`second` are (start, end) with end None = ongoing."""
+    values = {
+        "generator_version": "gen-v0.3",
+        "mtx_segments": (first, second),
+        "mtx_start": first[0],
+        "mtx_end": second[1],
+        "end_precision": None if second[1] is None else "day",
+        "interruption_variant": variant,
+        "interruption_reason": "infection",
+    }
+    return make_facts(**(values | overrides))
+
+
+# GOLD-TMP-17 shape: 2026-01-05 -> 2026-02-23 (49 d), held, 2026-03-23 -> 2026-05-18 (56 d).
+TMP_17 = interrupted(
+    (date(2026, 1, 5), date(2026, 2, 23)), (date(2026, 3, 23), date(2026, 5, 18)), "a"
+)
+# GOLD-TMP-18 shape: 2025-10-06 -> 2025-11-03 (28 d), 2026-01-12 -> 2026-05-04 (112 d).
+TMP_18 = interrupted(
+    (date(2025, 10, 6), date(2025, 11, 3)), (date(2026, 1, 12), date(2026, 5, 4)), "b"
+)
+# Pattern (c): 2026-01-05 -> 2026-05-04 (119 d), 2026-06-01 -> 2026-07-06 (35 d).
+EARLIER = interrupted(
+    (date(2026, 1, 5), date(2026, 5, 4)), (date(2026, 6, 1), date(2026, 7, 6)), "c"
+)
+
+
+def test_d8_tmp_17_pattern_is_not_satisfied_although_the_span_is_133_days():
+    assert segment_days(TMP_17) == (49, 56)
+    assert conservative_days(TMP_17) == 133
+    assert not label_case(TMP_17).step_therapy_satisfied
+    assert action_for(TMP_17) is WorkflowAction.HUMAN_REVIEW
+
+
+def test_d8_a_single_qualifying_segment_satisfies_either_way_round():
+    assert segment_days(TMP_18) == (28, 112)
+    assert segment_days(EARLIER) == (119, 35)
+    for facts in (TMP_18, EARLIER):
+        assert label_case(facts).step_therapy_satisfied
+        assert action_for(facts) is WorkflowAction.AUTO_PROCESS
+
+
+def test_d8_still_needs_a_qualifying_outcome():
+    assert not label_case(
+        interrupted(TMP_18.mtx_segments[0], TMP_18.mtx_segments[1], "b", mtx_outcome="not_stated")
+    ).step_therapy_satisfied
+
+
+def test_d8_an_ongoing_later_segment_counts_to_as_of():
+    facts = interrupted(
+        (date(2026, 1, 5), date(2026, 2, 2)), (date(2026, 5, 4), None), "b"
+    )  # 28 d, then 2026-05-04 -> 2026-09-15 = 134 d
+    assert segment_days(facts) == (28, 134)
+    assert label_case(facts).step_therapy_satisfied
+
+
+def test_interrupted_notes_name_the_segments_and_pattern():
+    notes = label_case(TMP_17).notes
+    assert notes.startswith("gen-v0.3 easy: mtx taken interrupted (infection, pattern a):")
+    assert "segments 49d and 56d, inadequate_response" in notes
+
+
+def test_v0_1_and_v0_2_labels_agree_for_a_recent_course():
+    facts = make_facts()  # ended 2026-06-01, 106 days before 2026-09-15
+    assert days_since_end(facts) == 106
+    assert label_case(facts, V1) == label_case(facts, V2) == label_case(facts)
+
+
+def test_recency_fails_a_course_that_ended_more_than_365_days_before_as_of():
+    old = make_facts(mtx_start=date(2025, 1, 13), mtx_end=date(2025, 6, 2))  # 140 d
+    assert days_since_end(old) == 470
+    assert label_case(old, V1).step_therapy_satisfied
+    assert not label_case(old, V2).step_therapy_satisfied
+    edge = make_facts(mtx_start=date(2025, 4, 1), mtx_end=date(2025, 9, 15))
+    assert days_since_end(edge) == 365
+    assert label_case(edge, V2).step_therapy_satisfied
+
+
+def test_recency_uses_the_conservative_end_of_a_month_only_date():
+    # "September 2025" ends at the earliest 2025-09-01: 379 days before 2026-09-15.
+    facts = make_facts(mtx_start=date(2025, 3, 3), mtx_end=date(2025, 9, 20), end_precision="month")
+    assert days_since_end(facts) == 379
+    assert label_case(facts, V1).step_therapy_satisfied
+    assert not label_case(facts, V2).step_therapy_satisfied
+
+
+def test_recency_applies_to_the_qualifying_segment_not_the_last_one():
+    # The earlier segment qualifies (119 d) but ended 2025-05-04, 499 days before as_of; the
+    # later, recent segment is short (35 d).
+    facts = interrupted(
+        (date(2025, 1, 5), date(2025, 5, 4)), (date(2026, 6, 1), date(2026, 7, 6)), "c"
+    )
+    assert label_case(facts, V1).step_therapy_satisfied
+    assert not label_case(facts, V2).step_therapy_satisfied
+
+
+def test_an_ongoing_course_is_always_recent():
+    facts = make_facts(mtx_start=date(2024, 1, 8), mtx_end=None, end_precision=None)
+    assert days_since_end(facts) == 0
+    assert label_case(facts, V2).step_therapy_satisfied
+
+
+def test_gen_v0_3_notes_record_how_long_ago_the_course_ended():
+    facts = make_facts(generator_version="gen-v0.3")
+    assert label_case(facts).notes.endswith("ended 106d before as-of")
+    assert "before as-of" not in label_case(make_facts()).notes  # gen-v0.2 notes unchanged

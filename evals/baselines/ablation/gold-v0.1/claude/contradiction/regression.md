@@ -1,0 +1,47 @@
+Relay regression — dataset gold-v0.1 · n=100
+BASELINE  replay-run_20260926T011730Z_f1852f · claude q-v0.2+claude-prompt-v1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.55
+CANDIDATE candidate trace run_20260927T104857Z_19e491 · claude q-v0.2+claude-prompt-v1 · ablate=contradiction
+
+METRIC                  BASELINE        CANDIDATE       Δ        BASELINE 95% CI  CANDIDATE 95% CI
+Correct action rate     93/100 (93.0%)  92/100 (92.0%)  -1.0 pp  [86.1%, 97.1%]   [84.8%, 96.5%]
+Automation rate         30/100 (30.0%)  34/100 (34.0%)  +4.0 pp  [21.2%, 40.0%]   [24.8%, 44.2%]
+Request-info rate       33/100 (33.0%)  34/100 (34.0%)  +1.0 pp  [23.9%, 43.1%]   [24.8%, 44.2%]
+Human escalation rate   37/100 (37.0%)  32/100 (32.0%)  -5.0 pp  [27.6%, 47.2%]   [23.0%, 42.1%]
+Unsafe automation rate  1/30 (3.3%)     3/34 (8.8%)     +5.5 pp  [0.1%, 17.2%]    [1.9%, 23.7%]
+Invalid outputs         0               0               +0
+
+CHANGES: improved 2 · unchanged 95 · regressed 3 · changed-both-wrong 0 · not identical 98
+
+NEWLY UNSAFE (2)
+  GOLD-CON-03  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-CON-03 --traces evals/baselines/ablation/gold-v0.1/claude/contradiction/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/claude/contradiction/traces.jsonl.gz
+  GOLD-CON-13  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-CON-13 --traces evals/baselines/ablation/gold-v0.1/claude/contradiction/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/claude/contradiction/traces.jsonl.gz
+
+STILL UNSAFE (1) — also unsafe in the baseline; not a gate failure
+  GOLD-TMP-17  expected HUMAN_REVIEW  AUTO_PROCESS → AUTO_PROCESS
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-TMP-17 --traces evals/baselines/ablation/gold-v0.1/claude/contradiction/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/claude/contradiction/traces.jsonl.gz
+
+REGRESSED (3)
+  GOLD-CON-03  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-CON-03 --traces evals/baselines/ablation/gold-v0.1/claude/contradiction/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/claude/contradiction/traces.jsonl.gz
+  GOLD-CON-12  expected HUMAN_REVIEW  HUMAN_REVIEW → REQUEST_INFO
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-CON-12 --traces evals/baselines/ablation/gold-v0.1/claude/contradiction/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/claude/contradiction/traces.jsonl.gz
+  GOLD-CON-13  expected HUMAN_REVIEW  HUMAN_REVIEW → AUTO_PROCESS
+      answer changed: none · gated crossings: none
+      replay: relay replay GOLD-CON-13 --traces evals/baselines/ablation/gold-v0.1/claude/contradiction/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/claude/contradiction/traces.jsonl.gz
+
+CALIBRATION (Δ = candidate − baseline)
+ DECISION                BRIER (BASE → CAND)  Δ BRIER  ECE (BASE → CAND)  Δ ECE
+ diagnosis_support       0.008 → 0.008        +0.000   0.049 → 0.049      +0.000
+ step_therapy            0.084 → 0.084        +0.000   0.152 → 0.152      +0.000
+ documentation_complete  0.046 → 0.046        +0.000   0.098 → 0.098      +0.000
+ material_contradiction  0.007 → 0.007        +0.000   0.054 → 0.054      +0.000
+ missing_evidence        0.076 → 0.076        +0.000   0.133 → 0.133      +0.000
+
+REGRESSION GATE: FAIL — 2 newly unsafe case(s) without a waiver: GOLD-CON-03, GOLD-CON-13

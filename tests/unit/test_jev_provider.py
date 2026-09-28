@@ -10,15 +10,24 @@ from typesafe_sdk import SystemOneResponse, TypeSafeError
 from relay.cases.loader import load_case
 from relay.cases.policies import load_policy
 from relay.decisions.base import DecisionId
-from relay.decisions.jev import CLIENT_VERSION, JEV_MODEL, JevProvider, build_state
+from relay.decisions.composition import MalformedAnswers
+from relay.decisions.jev import (
+    CLIENT_VERSION,
+    JEV_MODEL,
+    JevProvider,
+    answer_set_from_raw,
+    build_state,
+)
 from relay.decisions.questions import (
     DEFAULT_QUESTION_SET_VERSION,
     QUESTION_IDS,
+    QUESTION_IDS_V0_3,
     question_set_hash,
 )
 from relay.workflow.engine import bundle_problem, determine_action
 from relay.workflow.outcomes import WorkflowAction
 from relay.workflow.thresholds import THRESHOLDS_V0_1
+from tests.jev_fakes import q_v0_3_payload, raw_date, raw_noul
 
 REPO = Path(__file__).resolve().parents[2]
 AUTO01 = load_case(REPO / "evals" / "smoke" / "AUTO-01")
@@ -186,3 +195,68 @@ async def test_provider_sends_and_records_the_requested_question_set(version):
 def test_unknown_question_set_is_rejected_at_construction():
     with pytest.raises(ValueError, match="q-v9"):
         JevProvider(FakeClient(), question_set_version="q-v9")
+
+
+# ---- Phase 3D: q-v0.3 over the wire, and rebuilding answers from a trace ----
+
+
+async def decide_v3(payload):
+    client = FakeClient(result=response(payload))
+    bundle = await JevProvider(client, question_set_version="q-v0.3").decide(AUTO01.input)
+    return bundle, client
+
+
+async def test_q_v0_3_sends_nineteen_questions_and_records_the_version():
+    bundle, client = await decide_v3(q_v0_3_payload())
+    [call] = client.calls
+    assert tuple(call["questions"]) == QUESTION_IDS_V0_3
+    assert bundle.question_set_version == "q-v0.3"
+    assert bundle.question_set_hash == question_set_hash(load_policy("immunara-v0.1"), "q-v0.3")
+    assert set(bundle.raw_answers) == set(QUESTION_IDS_V0_3)
+    assert bundle_problem(bundle) is None
+
+
+async def test_q_v0_3_composes_the_interruption():
+    # AUTO-01 fixture: 2026-01-12 -> 2026-06-01. Held 2026-02-23 (42 d), restarted 2026-03-23
+    # (70 d to the end): certainly interrupted, so no segment reaches 12 weeks.
+    payload = q_v0_3_payload(
+        mtx_interrupted=raw_noul(1.0),
+        **raw_date("mtx_pause", "February", "23", "2026"),
+        **raw_date("mtx_restart", "March", "23", "2026"),
+    )
+    bundle, _ = await decide_v3(payload)
+    assert bundle.get(DecisionId.STEP_THERAPY).p_yes == 0.0
+    step = bundle.derivations["step_therapy"]
+    # The fixture's start month is January at 0.99 (0.01 "none"), so the continuous reading
+    # would be 0.99; the certain interruption replaces it with the two short segments.
+    assert step["p_continuous"] == pytest.approx(0.99)
+    assert (step["p_either_segment"], step["p_interrupted"]) == (0.0, 1.0)
+
+
+async def test_a_q_v0_3_response_missing_an_interruption_answer_is_malformed():
+    payload = q_v0_3_payload()
+    del payload["answers"]["mtx_restart_day"]
+    bundle, _ = await decide_v3(payload)
+    assert bundle.error is not None and "mtx_restart_day" in bundle.error
+    assert bundle.decisions == []
+
+
+def test_answer_set_from_raw_rebuilds_what_decide_composed():
+    raw = fixture_payload()["answers"]
+    answers = answer_set_from_raw(raw, "q-v0.2")
+    assert answers.yes_no["mtx_inadequate_response"] == 0.97
+    start = answers.choices["mtx_start_month"]
+    assert (start.answer, start.probabilities, start.confidence) == (
+        "January",
+        {"January": 0.99, "none": 0.01},
+        0.98,
+    )
+
+
+def test_answer_set_from_raw_refuses_missing_or_garbled_answers():
+    raw = fixture_payload()["answers"]
+    with pytest.raises(MalformedAnswers, match="mtx_pause_month"):
+        answer_set_from_raw(raw, "q-v0.3")
+    garbled = raw | {"diagnosis_support": {"type": "noul", "noul": "high"}}
+    with pytest.raises(MalformedAnswers):
+        answer_set_from_raw(garbled, "q-v0.2")

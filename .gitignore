@@ -17,6 +17,8 @@ build/
 /traces/
 /reports/
 /results/
+# Simulated case-status store written by relay run --workflow simulated (Phase 3C)
+/state/
 
 # Generated datasets are reproducible from their committed manifests
 /evals/generated/*/

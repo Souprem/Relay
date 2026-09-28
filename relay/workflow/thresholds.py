@@ -23,7 +23,11 @@ THRESHOLDS_V0_1 = Thresholds(
     missing_evidence_request_info=0.70,
 )
 
-_BY_VERSION = {THRESHOLDS_V0_1.version: THRESHOLDS_V0_1}
+# immunara-v0.2 changes only the step-therapy rule (recency), which is composed in code, so its
+# thresholds are v0.1's values under the v0.2 version: nothing was tuned.
+THRESHOLDS_V0_2 = THRESHOLDS_V0_1.model_copy(update={"version": "v0.2"})
+
+_BY_VERSION = {t.version: t for t in (THRESHOLDS_V0_1, THRESHOLDS_V0_2)}
 
 
 def load_thresholds(version: str) -> Thresholds:
@@ -33,3 +37,15 @@ def load_thresholds(version: str) -> Thresholds:
         raise KeyError(
             f"unknown thresholds version {version!r}; known: {sorted(_BY_VERSION)}"
         ) from None
+
+
+def override_auto_process(thresholds: Thresholds, auto_process: float) -> Thresholds:
+    """`thresholds` with auto_process replaced, and a version that records the override.
+
+    v0.1 becomes v0.1+at0.89. An earlier override is replaced rather than stacked, so
+    v0.1+at0.89 overridden to 0.9 becomes v0.1+at0.9. Every other threshold is unchanged.
+    """
+    base = thresholds.version.split("+at", 1)[0]
+    return thresholds.model_copy(
+        update={"auto_process": auto_process, "version": f"{base}+at{auto_process:g}"}
+    )

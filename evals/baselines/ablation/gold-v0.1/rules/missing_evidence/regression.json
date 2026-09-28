@@ -1,0 +1,289 @@
+{
+  "gate": null,
+  "reproduce": false,
+  "dataset_id": "gold-v0.1",
+  "n": 100,
+  "baseline": {
+    "label": "replay-run_20260925T170839Z_d3b427 · rules rules-v0.1 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.99",
+    "identity": {
+      "run_id": "replay-run_20260925T170839Z_d3b427",
+      "dataset_id": "gold-v0.1",
+      "dataset_hash": null,
+      "provider": "rules",
+      "provider_versions": [
+        "rules-v0.1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "rules-v0.1"
+      ],
+      "question_set_hashes": [
+        "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.99"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 100,
+    "correct": {
+      "count": 61,
+      "n": 100,
+      "rate": 0.61,
+      "ci95": {
+        "low": 0.5073144796323648,
+        "high": 0.7059895851465827
+      }
+    },
+    "automation": {
+      "count": 20,
+      "n": 100,
+      "rate": 0.2,
+      "ci95": {
+        "low": 0.12665555210195617,
+        "high": 0.29184268908862754
+      }
+    },
+    "request_info": {
+      "count": 66,
+      "n": 100,
+      "rate": 0.66,
+      "ci95": {
+        "low": 0.5584667322490418,
+        "high": 0.7517764984551554
+      }
+    },
+    "human_review": {
+      "count": 14,
+      "n": 100,
+      "rate": 0.14,
+      "ci95": {
+        "low": 0.0787054049269657,
+        "high": 0.22372798137056804
+      }
+    },
+    "uar": {
+      "count": 6,
+      "n": 20,
+      "rate": 0.3,
+      "ci95": {
+        "low": 0.11893159040572768,
+        "high": 0.5427891822762891
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "candidate": {
+    "label": "candidate trace run_20260927T104855Z_b08075 · rules rules-v0.1 · ablate=missing_evidence",
+    "identity": {
+      "run_id": "run_20260927T104855Z_b08075",
+      "dataset_id": "gold-v0.1",
+      "dataset_hash": null,
+      "provider": "rules",
+      "provider_versions": [
+        "rules-v0.1"
+      ],
+      "client_versions": [],
+      "question_set_versions": [
+        "rules-v0.1"
+      ],
+      "question_set_hashes": [
+        "sha256:5bd96c08e7c29353d55a180c4f465a2523a1f04563e31a4af0170fb1d9d92add"
+      ],
+      "policy_versions": [
+        "v0.1"
+      ],
+      "policy_text_hashes": [
+        "sha256:26f6c7aa37c587682cc11249a4001886064a445526954bc6ace1a7c4fd0f0f80"
+      ],
+      "thresholds_versions": [
+        "v0.1+at0.99"
+      ],
+      "relay_git_shas": [
+        "680167382580073ad7624b2d17119ac0fd144717"
+      ]
+    },
+    "n": 100,
+    "correct": {
+      "count": 61,
+      "n": 100,
+      "rate": 0.61,
+      "ci95": {
+        "low": 0.5073144796323648,
+        "high": 0.7059895851465827
+      }
+    },
+    "automation": {
+      "count": 20,
+      "n": 100,
+      "rate": 0.2,
+      "ci95": {
+        "low": 0.12665555210195617,
+        "high": 0.29184268908862754
+      }
+    },
+    "request_info": {
+      "count": 66,
+      "n": 100,
+      "rate": 0.66,
+      "ci95": {
+        "low": 0.5584667322490418,
+        "high": 0.7517764984551554
+      }
+    },
+    "human_review": {
+      "count": 14,
+      "n": 100,
+      "rate": 0.14,
+      "ci95": {
+        "low": 0.0787054049269657,
+        "high": 0.22372798137056804
+      }
+    },
+    "uar": {
+      "count": 6,
+      "n": 20,
+      "rate": 0.3,
+      "ci95": {
+        "low": 0.11893159040572768,
+        "high": 0.5427891822762891
+      }
+    },
+    "invalid_outputs": 0
+  },
+  "calibration": [
+    {
+      "decision": "diagnosis_support",
+      "brier_baseline": 0.065,
+      "brier_candidate": 0.065,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.06999999999999997,
+      "ece_candidate": 0.06999999999999997,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "step_therapy",
+      "brier_baseline": 0.1975,
+      "brier_candidate": 0.1975,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.11500000000000003,
+      "ece_candidate": 0.11500000000000003,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "documentation_complete",
+      "brier_baseline": 0.1175,
+      "brier_candidate": 0.1175,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.12500000000000006,
+      "ece_candidate": 0.12500000000000006,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "material_contradiction",
+      "brier_baseline": 0.15,
+      "brier_candidate": 0.15,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.15000000000000002,
+      "ece_candidate": 0.15000000000000002,
+      "ece_delta": 0.0
+    },
+    {
+      "decision": "missing_evidence",
+      "brier_baseline": 0.2675,
+      "brier_candidate": 0.2675,
+      "brier_delta": 0.0,
+      "ece_baseline": 0.145,
+      "ece_candidate": 0.145,
+      "ece_delta": 0.0
+    }
+  ],
+  "change_counts": {
+    "improved": 0,
+    "unchanged": 100,
+    "regressed": 0,
+    "changed-both-wrong": 0
+  },
+  "not_identical": 29,
+  "newly_unsafe": [],
+  "waived": [],
+  "still_unsafe": [
+    {
+      "case_id": "GOLD-CON-01",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-01 --traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-CON-03",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-03 --traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-CON-04",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-04 --traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-CON-05",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-05 --traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-CON-07",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-07 --traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/traces.jsonl.gz"
+    },
+    {
+      "case_id": "GOLD-CON-10",
+      "expected": "HUMAN_REVIEW",
+      "expected_candidate": null,
+      "action_baseline": "AUTO_PROCESS",
+      "action_candidate": "AUTO_PROCESS",
+      "answer_changed": [],
+      "crossed_gated": {},
+      "replay_command": "relay replay GOLD-CON-10 --traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/baseline.jsonl.gz --dataset evals/gold --candidate-traces evals/baselines/ablation/gold-v0.1/rules/missing_evidence/traces.jsonl.gz"
+    }
+  ],
+  "unsafe_resolved": [],
+  "regressed": [],
+  "improved": [],
+  "drifted": [],
+  "stale_waivers": [],
+  "max_regressed": null,
+  "verdict": "PASS",
+  "failures": [],
+  "exit_code": 0
+}

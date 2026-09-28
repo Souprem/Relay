@@ -1,0 +1,22 @@
+Relay replay — GOLD-TMP-17
+ORIGINAL run_20260925T170857Z_b95be9 · jev q-v0.2 · policy immunara-v0.1 (v0.1) · thresholds auto_process=0.95
+CANDIDATE candidate trace run_20260927T072623Z_ad6f44 · jev q-v0.3
+EXPECTED (evaluation-only): HUMAN_REVIEW
+
+    DECISION                ORIGINAL     CANDIDATE    Δ       CROSSED
+    diagnosis_support       p_yes=0.980  p_yes=0.980  +0.000
+ *  step_therapy            p_yes=0.932  p_yes=0.027  -0.904
+    documentation_complete  p_yes=0.970  p_yes=0.970  +0.000
+    material_contradiction  p_yes=0.100  p_yes=0.100  +0.000
+    missing_evidence        NONE (0.85)  NONE (0.90)  +0.050
+  (* = answer changed)
+
+GATES: same outcome at every gate (--all-gates shows every row)
+
+ACTIONS
+  ORIGINAL  HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.932 is below the 0.95 autonomous-action bar
+  CANDIDATE HUMAN_REVIEW (correct)
+      - step_therapy p_yes=0.027 is below the 0.95 autonomous-action bar
+
+ACTION UNCHANGED: HUMAN_REVIEW
