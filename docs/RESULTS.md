@@ -1227,7 +1227,7 @@ PROMOTION CHECK: HOLD — 1 newly unsafe case(s) without a waiver: GOLD-TMP-17
 
 **Honesty constraint.** q-v0.3 was motivated by a gold finding: GOLD-TMP-17's interrupted
 methotrexate course, which q-v0.2 read as one 133-day course and which both Jev and Claude
-therefore auto-approved. The README rule forbids question changes motivated by gold, so q-v0.3 was
+therefore auto-approved. The gold-set rule ("Never tune on gold", under "Gold set") forbids question changes motivated by gold, so q-v0.3 was
 developed on a new generated dev set (`gen-v0.3-dev`) and evaluated once on a new holdout
 (`gen-v0.3-holdout`), which is the primary evidence. It ran on gold-v0.1 exactly once, for
 completeness. **Gold is not a blind test for q-v0.3 on the interruption and restart cases
