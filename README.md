@@ -156,6 +156,29 @@ against Jev. The committed reference run of these 10 cases cost about $0.001.
 uv run relay eval --dataset evals/smoke --provider jev --policy v0.1
 ```
 
+## Dashboard (local)
+
+`web/` is a static Next.js site over the committed results: the headline table, all 110 gold
+and smoke cases with each provider's judgments and gate path, every committed run's metrics,
+frontier and calibration, the CI gates, and the experiments. It computes nothing itself: `relay
+export-site` writes its data from the committed artifacts, offline and with no keys. Node 22.12
+or newer is needed.
+
+```bash
+# From the repository root: export the data (writes web/public/data, git-ignored)
+env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env export-site \
+    --out web/public/data
+
+cd web
+npm ci
+npm run dev        # http://localhost:3000
+npm run build      # static site in web/out/
+npm run typecheck && npm run lint && npm test
+```
+
+Gates and the interrupted-course breakdown that need a generated dataset show as skipped until
+you regenerate it (see [Generated datasets](docs/RESULTS.md#generated-datasets)).
+
 ## Repository layout
 
 ```text
@@ -166,6 +189,7 @@ policies/   the synthetic payer policies (immunara-v0.1, immunara-v0.2)
 scripts/    one-off analysis and table scripts behind the committed artifacts
 docs/       RESULTS.md: detailed results and methods
 .github/    CI workflow (offline gates, no secrets)
+web/        the local dashboard (Next.js static site over the exported results)
 ```
 
 ## Limitations
