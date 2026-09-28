@@ -9,6 +9,8 @@ from pathlib import Path
 
 from relay.site.common import ExportError
 from relay.site.core import export_core
+from relay.site.experiments import export_experiments
+from relay.site.gates import export_gates
 
 
 def prepare_out(out: Path) -> None:
@@ -23,8 +25,17 @@ def prepare_out(out: Path) -> None:
     out.mkdir(parents=True)
 
 
-def export_site(repo: Path, out: Path, *, exported_at: str, git_sha: str | None) -> list[Path]:
+def export_site(
+    repo: Path,
+    out: Path,
+    *,
+    exported_at: str,
+    git_sha: str | None,
+    strict_generated: bool = False,
+) -> list[Path]:
     """Write every data file under `out`; return their paths, sorted."""
     prepare_out(out)
-    written, _ctx = export_core(repo, out, exported_at=exported_at, git_sha=git_sha)
+    written, ctx = export_core(repo, out, exported_at=exported_at, git_sha=git_sha)
+    written += export_gates(repo, out, ctx, strict_generated=strict_generated)
+    written += export_experiments(repo, out, strict_generated=strict_generated)
     return sorted(written)
