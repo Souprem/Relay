@@ -200,8 +200,7 @@ existing manifest unless you pass `--force`. `--verify` regenerates the dataset 
 directory and compares it with the manifest. With `--out` it also checks the files there (a missing
 `--out` directory is an error). It exits 2 on any mismatch. Any change to generator output requires
 bumping `GENERATOR_VERSION` in `relay/generation/facts.py` and generating new, newly named
-datasets. `gen-v0.2` replaced `gen-v0.1` before any model results were recorded. The changes are
-listed in the [2A spec](docs/superpowers/specs/2026-09-25-phase2a-case-generator-design.md).
+datasets. `gen-v0.2` replaced `gen-v0.1` before any model results were recorded.
 
 ## Evaluation
 
@@ -265,7 +264,6 @@ Total estimated cost of these runs: $0.2010
 - Part of q-v0.2's measured gain over q-v0.1 is alignment with the generator's own labelling
   convention — gen-v0.2's ground truth counts a record stating the patient never took
   methotrexate as documented treatment history, and q-v0.2's question wording says so explicitly
-  (§6 of the [design spec](docs/superpowers/specs/2026-09-25-phase2b-evaluation-depth-design.md))
   — not solely because Jev reads the same evidence more accurately under q-v0.2.
 
 **Question set.** Adoption on dev:
@@ -329,9 +327,8 @@ so they show how the pipeline and thresholds behave on this distribution, not re
 network-free provider turns explicit cues into the same five decisions: day-precision dates, fixed
 phrases such as "never tried methotrexate" or "inadequate response", and the member-ID field. The
 same policy engine and thresholds as Jev then decide the action. It reads `CaseInput` only, ignores
-lines about relatives, and uses the fax cover only for the member-ID check. Its patterns are the
-[2C spec](docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md)'s §3, fixed before
-any rules run. Nothing was tuned after seeing results.
+lines about relatives, and uses the fax cover only for the member-ID check. Its patterns (`relay/decisions/rules_baseline.py`) were
+fixed before any rules run. Nothing was tuned after seeing results.
 
 Those §3 patterns were written by someone who had already read the generator's phrase banks in
 [`relay/generation/render.py`](relay/generation/render.py): the diagnosis negators
@@ -1024,7 +1021,7 @@ The guarantee is enforced in code, not only in the CLI. The status store's only 
 shadow trace with `ShadowWriteError` before it touches the file, and a test checks the file stays
 byte-identical.
 
-The handoff's `relay run --dataset evals/gold --mode shadow` is `relay run --dataset evals/gold
+The project brief's `relay run --dataset evals/gold --mode shadow` is `relay run --dataset evals/gold
 --workflow shadow` here, because `--mode` already selects Claude's sync or batch mode. Two
 details follow from that choice:
 
@@ -1510,7 +1507,7 @@ gate only fires on a non-`NONE` answer at ≥ 0.7.
 ## Policy shift (immunara-v0.2)
 
 immunara-v0.2 is immunara-v0.1 plus one added prior-treatment requirement ("policy_v5" in the
-handoff): *"The qualifying methotrexate course must have been ongoing, or have ended, within the
+project brief): *"The qualifying methotrexate course must have been ongoing, or have ended, within the
 12 months (365 days) before the request date."* Recency is part of step therapy, which Relay composes
 in code, so the policy engine needed no new gate. One paid q-v0.3 Jev run on `gen-v0.3-shift`
 (ground truth labelled under v0.2) was recomposed twice from the same stored answers with
@@ -1835,30 +1832,3 @@ defense there.
 - Actions are simulated. Relay never submits anything anywhere. Shadow mode's agreement section
   is the only part a real shadow deployment could compute; its promotion check uses ground truth,
   which a real deployment would not have (see "Shadow mode" above).
-
-## Project docs
-
-- [Project handoff](docs/RELAY_PROJECT_HANDOFF.md)
-- [v0.1 design spec](docs/superpowers/specs/2026-09-24-relay-v0.1-milestone-design.md)
-- [v0.1 implementation plan](docs/superpowers/plans/2026-09-24-relay-v0.1-milestone.md)
-- [Phase 2A case generator design](docs/superpowers/specs/2026-09-25-phase2a-case-generator-design.md)
-- [Phase 2A implementation plan](docs/superpowers/plans/2026-09-25-phase2a-case-generator.md)
-- [Phase 2B evaluation depth design](docs/superpowers/specs/2026-09-25-phase2b-evaluation-depth-design.md)
-- [Phase 2B implementation plan](docs/superpowers/plans/2026-09-25-phase2b-evaluation-depth.md)
-- [Phase 2C rules baseline design](docs/superpowers/specs/2026-09-25-phase2c-rules-baseline-design.md)
-- [Phase 2C implementation plan](docs/superpowers/plans/2026-09-25-phase2c-rules-baseline.md)
-- [Phase 2D LLM baseline design](docs/superpowers/specs/2026-09-25-phase2d-llm-baseline-design.md)
-- [Phase 2D implementation plan](docs/superpowers/plans/2026-09-25-phase2d-llm-baseline.md)
-- [Phase 2E gold set design](docs/superpowers/specs/2026-09-25-phase2e-gold-set-design.md)
-- [Phase 2E implementation plan](docs/superpowers/plans/2026-09-25-phase2e-gold-set.md)
-- [Phase 3A replay design](docs/superpowers/specs/2026-09-26-phase3a-replay-design.md)
-- [Phase 3A implementation plan](docs/superpowers/plans/2026-09-26-phase3a-replay.md)
-- [Phase 3B regression gate design](docs/superpowers/specs/2026-09-26-phase3b-regression-gate-design.md)
-- [Phase 3B implementation plan](docs/superpowers/plans/2026-09-26-phase3b-regression-gate.md)
-- [Phase 3C shadow mode design](docs/superpowers/specs/2026-09-26-phase3c-shadow-mode-design.md)
-- [Phase 3C implementation plan](docs/superpowers/plans/2026-09-26-phase3c-shadow-mode.md)
-- [Phase 3D design (q-v0.3, policy shift, parallelism)](docs/superpowers/specs/2026-09-26-phase3d-questions-and-policy-shift-design.md)
-- [Phase 3D1 implementation plan](docs/superpowers/plans/2026-09-26-phase3d1-generator-policy-questions.md)
-- [Phase 3D2 implementation plan](docs/superpowers/plans/2026-09-26-phase3d2-experiments.md)
-- [Phase 3E gate ablation design](docs/superpowers/specs/2026-09-27-phase3e-ablation-design.md)
-- [Phase 3E implementation plan](docs/superpowers/plans/2026-09-27-phase3e-ablation.md)
