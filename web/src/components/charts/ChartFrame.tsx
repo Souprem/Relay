@@ -45,10 +45,16 @@ export function ChartFrame(props: ChartProps) {
 
 interface ChartProps {
   title: string;
+  /** A longer summary for screen readers, read after the title. */
+  description?: string;
   width?: number;
   midWidth?: number;
   height?: number;
   marginRight?: number;
+  /** Room above the plot area, for annotations drawn over it (wide and mid variants). */
+  marginTop?: number;
+  /** The same for the phone variant; defaults to marginTop. */
+  marginTopNarrow?: number;
   xDomain: [number, number];
   yDomain: [number, number];
   xTicks: number[];
@@ -64,11 +70,14 @@ interface ChartProps {
 
 function ChartSvg({
   title,
+  description,
   width,
   narrow,
   className = "",
   height = 320,
   marginRight = MARGIN.right,
+  marginTop = MARGIN.top,
+  marginTopNarrow,
   xDomain,
   yDomain,
   xTicks,
@@ -83,7 +92,7 @@ function ChartSvg({
   const fs = (size: number) => (narrow ? size + 1 : size);
   const inner = {
     left: MARGIN.left,
-    top: MARGIN.top,
+    top: narrow ? (marginTopNarrow ?? marginTop) : marginTop,
     right: width - marginRight,
     bottom: height - MARGIN.bottom,
   };
@@ -93,11 +102,12 @@ function ChartSvg({
     <svg
       viewBox={`0 0 ${width} ${height}`}
       role="img"
-      aria-label={title}
+      aria-label={description ? `${title}. ${description}` : title}
       data-variant={narrow ? "narrow" : "wide"}
       className={`block h-auto w-full overflow-visible font-mono text-ink ${className}`}
     >
       <title>{title}</title>
+      {description ? <desc>{description}</desc> : null}
       <g aria-hidden="true">
         {yTicks.map((t) => (
           <g key={`y${t}`}>

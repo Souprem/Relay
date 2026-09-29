@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 import { QuestionsLink } from "@/components/questions/QuestionsLink";
-import { FrontierChart } from "@/components/charts/FrontierChart";
 import { ReliabilityDiagram } from "@/components/charts/ReliabilityDiagram";
+import { ThresholdDial } from "@/components/charts/ThresholdDial";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { getRun, getRuns } from "@/lib/data";
-import { ciText, rateText, threshold } from "@/lib/format";
+import { ciText, pct, rateText, threshold } from "@/lib/format";
 import { UNSAFE_TEXT } from "@/lib/semantic";
 
 const DECISIONS = [
@@ -102,25 +102,31 @@ export function EvalsView({ runId }: { runId: string }) {
         id="frontier"
         label="Automation against safety"
         lede={
-          run.frontier.flat ? (
-            "This frontier is flat: every threshold from 0.50 to 0.99 gives the same actions, because the probabilities are all 0, 0.5 or 1."
-          ) : (
-            <>
-              <p>Lower thresholds automate more; the dashed line is the 1% unsafe ceiling.</p>
-              <Disclosure label="How this is measured" variant="inline" className="mt-0.5">
-                <p className="text-sm text-ink-2">
-                  Each point is one auto_process threshold re-decided over the stored judgments. The
-                  1% unsafe ceiling is the one used to pick thresholds on dev sets.
-                </p>
-              </Disclosure>
-            </>
-          )
+          <>
+            <p>How many cases each threshold would auto-process, and how many of those would be unsafe.</p>
+            {run.frontier.flat ? (
+              <p className="mt-1">
+                This run is flat: every threshold from 0.50 to 0.99 gives the same actions, because its
+                probabilities are all 0, 0.5 or 1.
+              </p>
+            ) : null}
+            <Disclosure label="How this is measured" variant="inline" className="mt-0.5">
+              <p className="text-sm text-ink-2">
+                Each column is one auto_process threshold, re-decided over the stored judgments: its height
+                is the cases that threshold would auto-process, and its red top is the unsafe automations
+                among them. Thresholds are picked on dev sets with a {pct(run.frontier.ceiling, 0)} unsafe
+                ceiling: the threshold that automates the most while unsafe automations stay at or below{" "}
+                {pct(run.frontier.ceiling, 0)} of those automated, ties going to the stricter threshold. The
+                ceiling is a rule for choosing on dev, so it is not drawn here.
+              </p>
+            </Disclosure>
+          </>
         }
       >
-        <FrontierChart
+        <ThresholdDial
           points={run.frontier.points}
           operating={op.auto_process}
-          ceiling={run.frontier.ceiling}
+          source={op.source}
           label={`${run.label} on ${run.dataset}`}
         />
       </Section>
