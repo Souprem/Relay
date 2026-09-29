@@ -67,3 +67,49 @@ jobs:
           name: regression-report
           path: regression-report/
           if-no-files-found: warn
+
+  web:
+    runs-on: ubuntu-latest
+    # TYPESAFE_API_KEY and ANTHROPIC_API_KEY are deliberately never set here.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv and Python 3.12
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Export the dashboard's JSON data from committed artifacts (offline; no provider keys)
+        run: uv run relay --env-file .no-such.env export-site --out web/public/data
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: web
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: web
+        run: npm run lint
+
+      - name: Test
+        working-directory: web
+        run: npm test
+
+      - name: Build the static export
+        working-directory: web
+        env:
+          NEXT_PUBLIC_BASE_PATH: /Relay
+        run: npm run build

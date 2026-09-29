@@ -4,6 +4,8 @@
 
 > Relay uses synthetic data only and is an engineering/evaluation prototype. It is not for clinical use or real authorization decisions.
 
+**Live dashboard: <https://souprem.github.io/Relay/>**
+
 Relay asks one question: **how can probabilistic AI judgments be turned into safe autonomous
 workflow actions?** It works on synthetic prior-authorization cases. TypeSafe's
 [Jev](https://docs.typesafe.ai/) answers narrow, typed questions about each case (is the diagnosis
@@ -199,6 +201,11 @@ and smoke cases with each provider's judgments and gate path, every committed ru
 frontier and calibration, the CI gates, and the experiments. It computes nothing itself: `relay
 export-site` writes its data from the committed artifacts, offline and with no keys. Node 22.12
 or newer is needed.
+
+The same build is published automatically to GitHub Pages at
+<https://souprem.github.io/Relay/> on every push to `main`
+(`.github/workflows/pages.yml`), with `NEXT_PUBLIC_BASE_PATH=/Relay` set so links and assets
+resolve under that prefix. Locally, leave `NEXT_PUBLIC_BASE_PATH` unset.
 
 ```bash
 # From the repository root: export the data (writes web/public/data, git-ignored)
