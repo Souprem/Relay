@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ActionBadge } from "@/components/ui/ActionBadge";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { VerdictLabel } from "@/components/ui/Verdict";
 import { DECISION_LABELS, pyFixed, threshold } from "@/lib/format";
@@ -27,12 +28,11 @@ export function DiffPanel({ diff }: { diff: Diff }) {
   const gateChanges = diff.gates.filter((g) => g.original !== g.candidate);
   const thresholds = Object.entries(diff.thresholds);
   return (
-    <article className="min-w-0 border-t border-ink pt-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-lg text-ink">{diff.title}</h3>
+    <article className="min-w-0 max-w-[56rem]">
+      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <h3 className="text-md text-ink">{diff.title}:</h3>
         {changeTag(diff)}
       </div>
-      <p className="mt-1 max-w-prose text-md text-ink-2">{diff.summary}</p>
       {diff.questions_compare ? (
         <p className="mt-1 text-sm text-ink-2">
           The question sets differ:{" "}
@@ -45,6 +45,8 @@ export function DiffPanel({ diff }: { diff: Diff }) {
         </p>
       ) : null}
 
+      <Disclosure label="Full comparison" meta="before and after, every judgment" className="mt-2 border-b border-rule">
+      <p className="max-w-prose text-md text-ink-2">{diff.summary}</p>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         {[
           ["Before", diff.original_label, diff.action_original, diff.verdict_original, diff.reasons_original],
@@ -128,6 +130,7 @@ export function DiffPanel({ diff }: { diff: Diff }) {
           ))}
         </dl>
       ) : null}
+      </Disclosure>
     </article>
   );
 }

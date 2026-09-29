@@ -49,7 +49,7 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
       </div>
 
       {detail.diffs.length ? (
-        <section aria-labelledby="changed" className="mt-6">
+        <section aria-labelledby="changed" className="mt-6 border-t border-rule pt-2">
           <h2 id="changed" className="text-label font-semibold uppercase text-ink-2">
             What changed
           </h2>

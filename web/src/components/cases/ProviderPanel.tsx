@@ -2,6 +2,7 @@
 
 import { QuestionsLink } from "@/components/questions/QuestionsLink";
 import { ActionBadge } from "@/components/ui/ActionBadge";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { GatePath } from "@/components/ui/GatePath";
 import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
 import { VerdictLabel } from "@/components/ui/Verdict";
@@ -41,16 +42,21 @@ function SubHead({ children }: { children: React.ReactNode }) {
 }
 
 function ProviderView({ p }: { p: ProviderResult }) {
+  const fired = p.gates.find((g) => g.status === "FIRED");
   return (
     <div>
-      <p className="font-mono text-label tracking-normal text-ink-3">
-        {p.run_id} · {p.question_set} · {p.policy}
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-lg">
+        <ActionBadge action={p.action} />
+        <span aria-hidden="true" className="text-ink-3">
+          ·
+        </span>
+        <VerdictLabel verdict={p.verdict} />
+      </div>
+      <p className="mt-1 text-sm text-ink-2">
+        Decided by: <span className="font-mono text-ink">{fired ? fired.gate : "no"}</span> gate
+        <span className="text-ink-3"> · auto_process </span>
+        <span className="num text-ink">{threshold(p.thresholds.auto_process)}</span>
       </p>
-      <p className="mt-0.5 text-sm text-ink-2">
-        <span className="num text-ink">auto_process {threshold(p.thresholds.auto_process)}</span>,{" "}
-        {p.operating_point_source}.{p.note ? ` ${p.note}` : ""}
-      </p>
-      <QuestionsLink questionSet={p.question_set} page={p.questions_page} className="mt-0.5" />
 
       <div className="mt-3">
         <SubHead>Judgments</SubHead>
@@ -60,23 +66,25 @@ function ProviderView({ p }: { p: ProviderResult }) {
         <div className="mt-2 grid gap-2">{p.decisions.map(decisionBar)}</div>
       </div>
 
-      <div className="mt-4">
-        <SubHead>Gate path</SubHead>
-        <div className="mt-2">
-          <GatePath gates={p.gates} />
-        </div>
-      </div>
-
       <div className="mt-3">
-        <SubHead>Action</SubHead>
-        <div className="mt-1 text-lg">
-          <ActionBadge action={p.action} />
-        </div>
-        <ul className="mt-1 grid gap-0.5 font-mono text-sm text-ink-2">
-          {p.reasons.map((r) => (
-            <li key={r}>{r}</li>
-          ))}
-        </ul>
+        <Disclosure label="Gate path" meta={`${p.gates.length} gates, in engine order`}>
+          <GatePath gates={p.gates} />
+          <ul className="mt-1 grid gap-0.5 font-mono text-sm text-ink-2">
+            {p.reasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </Disclosure>
+        <Disclosure label="Run details" meta={p.question_set}>
+          <p className="font-mono text-label tracking-normal text-ink-3">
+            {p.run_id} · {p.question_set} · {p.policy}
+          </p>
+          <p className="mt-0.5 text-sm text-ink-2">
+            <span className="num text-ink">auto_process {threshold(p.thresholds.auto_process)}</span>,{" "}
+            {p.operating_point_source}.{p.note ? ` ${p.note}` : ""}
+          </p>
+          <QuestionsLink questionSet={p.question_set} page={p.questions_page} className="mt-0.5" />
+        </Disclosure>
       </div>
     </div>
   );
@@ -92,7 +100,7 @@ function EvaluationOnly({ detail, p }: { detail: CaseDetail; p: ProviderResult }
     ["missing_evidence", gt.missing_evidence],
   ];
   return (
-    <aside aria-label="Evaluation only" className="mt-4 border border-dashed border-rule-strong p-2">
+    <aside aria-label="Evaluation only" className="border border-dashed border-rule-strong p-2">
       <p className="text-label font-semibold uppercase text-ink-2">Evaluation only · never shown to the engine</p>
       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
         <span className="text-sm text-ink-3">Expected</span>
@@ -165,7 +173,9 @@ export function ProviderPanel({ detail }: { detail: CaseDetail }) {
       </div>
       <div role="tabpanel" id="provider-panel" aria-labelledby={`tab-${selected.slug}`} className="pt-2">
         <ProviderView p={selected} />
-        <EvaluationOnly detail={detail} p={selected} />
+        <Disclosure label="Show expected answer (evaluation only)" className="border-b border-rule">
+          <EvaluationOnly detail={detail} p={selected} />
+        </Disclosure>
       </div>
     </div>
   );

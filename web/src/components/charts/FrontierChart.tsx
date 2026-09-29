@@ -165,7 +165,7 @@ export function FrontierChart({
         }}
       </ChartFrame>
       <ChartData
-        summary="Frontier data (every threshold)"
+        summary="Frontier data table, every threshold"
         columns={["auto_process", "automated", "unsafe", "unsafe / auto", "correct"]}
         rows={points.map((p) => [
           threshold(p.auto_threshold),

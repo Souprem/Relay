@@ -1,27 +1,32 @@
 import Link from "next/link";
 
+import { Disclosure } from "@/components/ui/Disclosure";
 import { FINDING_TONE_TEXT } from "@/lib/semantic";
 import type { Finding } from "@/lib/types";
 
 /**
- * The home page's findings: a numbered list split by thin rules. The text, numbers included,
- * comes from index.json (relay/site/findings.py); only unsafe and correct figures take colour.
+ * The home page's findings: five one-line headlines, each opening onto its full text and links.
+ * The text, numbers included, comes from index.json (relay/site/findings.py); only unsafe and
+ * correct figures take colour.
  */
 export function Findings({ findings }: { findings: Finding[] }) {
   return (
-    <ol className="max-w-[48rem] border-t border-ink">
+    <div className="max-w-[48rem] border-b border-rule">
       {findings.map((f, i) => (
-        <li
+        <Disclosure
           key={f.id}
           id={`finding-${f.id}`}
-          className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-1 border-b border-rule py-2 md:grid-cols-[2.5rem_minmax(0,1fr)]"
+          label={
+            <span className="flex gap-1">
+              <span className="num shrink-0 pt-px text-sm text-ink-3" aria-hidden="true">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="text-balance">{f.title}</span>
+            </span>
+          }
         >
-          <span className="num pt-px text-sm text-ink-3" aria-hidden="true">
-            {String(i + 1).padStart(2, "0")}
-          </span>
-          <div>
-            <p className="text-balance text-md font-medium text-ink">{f.title}</p>
-            <p className="mt-1 text-md text-ink-2">
+          <div className="pl-5">
+            <p className="text-md text-ink-2">
               {f.body.map((s, j) =>
                 s.tone ? (
                   <span key={j} className={`font-medium ${FINDING_TONE_TEXT[s.tone]}`}>
@@ -41,8 +46,8 @@ export function Findings({ findings }: { findings: Finding[] }) {
               </a>
             </p>
           </div>
-        </li>
+        </Disclosure>
       ))}
-    </ol>
+    </div>
   );
 }

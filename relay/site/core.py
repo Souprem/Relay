@@ -42,7 +42,7 @@ from relay.site.common import (
     trace_for,
     write_json,
 )
-from relay.site.findings import build_findings
+from relay.site.findings import build_findings, build_hero
 from relay.site.questions import questions_compare, questions_page
 from relay.site.registry import (
     DATASETS,
@@ -460,6 +460,7 @@ def export_core(
         "exported_at": exported_at,
         "git_sha": git_sha,
         "disclaimer": DISCLAIMER,
+        "hero": build_hero(ctx),
         "headline": headline_rows(ctx.run_payloads),
         "spend": {
             "claude_usd": _spend(repo, CLAUDE_SPEND),

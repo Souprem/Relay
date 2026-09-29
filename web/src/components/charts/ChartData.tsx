@@ -1,3 +1,5 @@
+import { Disclosure } from "@/components/ui/Disclosure";
+
 /** The data behind a chart, as a table, for screen readers and for anyone who wants the numbers. */
 export function ChartData({
   summary = "Data table",
@@ -9,9 +11,8 @@ export function ChartData({
   rows: (string | number)[][];
 }) {
   return (
-    <details className="mt-1 text-sm">
-      <summary className="cursor-pointer text-ink-2 hover:text-ink">{summary}</summary>
-      <div className="mt-1 max-h-[24rem] overflow-auto border-t border-rule">
+    <Disclosure label={summary} meta={`${rows.length} rows`} variant="inline" className="mt-1 text-sm">
+      <div className="max-h-[24rem] overflow-auto border-t border-rule">
         <table className="w-full">
           <thead>
             <tr>
@@ -41,6 +42,6 @@ export function ChartData({
           </tbody>
         </table>
       </div>
-    </details>
+    </Disclosure>
   );
 }

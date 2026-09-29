@@ -62,11 +62,29 @@ export interface Finding {
   figures: Record<string, unknown>;
 }
 
+/** One of the home page's three headline figures (relay/site/findings.py build_hero). */
+export interface HeroFigure {
+  id: "automation" | "unsafe" | "correct";
+  value: string;
+  label: string;
+  caption: string;
+}
+
+export interface Hero {
+  run_id: string;
+  label: string;
+  dataset: string;
+  n: number;
+  auto_process: number;
+  figures: HeroFigure[];
+}
+
 export interface SiteIndex {
   schema_version: number;
   exported_at: string;
   git_sha: string | null;
   disclaimer: string;
+  hero: Hero;
   headline: HeadlineRow[];
   spend: { claude_usd: string; jev_3d_usd: string };
   counts: { cases: number; by_dataset: Record<string, number>; runs: number };

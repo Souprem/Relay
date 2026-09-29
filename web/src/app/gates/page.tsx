@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { CaseEntries, RegressionMetrics } from "@/components/gates/RegressionTable";
 import { ShadowCard } from "@/components/gates/ShadowCard";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { GateVerdict } from "@/components/ui/Verdicts";
@@ -68,33 +69,98 @@ function Report({ report }: { report: RegressionReport }) {
   );
 }
 
+function StoryLine({ verdict, children }: { verdict: string; children: React.ReactNode }) {
+  return (
+    <li className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-baseline gap-x-1 py-0.5">
+      <GateVerdict verdict={verdict} />
+      <span className="text-md text-ink-2">{children}</span>
+    </li>
+  );
+}
+
 export default function GatesPage() {
   const data = getGates();
   const reports = Object.fromEntries(data.regressions.map((r) => [r.key, r]));
   const passed = data.gates.filter((g) => g.verdict === "PASS").length;
   const skipped = data.gates.filter((g) => g.verdict === "SKIPPED").length;
+  const failed = data.gates.length - passed - skipped;
+  const fail = reports["gold-fail"];
+  const waiver = reports["gold-waiver"];
+  const others = ["gold-jev-vs-claude", "holdout-adoption", "stale-to-aware"].filter((k) => reports[k]);
   return (
     <>
       <PageHeader eyebrow="Gates" title="How do you know a change made it safer?">
         <p>
-          Every change is replayed against an accepted baseline on the same frozen cases. The gate
-          fails when a case that was handled safely becomes an unsafe automation, unless a reviewer
-          has signed a waiver for it. CI runs these gates on every push, with no provider keys.
+          Every change is replayed against an accepted baseline on the same frozen cases, and CI
+          runs these gates on every push, with no provider keys.
         </p>
+        <Disclosure label="How this is measured" variant="inline" className="mt-0.5">
+          <p className="text-sm text-ink-2">
+            The gate fails when a case that was handled safely becomes an unsafe automation, unless a
+            reviewer has signed a waiver for it. A reproduce gate replays stored decisions through
+            today&rsquo;s engine and fails on any difference; a compare gate diffs two configurations.
+            Still unsafe counts a baseline&rsquo;s own unsafe automations; they are reported but never
+            fail a gate.
+          </p>
+        </Disclosure>
       </PageHeader>
 
-      <Section
-        id="ci"
-        label={`The ${data.gates.length} committed gates`}
-        lede={
-          <>
-            {passed} pass{skipped ? `; ${skipped} need generated datasets that are not on this machine and are skipped` : ""}.
-            A reproduce gate replays stored decisions through today&rsquo;s engine and fails on any
-            difference; a compare gate diffs two configurations.
-          </>
-        }
-      >
-        <TableScroll hint>
+      <p className="mt-4 flex flex-wrap items-baseline gap-x-1 text-md text-ink">
+        <GateVerdict verdict={failed ? "FAIL" : "PASS"} />
+        <span>
+          {passed === data.gates.length
+            ? `All ${data.gates.length} committed gates pass.`
+            : `${passed} of ${data.gates.length} committed gates pass${skipped ? `; ${skipped} need generated datasets that are not on this machine and are skipped` : ""}.`}
+        </span>
+      </p>
+
+      <Section id="fail" label="A gate that fails on purpose">
+        <p className="max-w-prose text-md text-ink">
+          Lowering Jev&rsquo;s threshold from the recorded 0.95 to its dev-selected 0.89 automates
+          11 more gold cases, among them{" "}
+          <Link href="/cases/GOLD-TMP-17/" className="font-mono underline hover:text-ink-2">
+            GOLD-TMP-17
+          </Link>
+          , an interrupted methotrexate course that needs a person.
+        </p>
+        <ul className="mt-1">
+          <StoryLine verdict={fail.verdict}>The regression gate fails.</StoryLine>
+          <StoryLine verdict={waiver.verdict}>
+            A reviewed waiver is the only way through, and the waived case stays listed.
+          </StoryLine>
+        </ul>
+      </Section>
+
+      <Section id="shadow" label="Shadow rollout">
+        <ul>
+          {data.shadow.map((s) => (
+            <StoryLine key={s.key} verdict={s.decision}>
+              {s.candidate} in shadow beside {s.incumbent}
+              {s.newly_unsafe.length ? (
+                <>
+                  : would newly make{" "}
+                  {s.newly_unsafe.map((id, i) => (
+                    <span key={id}>
+                      {i ? ", " : ""}
+                      <Link href={`/cases/${id}/`} className="font-mono underline decoration-rule-strong hover:decoration-ink">
+                        {id}
+                      </Link>
+                    </span>
+                  ))}{" "}
+                  unsafe
+                </>
+              ) : (
+                <>: no newly unsafe case</>
+              )}
+              .
+            </StoryLine>
+          ))}
+        </ul>
+      </Section>
+
+      <div className="mt-6 border-b border-rule">
+        <Disclosure id="ci" label={`All ${data.gates.length} gates`} meta={`${passed} pass`}>
+                  <TableScroll hint>
           <table className="w-full min-w-[52rem]">
             <thead>
               <tr>
@@ -133,67 +199,45 @@ export default function GatesPage() {
           Still unsafe counts a baseline&rsquo;s own unsafe automations; they are reported but never
           fail a gate.
         </p>
-      </Section>
-
-      <Section
-        id="fail"
-        label="A gate that fails on purpose"
-        lede={
-          <>
-            Lowering Jev&rsquo;s threshold from the recorded 0.95 to its dev-selected 0.89 automates
-            11 more gold cases. One of them is{" "}
-            <Link href="/cases/GOLD-TMP-17/" className="font-mono underline hover:text-ink">
-              GOLD-TMP-17
-            </Link>
-            , an interrupted methotrexate course that needs a person. The gate fails; a signed waiver
-            is the only way through, and the waived case stays listed.
-          </>
-        }
-      >
-        <div className="grid gap-6">
-          <Report report={reports["gold-fail"]} />
-          <Report report={reports["gold-waiver"]} />
-        </div>
-      </Section>
-
-      <Section
-        id="shadow"
-        label="Shadow rollout"
-        lede={
-          <>
+        </Disclosure>
+        {[fail, waiver].map((r) => (
+          <Disclosure key={r.key} id={`report-${r.key}`} label={`Detailed report: ${r.title}`} meta={r.verdict}>
+            <Report report={r} />
+          </Disclosure>
+        ))}
+        <Disclosure id="shadow-details" label="Shadow details" meta={`${data.shadow.length} rollouts`}>
+          <p className="max-w-prose text-md text-ink-2">
             A candidate runs beside the live configuration. Its actions are recorded and never
             applied: the case-status file is hashed before and after, and the run only reports{" "}
             <span className="font-mono text-sm">case state unchanged (verified)</span> when the hashes
             match. The promotion check is the regression gate, so it needs ground truth and is
             evaluation-only.
-          </>
-        }
-      >
-        <div className="grid gap-6 lg:grid-cols-2">
-          {data.shadow.map((s) => (
-            <ShadowCard key={s.key} demo={s} />
-          ))}
-        </div>
-      </Section>
-
-      <Section id="committed" label="Other committed gate reports">
-        <div className="grid gap-6">
-          {["gold-jev-vs-claude", "holdout-adoption", "stale-to-aware"].map((k) =>
-            reports[k] ? <Report key={k} report={reports[k]} /> : null,
-          )}
-        </div>
-        <p className="mt-3 text-sm text-ink-2">
-          Methods:{" "}
-          <a href={data.links.regression} className="underline hover:text-ink">
-            regression gate
-          </a>{" "}
-          and{" "}
-          <a href={data.links.shadow} className="underline hover:text-ink">
-            shadow mode
-          </a>{" "}
-          in RESULTS.md.
-        </p>
-      </Section>
+          </p>
+          <div className="mt-3 grid gap-6 lg:grid-cols-2">
+            {data.shadow.map((s) => (
+              <ShadowCard key={s.key} demo={s} />
+            ))}
+          </div>
+        </Disclosure>
+        <Disclosure id="committed" label="Other committed gate reports" meta={`${others.length} reports`}>
+          <div className="grid gap-6">
+            {others.map((k) => (
+              <Report key={k} report={reports[k]} />
+            ))}
+          </div>
+        </Disclosure>
+      </div>
+      <p className="mt-2 text-sm text-ink-2">
+        Methods:{" "}
+        <a href={data.links.regression} className="underline hover:text-ink">
+          regression gate
+        </a>{" "}
+        and{" "}
+        <a href={data.links.shadow} className="underline hover:text-ink">
+          shadow mode
+        </a>{" "}
+        in RESULTS.md.
+      </p>
     </>
   );
 }

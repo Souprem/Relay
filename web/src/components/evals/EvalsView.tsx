@@ -3,6 +3,7 @@ import Link from "next/link";
 import { QuestionsLink } from "@/components/questions/QuestionsLink";
 import { FrontierChart } from "@/components/charts/FrontierChart";
 import { ReliabilityDiagram } from "@/components/charts/ReliabilityDiagram";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { MetricCard } from "@/components/ui/MetricCard";
 import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
@@ -26,13 +27,17 @@ export function EvalsView({ runId }: { runId: string }) {
   if (!dataset) throw new Error(`run ${runId} has no dataset in runs.json`);
   const m = run.metrics;
   const op = run.operating_point;
+  const calibrated = DECISIONS.filter((d) => run.calibration.decisions[d]);
   return (
     <>
       <PageHeader eyebrow="Evaluation" title="Every committed run, at its operating point">
-        <p>
-          Rates carry exact 95% Clopper-Pearson intervals. Runs on gold and smoke are re-scored from
-          their traces; runs on generated sets come from their committed report bundles.
-        </p>
+        <p>Rates carry exact 95% Clopper-Pearson intervals.</p>
+        <Disclosure label="How this is measured" variant="inline" className="mt-0.5">
+          <p className="text-sm text-ink-2">
+            Runs on gold and smoke are re-scored from their traces; runs on generated sets come from
+            their committed report bundles.
+          </p>
+        </Disclosure>
       </PageHeader>
 
       <nav aria-label="Datasets and runs" className="mt-4 grid gap-2 border-y border-rule py-2 md:grid-cols-[12rem_minmax(0,1fr)]">
@@ -90,8 +95,6 @@ export function EvalsView({ runId }: { runId: string }) {
           <MetricCard label="Correct action" rate={m.correct} />
           <MetricCard label="Automation" rate={m.automation} />
           <MetricCard label="Unsafe / auto" rate={m.uar} />
-          <MetricCard label="Request info" rate={m.request_info} />
-          <MetricCard label="Human review" rate={m.human_review} />
         </div>
       </section>
 
@@ -99,9 +102,19 @@ export function EvalsView({ runId }: { runId: string }) {
         id="frontier"
         label="Automation against safety"
         lede={
-          run.frontier.flat
-            ? "This frontier is flat: every threshold from 0.50 to 0.99 gives the same actions, because the probabilities are all 0, 0.5 or 1."
-            : "Each point is one auto_process threshold re-decided over the stored judgments. Lower thresholds automate more; the dashed line is the 1% unsafe ceiling used to pick thresholds on dev sets."
+          run.frontier.flat ? (
+            "This frontier is flat: every threshold from 0.50 to 0.99 gives the same actions, because the probabilities are all 0, 0.5 or 1."
+          ) : (
+            <>
+              <p>Lower thresholds automate more; the dashed line is the 1% unsafe ceiling.</p>
+              <Disclosure label="How this is measured" variant="inline" className="mt-0.5">
+                <p className="text-sm text-ink-2">
+                  Each point is one auto_process threshold re-decided over the stored judgments. The
+                  1% unsafe ceiling is the one used to pick thresholds on dev sets.
+                </p>
+              </Disclosure>
+            </>
+          )
         }
       >
         <FrontierChart
@@ -112,22 +125,30 @@ export function EvalsView({ runId }: { runId: string }) {
         />
       </Section>
 
-      <Section
-        id="calibration"
-        label="Calibration"
-        lede="Accuracy against stated confidence for each judgment. Points below the diagonal are over-confident; hollow points hold fewer than 20 cases."
-      >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 border-b border-rule">
+        <Disclosure id="other-rates" label="Request info and human review" meta="2 rates">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-3 md:grid-cols-5">
+            <MetricCard label="Request info" rate={m.request_info} />
+            <MetricCard label="Human review" rate={m.human_review} />
+          </div>
+        </Disclosure>
+        <Disclosure id="calibration" label="Calibration" meta={`${calibrated.length} charts`}>
+          <p className="max-w-prose text-md text-ink-2">
+            Accuracy against stated confidence for each judgment. Points below the diagonal are
+            over-confident; hollow points hold fewer than 20 cases.
+          </p>
+          <div className="mt-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DECISIONS.map((d) =>
             run.calibration.decisions[d] ? (
               <ReliabilityDiagram key={d} decision={d} report={run.calibration.decisions[d]} />
             ) : null,
           )}
         </div>
-      </Section>
-
-      <Section id="compare" label={`All runs on ${dataset.id}`}>
-        <TableScroll hint>
+          </div>
+        </Disclosure>
+        <Disclosure id="compare" label={`All runs on ${dataset.id}`} meta={`${dataset.runs.length} runs`}>
+          <TableScroll hint>
           <table className="w-full min-w-[56rem]">
             <thead>
               <tr>
@@ -163,7 +184,8 @@ export function EvalsView({ runId }: { runId: string }) {
             </tbody>
           </table>
         </TableScroll>
-      </Section>
+        </Disclosure>
+      </div>
     </>
   );
 }

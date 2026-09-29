@@ -77,6 +77,9 @@
   --text-lg--line-height: 1.75rem;
   --text-xl: 1.75rem;
   --text-xl--line-height: 2.25rem;
+  /* The home page's three headline figures only. */
+  --text-display: 2.75rem;
+  --text-display--line-height: 3rem;
 
   --radius-sm: 2px;
   --container-page: 75rem;

@@ -66,6 +66,34 @@ def test_the_gating_figures_match_the_committed_holdout_artifacts(site_export):
     assert _counts(fig["rules"]["correct"]) == (667, 1000)
 
 
+def test_the_home_hero_figures_are_the_holdout_display_strings(site_export):
+    index = load(site_export, "index.json")
+    hero = index["hero"]
+    holdout = _json("gen-v0.3-holdout/regression-q-v0.2-vs-q-v0.3/regression.json")["candidate"]
+    assert hero["run_id"] == "run_20260927T072144Z_12e1e4"
+    assert (hero["label"], hero["dataset"], hero["n"], hero["auto_process"]) == (
+        "Jev q-v0.3",
+        "gen-v0.3-holdout",
+        1000,
+        0.81,
+    )
+    figures = {f["id"]: f for f in hero["figures"]}
+    assert list(figures) == ["automation", "unsafe", "correct"]
+    assert (figures["automation"]["value"], figures["automation"]["caption"]) == (
+        "24.4%",
+        "244 of 1000 cases",
+    )
+    assert figures["unsafe"]["value"] == "0 of 244"
+    assert figures["unsafe"]["caption"] == f"95% upper bound {holdout['uar']['ci95']['high']:.1%}"
+    assert (figures["correct"]["value"], figures["correct"]["caption"]) == (
+        "92.1%",
+        "921 of 1000 cases",
+    )
+    gating = _findings(site_export)["gating"]["figures"]["jev_q_v0_3"]
+    assert figures["automation"]["value"] == gating["automation"]["pct"]
+    assert figures["correct"]["value"] == gating["correct"]["pct"]
+
+
 def test_the_design_flaw_figures_match_the_committed_artifacts(site_export):
     fig = _findings(site_export)["design-flaw"]["figures"]
     assert fig["case"] == "GOLD-TMP-17"

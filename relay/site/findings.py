@@ -331,6 +331,41 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
     }
 
 
+def build_hero(ctx: ExportContext) -> dict[str, Any]:
+    """The home page's three headline figures: Jev q-v0.3 on gen-v0.3-holdout at its operating
+    point. Values and captions are display strings, so the page never formats a number."""
+    payload = ctx.run_payloads[HOLDOUT_V3_JEV]
+    m = payload["metrics"]
+    automation, uar, correct = m["automation"], m["uar"], m["correct"]
+    return {
+        "run_id": HOLDOUT_V3_JEV,
+        "label": payload["label"],
+        "dataset": payload["dataset"],
+        "n": payload["n"],
+        "auto_process": payload["operating_point"]["auto_process"],
+        "figures": [
+            {
+                "id": "automation",
+                "value": rate_display(automation)["pct"],
+                "label": "of held-out cases auto-processed",
+                "caption": f"{automation['count']} of {automation['n']} cases",
+            },
+            {
+                "id": "unsafe",
+                "value": f"{uar['count']} of {uar['n']}",
+                "label": "automations were unsafe",
+                "caption": f"95% upper bound {rate_display(uar)['ci_high_pct']}",
+            },
+            {
+                "id": "correct",
+                "value": rate_display(correct)["pct"],
+                "label": "chose the correct action",
+                "caption": f"{correct['count']} of {correct['n']} cases",
+            },
+        ],
+    }
+
+
 def build_findings(repo: Path, ctx: ExportContext) -> list[dict[str, Any]]:
     return [
         gating_finding(ctx),

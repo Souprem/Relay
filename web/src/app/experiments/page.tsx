@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { LineChart } from "@/components/charts/LineChart";
 import { RegressionMetrics } from "@/components/gates/RegressionTable";
+import { Disclosure } from "@/components/ui/Disclosure";
 import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { GateVerdict } from "@/components/ui/Verdicts";
@@ -65,8 +66,11 @@ export default function ExperimentsPage() {
         id="qv03"
         label={x.qv03.title}
         title={`${holdout.baseline.correct.count} → ${holdout.candidate.correct.count} correct of ${holdout.n} on the holdout, with ${holdout.candidate.uar.count}/${holdout.candidate.uar.n} unsafe automations.`}
-        lede={
-          <>
+        lede="q-v0.3 adds questions about paused and restarted methotrexate courses; the gain is concentrated in interrupted courses."
+      >
+        <Disclosure label="Show details" hashIds={["qv03"]} variant="inline" className="-mt-1">
+          <div className="max-w-prose text-md text-ink-2">
+            <>
             q-v0.2 has one start and one end date, so it cannot express a paused methotrexate course.
             q-v0.3 adds seven questions about pauses and restarts. It was adopted on gen-v0.3-dev (
             {dev.baseline.correct.count} → {dev.candidate.correct.count} of {dev.n} correct, gate{" "}
@@ -75,8 +79,8 @@ export default function ExperimentsPage() {
               Compare the question sets&nbsp;→
             </Link>
           </>
-        }
-      >
+          </div>
+          <div className="mt-3">
         <RegressionMetrics report={holdout} />
         <p className="mt-1 text-sm text-ink-3">
           Baseline: {holdout.baseline.label}. Candidate: {holdout.candidate.label}.
@@ -126,14 +130,21 @@ export default function ExperimentsPage() {
           becomes newly unsafe at the lower 0.81 threshold.
         </p>
         <MethodLink href={x.qv03.link} />
+          </div>
+        </Disclosure>
       </Section>
 
       <Section
         id="shift"
         label={x.shift.title}
         title={`Stale: ${shift.baseline.uar.count}/${shift.baseline.uar.n} unsafe automations. Aware: ${shift.candidate.uar.count}/${shift.candidate.uar.n}.`}
-        lede="immunara-v0.2 adds one rule: the qualifying methotrexate course must have been ongoing or ended within 12 months of the request. The same stored Jev answers on gen-v0.3-shift were composed twice: under the old policy (stale) and under the new one (aware)."
+        lede="The same stored Jev answers, composed under the old policy and under immunara-v0.2, which adds a 12-month recency rule."
       >
+        <Disclosure label="Show details" hashIds={["shift"]} variant="inline" className="-mt-1">
+          <div className="max-w-prose text-md text-ink-2">
+            {"immunara-v0.2 adds one rule: the qualifying methotrexate course must have been ongoing or ended within 12 months of the request. The same stored Jev answers on gen-v0.3-shift were composed twice: under the old policy (stale) and under the new one (aware)."}
+          </div>
+          <div className="mt-3">
         <TableScroll hint>
           <table className="w-full min-w-[40rem]">
             <thead>
@@ -180,14 +191,21 @@ export default function ExperimentsPage() {
           automations out of {shift.n}.
         </p>
         <MethodLink href={x.shift.link} />
+          </div>
+        </Disclosure>
       </Section>
 
       <Section
         id="parallelism"
         label={x.parallelism.title}
         title={`p50 latency goes from ${roundInt(sizes[0].p50_ms)} to ${roundInt(sizes[sizes.length - 1].p50_ms)} ms as questions per call go from ${sizes[0].size} to ${sizes[sizes.length - 1].size}.`}
-        lede={`${x.parallelism.cases} ${x.parallelism.dataset} cases were sent to ${x.parallelism.model} with 1, 5, 10 and 20 questions in one call. Narrow decisions are cheap to add; cost per case grows with tokens.`}
+        lede="Narrow decisions are cheap to add; cost per case grows with tokens."
       >
+        <Disclosure label="Show details" hashIds={["parallelism"]} variant="inline" className="-mt-1">
+          <div className="max-w-prose text-md text-ink-2">
+            {`${x.parallelism.cases} ${x.parallelism.dataset} cases were sent to ${x.parallelism.model} with 1, 5, 10 and 20 questions in one call. Narrow decisions are cheap to add; cost per case grows with tokens.`}
+          </div>
+          <div className="mt-3">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <LineChart
             title="Latency against questions per call"
@@ -230,6 +248,8 @@ export default function ExperimentsPage() {
           The p95 at 20 questions rests on three slow calls out of 40, so it is not a stable estimate.
         </p>
         <MethodLink href={x.parallelism.link} />
+          </div>
+        </Disclosure>
       </Section>
 
       <Section
@@ -247,10 +267,12 @@ export default function ExperimentsPage() {
             newly unsafe for every model provider on gold.
           </>
         }
-        lede={
-          <>
-            Each committed run was re-decided with the contradiction gate, the missing-evidence gate,
-            or both disabled. The null results:{" "}
+        lede="Each committed run was re-decided with the contradiction gate, the missing-evidence gate, or both disabled."
+      >
+        <Disclosure label="Show details" hashIds={["ablation"]} variant="inline" className="-mt-1">
+          <div className="max-w-prose text-md text-ink-2">
+            <>
+            The null results:{" "}
             {abl.generatedNewly === 0 ? "no ablation creates a newly unsafe case on the generated sets" : `${abl.generatedNewly} generated-set ablations create newly unsafe cases`}
             , and{" "}
             {abl.meAutomationUnchanged
@@ -259,8 +281,8 @@ export default function ExperimentsPage() {
             .{" "}
             {claudeNote ? `The claude-150 rows: ${claudeNote}` : null}
           </>
-        }
-      >
+          </div>
+          <div className="mt-3">
         <TableScroll hint>
           <table className="w-full min-w-[68rem]">
             <thead>
@@ -309,6 +331,8 @@ export default function ExperimentsPage() {
           </table>
         </TableScroll>
         <MethodLink href={x.ablation.link} />
+          </div>
+        </Disclosure>
       </Section>
     </>
   );
