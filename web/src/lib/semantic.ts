@@ -62,3 +62,18 @@ export const GATE_VERDICT_TEXT: Record<GateVerdictName, string> = {
   HOLD: "text-ink",
   SKIPPED: "text-ink-3",
 };
+
+/** Word diffs between question sets: additions in the correct green, removals in the unsafe red,
+ * struck through. */
+export const DIFF_TEXT: Record<"add" | "del", string> = {
+  add: "bg-auto-tint text-auto no-underline",
+  del: "bg-unsafe-tint text-unsafe line-through",
+};
+
+/** A question's status in a comparison: added green, removed red, the rest ink. */
+export const QUESTION_STATUS_TEXT: Record<"added" | "removed" | "changed" | "unchanged", string> = {
+  added: "text-auto",
+  removed: "text-unsafe",
+  changed: "text-ink",
+  unchanged: "text-ink-3",
+};

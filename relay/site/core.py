@@ -43,6 +43,7 @@ from relay.site.common import (
     write_json,
 )
 from relay.site.findings import build_findings
+from relay.site.questions import questions_compare, questions_page
 from relay.site.registry import (
     DATASETS,
     DIFFS,
@@ -97,6 +98,7 @@ def _run_payload(
         "label": spec.label,
         "slug": spec.slug,
         "question_set": spec.question_set,
+        "questions_page": questions_page(spec.question_set),
         "note": spec.note,
         "n": at.n,
         "operating_point": {
@@ -192,6 +194,7 @@ def runs_index(run_payloads: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     "slug": r.slug,
                     "provider": r.provider,
                     "question_set": r.question_set,
+                    "questions_page": questions_page(r.question_set),
                     "n": payload["n"],
                     "auto_process": payload["operating_point"]["auto_process"],
                     "operating_point_source": r.operating_point_source,
@@ -258,6 +261,7 @@ def provider_result(spec: RunSpec, trace: WorkflowTrace, case: PriorAuthCase) ->
         "provider": spec.provider,
         "run_id": spec.run_id,
         "question_set": trace.question_set_version,
+        "questions_page": questions_page(trace.question_set_version),
         "policy": f"{trace.policy_id} ({trace.policy_version})",
         "thresholds": thresholds,
         "operating_point_source": spec.operating_point_source,
@@ -308,6 +312,10 @@ def diff_json(
     return diff.model_dump(mode="json") | {
         "title": spec.title,
         "summary": spec.summary,
+        "question_sets": [original.question_set_version, candidate.question_set_version],
+        "questions_compare": questions_compare(
+            original.question_set_version, candidate.question_set_version
+        ),
         "verdict_original": classify(diff.action_original, diff.expected_original),
         "verdict_candidate": classify(diff.action_candidate, diff.expected_candidate),
     }

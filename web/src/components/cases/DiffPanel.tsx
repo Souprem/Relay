@@ -1,7 +1,10 @@
+import Link from "next/link";
+
 import { ActionBadge } from "@/components/ui/ActionBadge";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { VerdictLabel } from "@/components/ui/Verdict";
 import { DECISION_LABELS, pyFixed, threshold } from "@/lib/format";
+import { compareHref, comparePair } from "@/lib/questions";
 import type { CaseDetail } from "@/lib/types";
 import { RESOLVED_TEXT, UNSAFE_TEXT } from "@/lib/semantic";
 
@@ -30,6 +33,17 @@ export function DiffPanel({ diff }: { diff: Diff }) {
         {changeTag(diff)}
       </div>
       <p className="mt-1 max-w-prose text-md text-ink-2">{diff.summary}</p>
+      {diff.questions_compare ? (
+        <p className="mt-1 text-sm text-ink-2">
+          The question sets differ:{" "}
+          <Link
+            href={compareHref(diff.questions_compare)}
+            className="font-mono text-ink underline decoration-rule-strong hover:decoration-ink"
+          >
+            compare {comparePair(diff.questions_compare).join(" → ")}&nbsp;→
+          </Link>
+        </p>
+      ) : null}
 
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         {[

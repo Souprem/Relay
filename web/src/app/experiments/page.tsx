@@ -8,6 +8,7 @@ import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { GateVerdict } from "@/components/ui/Verdicts";
 import { getExperiments } from "@/lib/data";
 import { pct, pyFixed, rateText, roundInt } from "@/lib/format";
+import { compareHref } from "@/lib/questions";
 import type { AblationRow } from "@/lib/types";
 import { UNSAFE_TEXT } from "@/lib/semantic";
 
@@ -69,7 +70,10 @@ export default function ExperimentsPage() {
             q-v0.2 has one start and one end date, so it cannot express a paused methotrexate course.
             q-v0.3 adds seven questions about pauses and restarts. It was adopted on gen-v0.3-dev (
             {dev.baseline.correct.count} → {dev.candidate.correct.count} of {dev.n} correct, gate{" "}
-            {dev.verdict}) and then run once on gen-v0.3-holdout.
+            {dev.verdict}) and then run once on gen-v0.3-holdout.{" "}
+            <Link href={compareHref("q-v0.2...q-v0.3")} className="font-mono text-ink underline decoration-rule-strong hover:decoration-ink">
+              Compare the question sets&nbsp;→
+            </Link>
           </>
         }
       >

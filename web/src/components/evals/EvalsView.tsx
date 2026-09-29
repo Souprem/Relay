@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { QuestionsLink } from "@/components/questions/QuestionsLink";
 import { FrontierChart } from "@/components/charts/FrontierChart";
 import { ReliabilityDiagram } from "@/components/charts/ReliabilityDiagram";
 import { MetricCard } from "@/components/ui/MetricCard";
@@ -83,6 +84,7 @@ export function EvalsView({ runId }: { runId: string }) {
           <span className="num text-ink">{threshold(op.auto_process)}</span> ({op.source}
           {op.auto_process !== op.recorded ? `; recorded at ${threshold(op.recorded)}` : ""})
         </p>
+        <QuestionsLink questionSet={run.question_set} page={run.questions_page} className="mt-0.5" />
         {run.note ? <p className="mt-0.5 text-sm text-ink-2">{run.note}</p> : null}
         <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 md:grid-cols-5">
           <MetricCard label="Correct action" rate={m.correct} />

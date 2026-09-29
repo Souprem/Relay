@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/evals/", label: "Evals" },
   { href: "/gates/", label: "Gates" },
   { href: "/experiments/", label: "Experiments" },
+  { href: "/questions/", label: "Questions" },
 ];
 
 export function NavLinks() {

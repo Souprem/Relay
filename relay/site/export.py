@@ -11,6 +11,7 @@ from relay.site.common import ExportError
 from relay.site.core import export_core
 from relay.site.experiments import export_experiments
 from relay.site.gates import export_gates
+from relay.site.questions import export_questions
 
 
 def prepare_out(out: Path) -> None:
@@ -38,4 +39,5 @@ def export_site(
     written, ctx = export_core(repo, out, exported_at=exported_at, git_sha=git_sha)
     written += export_gates(repo, out, ctx, strict_generated=strict_generated)
     written += export_experiments(repo, out, strict_generated=strict_generated)
+    written += export_questions(out, ctx)
     return sorted(written)

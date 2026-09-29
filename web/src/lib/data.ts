@@ -8,6 +8,7 @@ import type {
   CasesIndex,
   ExperimentsData,
   GatesData,
+  QuestionsData,
   RunDetail,
   RunsIndex,
   SiteIndex,
@@ -33,3 +34,4 @@ export const getRuns = () => read<RunsIndex>("runs.json");
 export const getRun = (runId: string) => read<RunDetail>(`runs/${runId}.json`);
 export const getGates = () => read<GatesData>("gates.json");
 export const getExperiments = () => read<ExperimentsData>("experiments.json");
+export const getQuestions = () => read<QuestionsData>("questions.json");

@@ -23,6 +23,7 @@ from relay.evaluation.regression_run import (
 from relay.evaluation.shadow import build_shadow_report
 from relay.evaluation.tracediff import original_label, replay_run
 from relay.site.common import ExportContext, ExportError, rate_json, read_json, write_json
+from relay.site.questions import questions_compare
 from relay.site.registry import (
     CLAUDE_150,
     CLAUDE_150_NOTE,
@@ -79,12 +80,23 @@ def _side(result: RegressionResult, side: str) -> dict[str, Any]:
     }
 
 
+def label_question_set(label: str) -> str | None:
+    """The question set in a side label, "<run> · <provider> <question set> · policy ..."."""
+    parts = label.split(" · ")
+    return parts[1].split()[-1] if len(parts) > 2 and parts[1].split() else None
+
+
 def regression_json(
     result: RegressionResult, *, key: str, title: str, description: str, source: str
 ) -> dict[str, Any]:
     """A RegressionResult without the parts that depend on the machine (paths, git SHAs)."""
+    baseline_qs = label_question_set(result.baseline.label)
+    candidate_qs = label_question_set(result.candidate.label)
     return {
         "key": key,
+        "questions_compare": None
+        if baseline_qs is None or candidate_qs is None
+        else questions_compare(baseline_qs, candidate_qs),
         "title": title,
         "description": description,
         "source": source,

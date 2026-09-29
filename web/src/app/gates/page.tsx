@@ -7,6 +7,7 @@ import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { GateVerdict } from "@/components/ui/Verdicts";
 import { getGates } from "@/lib/data";
+import { compareHref, comparePair } from "@/lib/questions";
 import type { RegressionReport } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Gates" };
@@ -20,6 +21,14 @@ function Report({ report }: { report: RegressionReport }) {
       </div>
       <p className="mt-1 max-w-prose text-md text-ink-2">{report.description}</p>
       <p className="mt-1 break-words font-mono text-label tracking-normal text-ink-3">{report.source}</p>
+      {report.questions_compare ? (
+        <p className="mt-1 text-sm text-ink-2">
+          The question sets differ:{" "}
+          <Link href={compareHref(report.questions_compare)} className="font-mono text-ink underline decoration-rule-strong hover:decoration-ink">
+            compare {comparePair(report.questions_compare).join(" → ")}&nbsp;→
+          </Link>
+        </p>
+      ) : null}
       <div className="mt-2 grid gap-1 text-sm text-ink-2 md:grid-cols-2">
         <p>
           <span className="text-label font-semibold uppercase text-ink-3">Baseline </span>

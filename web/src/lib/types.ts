@@ -110,6 +110,7 @@ export interface RunDetail {
   label: string;
   slug: string;
   question_set: string;
+  questions_page: string | null;
   note: string | null;
   n: number;
   operating_point: { auto_process: number; recorded: number; source: string };
@@ -140,6 +141,7 @@ export interface RunSummary {
   slug: string;
   provider: string;
   question_set: string;
+  questions_page: string | null;
   n: number;
   auto_process: number;
   operating_point_source: string;
@@ -203,6 +205,7 @@ export interface ProviderResult {
   provider: string;
   run_id: string;
   question_set: string;
+  questions_page: string | null;
   policy: string;
   thresholds: { version: string; auto_process: number; [name: string]: number | string };
   operating_point_source: string;
@@ -237,6 +240,8 @@ export interface GateDelta {
 export interface CaseDiff {
   title: string;
   summary: string;
+  question_sets: [string, string];
+  questions_compare: string | null;
   original_label: string;
   candidate_label: string;
   decisions: DecisionDelta[];
@@ -315,6 +320,7 @@ export interface RegressionSide {
 }
 
 export interface RegressionReport {
+  questions_compare: string | null;
   key: string;
   title: string;
   description: string;
@@ -445,4 +451,85 @@ export interface ExperimentsData {
 export interface CaseDiffVerdicts {
   verdict_original: Verdict;
   verdict_candidate: Verdict;
+}
+
+// questions.json (relay/site/questions.py)
+
+export interface QuestionOption {
+  option: string;
+  text: string | null;
+}
+
+export interface Question {
+  id: string;
+  type: "noul" | "choice";
+  instructions: string;
+  options: QuestionOption[];
+  options_summary: string | null;
+}
+
+export interface RecordedHashes {
+  hashes: string[];
+  policies: string[];
+  traces: number;
+  matches: boolean;
+}
+
+export interface RunRef {
+  run_id: string;
+  label: string;
+  dataset: string;
+}
+
+export interface QuestionSet {
+  version: string;
+  count: number;
+  ids: string[];
+  policy: string;
+  hashes: { policy: string; hash: string }[];
+  same_text_under_all_policies: boolean;
+  same_hash_under_all_policies: boolean;
+  recorded: RecordedHashes | null;
+  used_by: RunRef[];
+  questions: Question[];
+}
+
+export interface QuestionTransition {
+  from: string;
+  to: string;
+  slug: string;
+  why: string;
+  source: string;
+}
+
+export interface QuestionsData {
+  default_version: string;
+  latest_version: string;
+  primary_policy: string;
+  policies: string[];
+  policy_note: string;
+  year_placeholder: string;
+  year_display: string;
+  sets: QuestionSet[];
+  claude: {
+    prompt_version: string;
+    question_set: string;
+    question_set_version: string;
+    policy: string;
+    hash: string;
+    recorded: RecordedHashes | null;
+    used_by: RunRef[];
+    system_prompt: string;
+    hash_covers: string;
+  };
+  rules: { version: string; text: string; source: string; used_by: RunRef[] };
+  composition: {
+    intro: string;
+    decisions: { decision: string; text: string }[];
+    step_therapy_paths: { versions: string[]; text: string }[];
+    recency: string;
+    source: string;
+  };
+  transitions: QuestionTransition[];
+  compare: string[];
 }

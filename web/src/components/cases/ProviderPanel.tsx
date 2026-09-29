@@ -1,5 +1,6 @@
 "use client";
 
+import { QuestionsLink } from "@/components/questions/QuestionsLink";
 import { ActionBadge } from "@/components/ui/ActionBadge";
 import { GatePath } from "@/components/ui/GatePath";
 import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
@@ -49,6 +50,7 @@ function ProviderView({ p }: { p: ProviderResult }) {
         <span className="num text-ink">auto_process {threshold(p.thresholds.auto_process)}</span>,{" "}
         {p.operating_point_source}.{p.note ? ` ${p.note}` : ""}
       </p>
+      <QuestionsLink questionSet={p.question_set} page={p.questions_page} className="mt-0.5" />
 
       <div className="mt-3">
         <SubHead>Judgments</SubHead>
