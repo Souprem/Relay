@@ -15,13 +15,16 @@ def load():
     return yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))
 
 
-def steps():
-    [job] = load()["jobs"].values()
-    return job["steps"]
+def job(name: str):
+    return load()["jobs"][name]
 
 
-def runs() -> list[str]:
-    return [step.get("run", "") for step in steps()]
+def steps(name: str = "offline-gates"):
+    return job(name)["steps"]
+
+
+def runs(name: str = "offline-gates") -> list[str]:
+    return [step.get("run", "") for step in steps(name)]
 
 
 def test_it_runs_on_push_and_pull_request():
@@ -31,8 +34,7 @@ def test_it_runs_on_push_and_pull_request():
 
 
 def test_it_uses_ubuntu_uv_and_python_3_12():
-    [job] = load()["jobs"].values()
-    assert job["runs-on"] == "ubuntu-latest"
+    assert job("offline-gates")["runs-on"] == "ubuntu-latest"
     [setup] = [s for s in steps() if s.get("uses", "").startswith("astral-sh/setup-uv@")]
     assert setup["with"]["python-version"] == "3.12"
 
@@ -115,6 +117,50 @@ def test_the_regression_report_is_uploaded_even_on_failure():
 def test_no_secrets_are_referenced():
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "secrets." not in text
-    [job] = load()["jobs"].values()
-    assert "env" not in job
-    assert all("env" not in step for step in steps())
+    for name in load()["jobs"]:
+        assert "env" not in job(name)
+
+
+def test_it_has_an_offline_gates_and_a_web_job():
+    assert set(load()["jobs"]) == {"offline-gates", "web"}
+
+
+def test_the_web_job_uses_ubuntu_uv_node_22_and_the_committed_data():
+    assert job("web")["runs-on"] == "ubuntu-latest"
+    [setup] = [s for s in steps("web") if s.get("uses", "").startswith("astral-sh/setup-uv@")]
+    assert setup["with"]["python-version"] == "3.12"
+    [node_setup] = [s for s in steps("web") if s.get("uses", "").startswith("actions/setup-node@")]
+    assert node_setup["with"]["node-version"] == "22"
+    assert node_setup["with"]["cache"] == "npm"
+    assert node_setup["with"]["cache-dependency-path"] == "web/package-lock.json"
+
+
+def test_the_web_job_steps_run_in_order():
+    commands = "\n".join(runs("web"))
+    expected = [
+        "uv sync --frozen",
+        "export-site --out web/public/data",
+        "npm ci",
+        "npm run typecheck",
+        "npm run lint",
+        "npm test",
+        "npm run build",
+    ]
+    positions = [commands.index(fragment) for fragment in expected]
+    assert positions == sorted(positions)
+
+
+def test_the_web_job_exports_site_data_offline():
+    commands = "\n".join(runs("web"))
+    assert "uv run relay --env-file .no-such.env export-site --out web/public/data" in commands
+
+
+def test_the_web_job_builds_with_the_pages_base_path():
+    [build] = [s for s in steps("web") if s.get("run", "").strip() == "npm run build"]
+    assert build.get("env", {}).get("NEXT_PUBLIC_BASE_PATH") == "/Relay"
+
+
+def test_the_web_job_steps_run_in_the_web_directory():
+    for name in ("npm ci", "npm run typecheck", "npm run lint", "npm test", "npm run build"):
+        [step] = [s for s in steps("web") if s.get("run", "").strip() == name]
+        assert step.get("working-directory") == "web"

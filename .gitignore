@@ -28,3 +28,14 @@ build/
 .DS_Store
 .idea/
 .vscode/
+
+# Dashboard (web/): dependencies, build output, generated types and the exported site data
+/web/node_modules/
+/web/.next/
+/web/out/
+/web/public/data/
+/web/next-env.d.ts
+/web/tsconfig.tsbuildinfo
+# agent notes `next dev` regenerates; not part of the site
+/web/AGENTS.md
+/web/CLAUDE.md

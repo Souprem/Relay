@@ -1235,7 +1235,8 @@ completeness. **Gold is not a blind test for q-v0.3 on the interruption and rest
 
 q-v0.3 keeps all 12 q-v0.2 questions and adds 7 (19 in all): whether the patient's own methotrexate
 was held, paused or stopped and later restarted, and the date parts of the pause and of the restart.
-Two instructions gain "(the first time, if it was restarted)" and "(the last time, if it was
+Seven existing instructions are reworded: the three start-date parts gain "(the first time, if it
+was restarted)", and the end status and the three end-date parts gain "(the last time, if it was
 restarted)". Code composes P(some consecutive segment ≥ 12 weeks) =
 (1 − p_int) · P(first start → final end) + p_int · P(start → pause **or** restart → end).
 The two segment events are combined by inclusion-exclusion, under the same independence

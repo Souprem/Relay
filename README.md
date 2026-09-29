@@ -4,6 +4,8 @@
 
 > Relay uses synthetic data only and is an engineering/evaluation prototype. It is not for clinical use or real authorization decisions.
 
+**Live dashboard: <https://souprem.github.io/Relay/>**
+
 Relay asks one question: **how can probabilistic AI judgments be turned into safe autonomous
 workflow actions?** It works on synthetic prior-authorization cases. TypeSafe's
 [Jev](https://docs.typesafe.ai/) answers narrow, typed questions about each case (is the diagnosis
@@ -82,6 +84,42 @@ Caveats: all data is synthetic; gold labels were written and adjudicated by AI a
 not reviewed by clinicians; Claude's holdout evidence is a 150-case sample, so it is not in the
 table; gold is not a blind test for `q-v0.3`.
 
+## What I found
+
+**Confidence gating automated about a quarter of held-out cases without an unsafe approval.**
+Jev `q-v0.3` at 0.81 on `gen-v0.3-holdout` auto-processed 244/1000 (24.4%) of cases, 0/244
+unsafe (95% upper bound 1.5%), and chose the correct action for 921/1000 (92.1%). On
+`gen-v0.2-holdout` the rules baseline automated 134/1000 (13.4%) with 667/1000 (66.7%) correct,
+against 252/1000 (25.2%) and 895/1000 (89.5%) for Jev `q-v0.2`. The cases are synthetic and
+template-generated. ([Baselines](docs/RESULTS.md#baselines))
+
+**The evaluation loop found a real design flaw, and the fix held on a fresh holdout.**
+`GOLD-TMP-17`, an interrupted methotrexate course, was auto-approved unsafely by both Jev `q-v0.2`
+at 0.89 and Claude at 0.55. The cause was my question design: `q-v0.2` asks for one start date and
+one end date, so a paused course reads as one long course. `q-v0.3` adds questions about pauses and
+restarts; on `gen-v0.3-holdout`, run once, correct actions went from 694 to 921 of 1000. Gold is
+not a blind test for this change, and on gold `GOLD-TMP-16` became newly unsafe when the threshold
+dropped from 0.97 to 0.81.
+([Question set q-v0.3](docs/RESULTS.md#question-set-q-v03-interrupted-courses))
+
+**The contradiction gate is doing real work, and it has a cost.** With contradiction detection
+disabled, `GOLD-CON-03` and `GOLD-CON-13` become newly unsafe on gold for all 3 model providers. On
+the holdouts it only costs automation: Jev `q-v0.2` goes from 252 to 277 of 1000 automated and Jev
+`q-v0.3` from 244 to 261 of 1000, still 0/277 and 0/261 unsafe. Disabling the missing-evidence gate
+changed no automation and no unsafe count in any of the 10 runs, a null result.
+([Gate ablation](docs/RESULTS.md#gate-ablation))
+
+**Policy-aware logic matters when the policy changes.** Under `immunara-v0.2`'s new 12-month
+recency rule, on 400 cases, the same stored Jev answers composed under the old policy gave 3/16
+unsafe automations and under the new policy 0/13. The stale-to-aware gate passes, and shadow mode
+recommends PROMOTE. ([Policy shift](docs/RESULTS.md#policy-shift-immunara-v02))
+
+**A frontier LLM matched, but did not beat, narrow typed judgments.** On gold, with the same
+questions, Claude got 93/100 correct with 30 automated and 1 unsafe; Jev `q-v0.2` got 91/100 with
+29 automated and 1 unsafe. The 95% intervals on correct actions (86.1–97.1% and 83.6–95.8%)
+overlap, so 100 cases cannot separate them. Claude's gold run cost $1.56 at batch prices; Jev's
+`q-v0.3` gold run, with more questions per case, cost $0.0175. ([Gold set](docs/RESULTS.md#gold-set))
+
 ## What's inside
 
 Each item links to its section in [docs/RESULTS.md](docs/RESULTS.md), which has the full methods,
@@ -156,6 +194,34 @@ against Jev. The committed reference run of these 10 cases cost about $0.001.
 uv run relay eval --dataset evals/smoke --provider jev --policy v0.1
 ```
 
+## Dashboard (local)
+
+`web/` is a static Next.js site over the committed results: the headline table, all 110 gold
+and smoke cases with each provider's judgments and gate path, every committed run's metrics,
+frontier and calibration, the CI gates, and the experiments. It computes nothing itself: `relay
+export-site` writes its data from the committed artifacts, offline and with no keys. Node 22.12
+or newer is needed.
+
+The same build is published automatically to GitHub Pages at
+<https://souprem.github.io/Relay/> on every push to `main`
+(`.github/workflows/pages.yml`), with `NEXT_PUBLIC_BASE_PATH=/Relay` set so links and assets
+resolve under that prefix. Locally, leave `NEXT_PUBLIC_BASE_PATH` unset.
+
+```bash
+# From the repository root: export the data (writes web/public/data, git-ignored)
+env -u TYPESAFE_API_KEY -u ANTHROPIC_API_KEY uv run relay --env-file .no-such.env export-site \
+    --out web/public/data
+
+cd web
+npm ci
+npm run dev        # http://localhost:3000
+npm run build      # static site in web/out/
+npm run typecheck && npm run lint && npm test
+```
+
+Gates and the interrupted-course breakdown that need a generated dataset show as skipped until
+you regenerate it (see [Generated datasets](docs/RESULTS.md#generated-datasets)).
+
 ## Repository layout
 
 ```text
@@ -166,6 +232,7 @@ policies/   the synthetic payer policies (immunara-v0.1, immunara-v0.2)
 scripts/    one-off analysis and table scripts behind the committed artifacts
 docs/       RESULTS.md: detailed results and methods
 .github/    CI workflow (offline gates, no secrets)
+web/        the local dashboard (Next.js static site over the exported results)
 ```
 
 ## Limitations

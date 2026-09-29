@@ -137,6 +137,8 @@ from relay.reporting import (
     simulated_line,
     simulated_summary,
 )
+from relay.site.common import ExportError
+from relay.site.export import export_site
 from relay.traces.models import RunManifest, WorkflowMode, WorkflowTrace
 from relay.traces.store import TraceStore, current_git_sha, new_run_id, read_traces
 from relay.workflow.status import (
@@ -2390,6 +2392,41 @@ def regression(
     typer.echo(result.model_dump_json(indent=2) if json_output else rendered)
     if result.exit_code:
         raise typer.Exit(code=result.exit_code)
+
+
+@app.command("export-site")
+def export_site_command(
+    out: Annotated[
+        Path, typer.Option(help="Where the JSON data files are written (cleared first).")
+    ] = Path("web/public/data"),
+    strict_generated: Annotated[
+        bool,
+        typer.Option(
+            "--strict-generated",
+            help="A gate or breakdown whose generated dataset is missing is an error (exit 2) "
+            "instead of SKIPPED.",
+        ),
+    ] = False,
+    exported_at: Annotated[
+        str | None, typer.Option(help="The export time recorded in index.json (default: now, UTC).")
+    ] = None,
+) -> None:
+    """Write the dashboard's JSON data from committed artifacts (offline; no provider keys).
+
+    Run from the repository root. Exit codes: 0 ok; 2 a missing or changed input.
+    """
+    stamp = exported_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        paths = export_site(
+            Path.cwd(),
+            out,
+            exported_at=stamp,
+            git_sha=current_git_sha(),
+            strict_generated=strict_generated,
+        )
+    except ExportError as error:
+        raise _fail(str(error)) from error
+    typer.echo(f"Site data: {len(paths)} files in {out}")
 
 
 budget_app = typer.Typer(

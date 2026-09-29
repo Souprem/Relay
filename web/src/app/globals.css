@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+/*
+ * Relay's design tokens. Tailwind's default palette, fonts, type scale, radii and shadows are
+ * removed, so a component can only use the names below. Colour carries meaning only:
+ * auto = AUTO_PROCESS, info = REQUEST_INFO, review = HUMAN_REVIEW, unsafe = an unsafe automation.
+ * Every text/background pair used here meets WCAG AA in both schemes.
+ */
+:root {
+  --paper: #fafaf7;
+  --paper-2: #f2f1eb;
+  --ink: #1b1b18;
+  --ink-2: #55544c;
+  --ink-3: #6e6d64;
+  --rule: #dedcd3;
+  --rule-strong: #bdbbb1;
+  --auto: #2d6a45;
+  --auto-tint: #e5efe7;
+  --info: #8a5300;
+  --info-tint: #f7ecd6;
+  --review: #3a5675;
+  --review-tint: #e4eaf1;
+  --unsafe: #b42318;
+  --unsafe-tint: #fbe4e1;
+  --hatch: #9d9b91;
+  --focus: #1b1b18;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #141412;
+    --paper-2: #1c1c19;
+    --ink: #eceae2;
+    --ink-2: #b7b5aa;
+    --ink-3: #94928a;
+    --rule: #302f2a;
+    --rule-strong: #4a4943;
+    --auto: #86c79c;
+    --auto-tint: #1d2e23;
+    --info: #e3b45e;
+    --info-tint: #33281a;
+    --review: #a3bcdb;
+    --review-tint: #1f2833;
+    --unsafe: #ff8b80;
+    --unsafe-tint: #3a1d1a;
+    --hatch: #5e5c55;
+    --focus: #eceae2;
+    color-scheme: dark;
+  }
+}
+
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --blur-*: initial;
+
+  /* An 8px grid: p-1 = 8px, p-2 = 16px, gap-3 = 24px. Half steps (0.5 = 4px) are for hairline
+     details such as badge padding. */
+  --spacing: 0.5rem;
+
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.08em;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.5rem;
+  --text-md: 1rem;
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.75rem;
+  --text-xl--line-height: 2.25rem;
+  /* The home page's three headline figures only. */
+  --text-display: 2.75rem;
+  --text-display--line-height: 3rem;
+
+  --radius-sm: 2px;
+  --container-page: 75rem;
+}
+
+@theme inline {
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-auto: var(--auto);
+  --color-auto-tint: var(--auto-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+  --color-review: var(--review);
+  --color-review-tint: var(--review-tint);
+  --color-unsafe: var(--unsafe);
+  --color-unsafe-tint: var(--unsafe-tint);
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    font-variant-numeric: tabular-nums;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--review-tint);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  a {
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono);
+  }
+}
+
+@layer utilities {
+  /* The neutral mark for a wrong-but-safe action: never a colour, always a texture. */
+  .hatch {
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--hatch) 0 1px,
+      transparent 1px 5px
+    );
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
