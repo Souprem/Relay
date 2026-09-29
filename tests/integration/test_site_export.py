@@ -1,6 +1,7 @@
 """relay.site export core: index.json, runs, cases. Offline, deterministic, and in agreement with
 the README headline table."""
 
+import csv
 import json
 
 import pytest
@@ -166,6 +167,33 @@ def test_a_run_file_has_metrics_with_intervals_frontier_and_calibration(site_exp
     }
     runs = load(site_export, "runs.json")
     assert [d["id"] for d in runs["datasets"]][:2] == ["gold-v0.1", "smoke-v0.1"]
+
+
+@pytest.mark.parametrize(
+    "run_dir",
+    [
+        "evals/baselines/gold-v0.1/run_20260927T072623Z_ad6f44",
+        "evals/baselines/gen-v0.3-holdout/run_20260927T072144Z_12e1e4",
+    ],
+)
+def test_frontier_points_carry_the_committed_automated_and_unsafe_counts(site_export, run_dir):
+    """The threshold dial draws exported counts only: per threshold, the cases auto-processed and
+    the unsafe automations must equal the run's committed sweep.json and frontier.csv."""
+    run_id = run_dir.rsplit("/", 1)[1]
+    exported = {
+        p["auto_threshold"]: (p["n"], p["auto"], p["unsafe"])
+        for p in load(site_export, f"runs/{run_id}.json")["frontier"]["points"]
+    }
+    sweep = json.loads((REPO / run_dir / "sweep.json").read_text(encoding="utf-8"))
+    from_sweep = {p["auto_threshold"]: (p["n"], p["auto"], p["unsafe"]) for p in sweep["points"]}
+    with (REPO / run_dir / "frontier.csv").open(encoding="utf-8") as f:
+        from_csv = {
+            float(r["auto_threshold"]): (int(r["n"]), int(r["auto"]), int(r["unsafe"]))
+            for r in csv.DictReader(f)
+        }
+    assert len(exported) == 50
+    assert exported == from_sweep == from_csv
+    assert all(0 <= unsafe <= auto <= n for n, auto, unsafe in exported.values())
 
 
 def test_a_committed_report_bundle_reads_back_as_the_live_computation():
