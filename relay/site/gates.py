@@ -157,6 +157,8 @@ def gate_rows(repo: Path, *, strict_generated: bool) -> list[dict[str, Any]]:
             note = f"dataset not generated; run relay generate to create {spec.dataset}"
             if strict_generated:
                 raise ExportError(f"gate {spec.name}: {note}")
+            if CLAUDE_150 in spec.name:
+                note = f"{CLAUDE_150_NOTE} {note}"
             rows.append(row | {"verdict": "SKIPPED", "note": note})
             continue
         result = _run(repo, RegressionRequest.from_gate(spec))
