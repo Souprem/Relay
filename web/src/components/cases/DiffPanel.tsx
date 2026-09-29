@@ -53,7 +53,7 @@ export function DiffPanel({ diff }: { diff: Diff }) {
       </div>
 
       <div className="mt-3">
-        <TableScroll>
+        <TableScroll hint>
           <table className="w-full min-w-[36rem]">
             <thead>
               <tr>
