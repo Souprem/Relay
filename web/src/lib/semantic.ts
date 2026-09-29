@@ -40,6 +40,12 @@ export const GATE_STATUS_TEXT: Record<GateStatus, string> = {
 /** Text colour for an unsafe outcome (red, used sparingly: spec §3). */
 export const UNSAFE_TEXT = "text-unsafe";
 
+/** A finding's figures: red for an unsafe outcome, green for a correct or safe one. */
+export const FINDING_TONE_TEXT: Record<"unsafe" | "correct", string> = {
+  unsafe: "text-unsafe",
+  correct: "text-auto",
+};
+
 /** Text colour for an unsafe automation that a change resolved. */
 export const RESOLVED_TEXT = "text-auto";
 

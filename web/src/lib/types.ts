@@ -46,6 +46,22 @@ export interface HeadlineRow {
   uar: Rate;
 }
 
+/** One run of text in a finding; a figure may carry the unsafe or correct colour. */
+export interface FindingSegment {
+  text: string;
+  tone: "unsafe" | "correct" | null;
+}
+
+/** A "What we found" entry (relay/site/findings.py). Every number is inside the exported text. */
+export interface Finding {
+  id: string;
+  title: string;
+  body: FindingSegment[];
+  link: { href: string; label: string };
+  source: string;
+  figures: Record<string, unknown>;
+}
+
 export interface SiteIndex {
   schema_version: number;
   exported_at: string;
@@ -55,6 +71,7 @@ export interface SiteIndex {
   spend: { claude_usd: string; jev_3d_usd: string };
   counts: { cases: number; by_dataset: Record<string, number>; runs: number };
   entry_cases: { easy: string; hard: string };
+  findings: Finding[];
 }
 
 export interface FrontierPoint {

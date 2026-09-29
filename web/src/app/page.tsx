@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ArchitectureDiagram } from "@/components/home/ArchitectureDiagram";
 import { EntryCase } from "@/components/home/EntryCase";
+import { Findings } from "@/components/home/Findings";
 import { HeadlineTable } from "@/components/home/HeadlineTable";
 import { Section } from "@/components/ui/Section";
 import { getCase, getIndex } from "@/lib/data";
@@ -77,6 +78,10 @@ export default function HomePage() {
             {usd(index.spend.jev_3d_usd)} for the q-v0.3, policy-shift and latency runs.
           </li>
         </ul>
+      </Section>
+
+      <Section id="findings" label="What we found">
+        <Findings findings={index.findings} />
       </Section>
 
       <Section id="start" label="Start with a case">

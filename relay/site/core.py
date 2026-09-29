@@ -42,6 +42,7 @@ from relay.site.common import (
     trace_for,
     write_json,
 )
+from relay.site.findings import build_findings
 from relay.site.registry import (
     DATASETS,
     DIFFS,
@@ -462,6 +463,7 @@ def export_core(
             "runs": len(ctx.run_payloads),
         },
         "entry_cases": {"easy": EASY_CASE, "hard": HARD_CASE},
+        "findings": build_findings(repo, ctx),
     }
     written.append(write_json(out / "index.json", index))
     return written, ctx
