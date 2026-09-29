@@ -4,8 +4,8 @@ import { ActionBadge } from "@/components/ui/ActionBadge";
 import { GatePath } from "@/components/ui/GatePath";
 import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
 import { VerdictLabel } from "@/components/ui/Verdict";
-import { DECISION_LABELS, prob, threshold } from "@/lib/format";
-import { ACTION_SWATCH } from "@/lib/semantic";
+import { DECISION_LABELS, prob, pyFixed, threshold } from "@/lib/format";
+import { ACTION_SWATCH, UNSAFE_TEXT } from "@/lib/semantic";
 import type { CaseDetail, DecisionView, ProviderResult } from "@/lib/types";
 import { useQueryString } from "@/lib/useQueryString";
 
@@ -19,7 +19,7 @@ function decisionBar(d: DecisionView) {
       .filter(([k, v]) => k !== d.answer && v > 0)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
-      .map(([k, v]) => `${k} ${v.toFixed(2)}`)
+      .map(([k, v]) => `${k}\u00a0${pyFixed(v, 2)}`) // one pair never breaks across lines
       .join(" · ");
     return (
       <ProbabilityBar
@@ -46,7 +46,7 @@ function ProviderView({ p }: { p: ProviderResult }) {
         {p.run_id} · {p.question_set} · {p.policy}
       </p>
       <p className="mt-0.5 text-sm text-ink-2">
-        <span className="num text-ink">auto_process {threshold(Number(p.thresholds.auto_process))}</span>,{" "}
+        <span className="num text-ink">auto_process {threshold(p.thresholds.auto_process)}</span>,{" "}
         {p.operating_point_source}.{p.note ? ` ${p.note}` : ""}
       </p>
 
@@ -124,9 +124,20 @@ export function ProviderPanel({ detail }: { detail: CaseDetail }) {
     setQuery(params.toString());
   }
 
+  // Arrow keys move between tabs (WAI-ARIA tabs pattern); only the active tab is in the tab order.
+  function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const step = event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    if (!step) return;
+    event.preventDefault();
+    const i = detail.providers.findIndex((p) => p.slug === selected.slug);
+    const next = detail.providers[(i + step + detail.providers.length) % detail.providers.length];
+    choose(next.slug);
+    document.getElementById(`tab-${next.slug}`)?.focus();
+  }
+
   return (
     <div>
-      <div role="tablist" aria-label="Provider" className="flex flex-wrap gap-x-0.5 gap-y-1 border-b border-rule">
+      <div role="tablist" aria-label="Provider" onKeyDown={onKeyDown} className="flex flex-wrap gap-x-0.5 gap-y-1 border-b border-rule">
         {detail.providers.map((p) => {
           const active = p.slug === selected.slug;
           return (
@@ -136,6 +147,7 @@ export function ProviderPanel({ detail }: { detail: CaseDetail }) {
               role="tab"
               id={`tab-${p.slug}`}
               aria-selected={active}
+              tabIndex={active ? 0 : -1}
               aria-controls="provider-panel"
               onClick={() => choose(p.slug)}
               className={`-mb-px flex items-center gap-1 border-b-2 px-1 py-1 text-base transition-colors ${
@@ -144,7 +156,7 @@ export function ProviderPanel({ detail }: { detail: CaseDetail }) {
             >
               <span aria-hidden="true" className={`inline-block size-1 ${ACTION_SWATCH[p.action]}`} />
               {p.label}
-              {p.verdict === "UNSAFE" ? <span className="font-mono text-label tracking-normal text-unsafe">UNSAFE</span> : null}
+              {p.verdict === "UNSAFE" ? <span className={`font-mono text-label tracking-normal ${UNSAFE_TEXT}`}>UNSAFE</span> : null}
             </button>
           );
         })}

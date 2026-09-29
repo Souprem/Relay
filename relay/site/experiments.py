@@ -14,7 +14,7 @@ from typing import Any
 from relay.evaluation.regression import RegressionResult
 from relay.site.common import ExportError, read_json, write_json
 from relay.site.gates import regression_json
-from relay.site.registry import RESULTS_URL
+from relay.site.registry import CLAUDE_150, CLAUDE_150_NOTE, RESULTS_URL
 
 QV03_REPORTS = (
     ("dev", "evals/baselines/gen-v0.3-dev/regression-q-v0.2-vs-q-v0.3/regression.json"),
@@ -184,6 +184,7 @@ def ablation_section(repo: Path) -> dict[str, Any]:
                 "improved": r["improved"],
                 "automation": r["automation"],
                 "uar": r["uar"],
+                "note": CLAUDE_150_NOTE if r["run"] == CLAUDE_150 else None,
             }
             for r in rows
         ],

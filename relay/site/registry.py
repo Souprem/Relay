@@ -459,6 +459,14 @@ GATES_CONFIG = "evals/regression/gates.json"
 WAIVER_EXAMPLE = "evals/regression/examples/waiver-tmp17.json"
 RESULTS_URL = "https://github.com/Souprem/Relay/blob/main/docs/RESULTS.md"
 
+# Every place a claude-150 run appears carries this, so it is never read against the 1000-case
+# holdout rows beside it.
+CLAUDE_150 = "claude-150"
+CLAUDE_150_NOTE = (
+    "Claude's holdout run is a 150-case sample (seed 7) of gen-v0.2-holdout, not the 1000-case "
+    "holdout the other rows use."
+)
+
 
 def run_spec(run_id: str) -> RunSpec:
     for spec in RUNS:

@@ -36,3 +36,23 @@ describe("theme discipline", () => {
     expect(css).toContain("--shadow-*: initial;");
   });
 });
+
+// I-3: lib/semantic.ts assigns every meaning colour. Verdict.tsx draws the verdict chips from the
+// same tokens and is the one allowed exception.
+describe("semantic colour", () => {
+  it("assigns action and unsafe colours only in lib/semantic.ts", () => {
+    const MEANING = /\b(?:text|bg|border|outline|fill|stroke)-(?:auto|unsafe|info|review)\b/;
+    const allowed = new Set(["lib/semantic.ts", "components/ui/Verdict.tsx"]);
+    const offenders = files(SRC)
+      .filter((file) => !allowed.has(path.relative(SRC, file)))
+      .flatMap((file) =>
+        fs
+          .readFileSync(file, "utf-8")
+          .split("\n")
+          .map((line, i) => ({ line, i }))
+          .filter(({ line }) => MEANING.test(line))
+          .map(({ line, i }) => `${path.relative(SRC, file)}:${i + 1}: ${line.trim()}`),
+      );
+    expect(offenders).toEqual([]);
+  });
+});

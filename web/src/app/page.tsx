@@ -5,7 +5,7 @@ import { EntryCase } from "@/components/home/EntryCase";
 import { HeadlineTable } from "@/components/home/HeadlineTable";
 import { Section } from "@/components/ui/Section";
 import { getCase, getIndex } from "@/lib/data";
-import { usd } from "@/lib/format";
+import { threshold, usd } from "@/lib/format";
 
 export default function HomePage() {
   const index = getIndex();
@@ -47,7 +47,7 @@ export default function HomePage() {
       <Section id="pipeline" label="How a case moves">
         <ArchitectureDiagram
           caseId={easy.id}
-          providerLabel={`${example.label} @${Number(example.thresholds.auto_process).toFixed(2)}`}
+          providerLabel={`${example.label} @${threshold(example.thresholds.auto_process)}`}
           decisions={example.decisions}
           gates={example.gates}
           action={example.action}

@@ -1,19 +1,20 @@
 import { ActionBadge } from "@/components/ui/ActionBadge";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { VerdictLabel } from "@/components/ui/Verdict";
-import { DECISION_LABELS, threshold } from "@/lib/format";
+import { DECISION_LABELS, pyFixed, threshold } from "@/lib/format";
 import type { CaseDetail } from "@/lib/types";
+import { RESOLVED_TEXT, UNSAFE_TEXT } from "@/lib/semantic";
 
 type Diff = CaseDetail["diffs"][number];
 
 function signed(v: number | null): string {
   if (v === null) return "—";
-  return `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(3)}`;
+  return `${v >= 0 ? "+" : "−"}${pyFixed(Math.abs(v), 3)}`;
 }
 
 function changeTag(diff: Diff) {
-  if (diff.newly_unsafe) return <span className="font-mono text-sm font-medium text-unsafe">NEWLY UNSAFE</span>;
-  if (diff.unsafe_resolved) return <span className="font-mono text-sm font-medium text-auto">UNSAFE RESOLVED</span>;
+  if (diff.newly_unsafe) return <span className={`font-mono text-sm font-medium ${UNSAFE_TEXT}`}>NEWLY UNSAFE</span>;
+  if (diff.unsafe_resolved) return <span className={`font-mono text-sm font-medium ${RESOLVED_TEXT}`}>UNSAFE RESOLVED</span>;
   if (diff.action_original === diff.action_candidate) return <span className="font-mono text-sm text-ink-2">ACTION UNCHANGED</span>;
   return <span className="font-mono text-sm text-ink-2">{(diff.change ?? "changed").toUpperCase()}</span>;
 }

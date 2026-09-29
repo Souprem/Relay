@@ -36,3 +36,23 @@ export const GATE_STATUS_TEXT: Record<GateStatus, string> = {
   FIRED: "text-ink",
   "not reached": "text-ink-3",
 };
+
+/** Text colour for an unsafe outcome (red, used sparingly: spec §3). */
+export const UNSAFE_TEXT = "text-unsafe";
+
+/** Text colour for an unsafe automation that a change resolved. */
+export const RESOLVED_TEXT = "text-auto";
+
+export type GateVerdictName = "PASS" | "FAIL" | "SKIPPED" | "PROMOTE" | "HOLD";
+
+/**
+ * Gate and rollout verdicts. HOLD is the rollout check doing its job, not an unsafe outcome, so
+ * it stays ink rather than taking the unsafe red.
+ */
+export const GATE_VERDICT_TEXT: Record<GateVerdictName, string> = {
+  PASS: "text-auto",
+  PROMOTE: "text-auto",
+  FAIL: "text-unsafe",
+  HOLD: "text-ink",
+  SKIPPED: "text-ink-3",
+};

@@ -7,8 +7,9 @@ import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { GateVerdict } from "@/components/ui/Verdicts";
 import { getExperiments } from "@/lib/data";
-import { pct, rateText } from "@/lib/format";
+import { pct, pyFixed, rateText, roundInt } from "@/lib/format";
 import type { AblationRow } from "@/lib/types";
+import { UNSAFE_TEXT } from "@/lib/semantic";
 
 export const metadata: Metadata = { title: "Experiments" };
 
@@ -49,6 +50,7 @@ export default function ExperimentsPage() {
   const shift = x.shift.regression;
   const sizes = x.parallelism.sizes;
   const abl = ablationStatements(x.ablation.rows);
+  const claudeNote = x.ablation.rows.find((r) => r.note)?.note ?? null;
   return (
     <>
       <PageHeader eyebrow="Experiments" title="Four changes, each measured before it was believed">
@@ -128,7 +130,7 @@ export default function ExperimentsPage() {
         title={`Stale: ${shift.baseline.uar.count}/${shift.baseline.uar.n} unsafe automations. Aware: ${shift.candidate.uar.count}/${shift.candidate.uar.n}.`}
         lede="immunara-v0.2 adds one rule: the qualifying methotrexate course must have been ongoing or ended within 12 months of the request. The same stored Jev answers on gen-v0.3-shift were composed twice: under the old policy (stale) and under the new one (aware)."
       >
-        <TableScroll>
+        <TableScroll hint>
           <table className="w-full min-w-[40rem]">
             <thead>
               <tr>
@@ -143,7 +145,7 @@ export default function ExperimentsPage() {
                 <Td>Stale, immunara-v0.1</Td>
                 <Td num>{rateText(shift.baseline.correct)}</Td>
                 <Td num>{rateText(shift.baseline.automation)}</Td>
-                <Td num className="font-medium text-unsafe">{rateText(shift.baseline.uar)}</Td>
+                <Td num className={`font-medium ${UNSAFE_TEXT}`}>{rateText(shift.baseline.uar)}</Td>
               </tr>
               <tr>
                 <Td>Aware, immunara-v0.2</Td>
@@ -179,7 +181,7 @@ export default function ExperimentsPage() {
       <Section
         id="parallelism"
         label={x.parallelism.title}
-        title={`p50 latency goes from ${Math.round(sizes[0].p50_ms)} to ${Math.round(sizes[sizes.length - 1].p50_ms)} ms as questions per call go from ${sizes[0].size} to ${sizes[sizes.length - 1].size}.`}
+        title={`p50 latency goes from ${roundInt(sizes[0].p50_ms)} to ${roundInt(sizes[sizes.length - 1].p50_ms)} ms as questions per call go from ${sizes[0].size} to ${sizes[sizes.length - 1].size}.`}
         lede={`${x.parallelism.cases} ${x.parallelism.dataset} cases were sent to ${x.parallelism.model} with 1, 5, 10 and 20 questions in one call. Narrow decisions are cheap to add; cost per case grows with tokens.`}
       >
         <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
@@ -193,6 +195,7 @@ export default function ExperimentsPage() {
             xLabel="Questions per call"
             yLabel="Latency"
             yUnit="ms"
+            table={false}
           />
           <TableScroll>
             <table className="w-full">
@@ -209,10 +212,10 @@ export default function ExperimentsPage() {
                 {sizes.map((s) => (
                   <tr key={s.size}>
                     <Td num>{s.size}</Td>
-                    <Td num>{Math.round(s.p50_ms)}</Td>
-                    <Td num>{Math.round(s.p95_ms)}</Td>
-                    <Td num>{Math.round(s.input_tokens_mean)}</Td>
-                    <Td num>{Number(s.cost_per_case_usd).toFixed(6)}</Td>
+                    <Td num>{roundInt(s.p50_ms)}</Td>
+                    <Td num>{roundInt(s.p95_ms)}</Td>
+                    <Td num>{roundInt(s.input_tokens_mean)}</Td>
+                    <Td num>{pyFixed(Number(s.cost_per_case_usd), 6)}</Td>
                   </tr>
                 ))}
               </tbody>
@@ -228,7 +231,18 @@ export default function ExperimentsPage() {
       <Section
         id="ablation"
         label={x.ablation.title}
-        title={`Removing contradiction detection makes ${abl.newlyCases.join(" and ")} newly unsafe for every model provider on gold.`}
+        title={
+          <>
+            Removing contradiction detection makes{" "}
+            {abl.newlyCases.map((id, i) => (
+              <span key={id}>
+                {i ? " and " : ""}
+                <span className="whitespace-nowrap">{id}</span>
+              </span>
+            ))}{" "}
+            newly unsafe for every model provider on gold.
+          </>
+        }
         lede={
           <>
             Each committed run was re-decided with the contradiction gate, the missing-evidence gate,
@@ -238,11 +252,12 @@ export default function ExperimentsPage() {
             {abl.meAutomationUnchanged
               ? `removing the missing-evidence gate changes no automation in any of the ${abl.meRuns} runs`
               : "removing the missing-evidence gate changes automation in some runs"}
-            .
+            .{" "}
+            {claudeNote ? `The claude-150 rows: ${claudeNote}` : null}
           </>
         }
       >
-        <TableScroll>
+        <TableScroll hint>
           <table className="w-full min-w-[68rem]">
             <thead>
               <tr>
@@ -260,7 +275,14 @@ export default function ExperimentsPage() {
               {x.ablation.rows.map((r) => (
                 <tr key={`${r.dataset}-${r.run}-${r.ablation}`} className="hover:bg-paper-2">
                   <Td className="whitespace-nowrap font-mono text-sm">{r.dataset}</Td>
-                  <Td className="whitespace-nowrap font-mono text-sm">{r.run}</Td>
+                  <Td className="whitespace-nowrap font-mono text-sm">
+                    {r.run}
+                    {r.note ? (
+                      <span className="block font-sans text-label tracking-normal text-ink-3" title={r.note}>
+                        150-case sample
+                      </span>
+                    ) : null}
+                  </Td>
                   <Td className="whitespace-nowrap font-mono text-sm">{r.ablation}</Td>
                   <Td>
                     <GateVerdict verdict={r.verdict} />
@@ -275,7 +297,7 @@ export default function ExperimentsPage() {
                     {r.uar.baseline.count}/{r.uar.baseline.n} → {r.uar.ablated.count}/{r.uar.ablated.n}
                   </Td>
                   <Td className="font-mono text-sm">
-                    {r.newly_unsafe.length ? <span className="text-unsafe">{r.newly_unsafe.join(", ")}</span> : <span className="text-ink-3">none</span>}
+                    {r.newly_unsafe.length ? <span className={UNSAFE_TEXT}>{r.newly_unsafe.join(", ")}</span> : <span className="text-ink-3">none</span>}
                   </Td>
                 </tr>
               ))}

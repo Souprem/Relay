@@ -1,4 +1,4 @@
-import { DECISION_LABELS, pct } from "@/lib/format";
+import { DECISION_LABELS, pct, pyFixed } from "@/lib/format";
 import type { CalibrationReport } from "@/lib/types";
 
 import { ChartData } from "./ChartData";
@@ -20,9 +20,14 @@ export function ReliabilityDiagram({ decision, report }: { decision: string; rep
       <figcaption className="mb-1">
         <span className="block text-base text-ink">{label}</span>
         <span className="num block text-sm text-ink-2">
-          Brier {report.brier === null ? "—" : report.brier.toFixed(3)} · ECE{" "}
-          {report.ece === null ? "—" : report.ece.toFixed(3)} · n {report.n}
+          Brier {report.brier === null ? "—" : pyFixed(report.brier, 3)} · ECE{" "}
+          {report.ece === null ? "—" : pyFixed(report.ece, 3)} · n {report.n}
         </span>
+        {x0 === 0 ? (
+          <span className="block text-label tracking-normal text-ink-3">
+            x from 0: a multiple-choice answer&rsquo;s top confidence can fall below 0.5.
+          </span>
+        ) : null}
       </figcaption>
       <ChartFrame
         title={`Reliability of ${label}: accuracy against stated confidence`}
@@ -32,7 +37,7 @@ export function ReliabilityDiagram({ decision, report }: { decision: string; rep
         yDomain={[0, 1]}
         xTicks={x0 === 0 ? [0, 0.25, 0.5, 0.75, 1] : [0.5, 0.6, 0.7, 0.8, 0.9, 1]}
         yTicks={[0, 0.25, 0.5, 0.75, 1]}
-        xFormat={(v) => v.toFixed(x0 === 0 ? 2 : 1)}
+        xFormat={(v) => pyFixed(v, x0 === 0 ? 2 : 1)}
         yFormat={(v) => pct(v, 0)}
         xLabel="Stated confidence"
         yLabel="Accuracy"
@@ -58,7 +63,7 @@ export function ReliabilityDiagram({ decision, report }: { decision: string; rep
                     y={y(b.accuracy as number)}
                     dy="0.32em"
                     textAnchor="end"
-                    fontSize="10"
+                    fontSize="11"
                     fill="var(--ink-3)"
                   >
                     {b.n}
@@ -73,9 +78,9 @@ export function ReliabilityDiagram({ decision, report }: { decision: string; rep
         summary="Bins"
         columns={["bin", "n", "mean confidence", "accuracy"]}
         rows={report.bins.map((b) => [
-          `${b.lower.toFixed(1)}–${b.upper.toFixed(1)}`,
+          `${pyFixed(b.lower, 1)}–${pyFixed(b.upper, 1)}`,
           b.n,
-          b.mean_confidence === null ? "—" : b.mean_confidence.toFixed(3),
+          b.mean_confidence === null ? "—" : pyFixed(b.mean_confidence, 3),
           pct(b.accuracy),
         ])}
       />

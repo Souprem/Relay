@@ -40,10 +40,46 @@ class ExportContext:
     run_payloads: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
+RATE_KEYS = frozenset({"count", "n", "rate", "ci95"})
+
+
+def is_rate(value: Any) -> bool:
+    """A rate-shaped mapping: count, n, rate and ci95 (a Rate dump or a committed artifact's)."""
+    return isinstance(value, dict) and RATE_KEYS <= value.keys()
+
+
+def rate_display(r: dict[str, Any]) -> dict[str, str | None]:
+    """Display strings for one rate, formatted by Python the way the CLI, README and
+    docs/RESULTS.md print them (f"{rate:.1%}", round-half-even), so the site never re-rounds."""
+    value, ci = r["rate"], r["ci95"]
+    pct = None if value is None else f"{value:.1%}"
+    return {
+        "pct": pct,
+        "text": f"{r['count']}/{r['n']}" if pct is None else f"{r['count']}/{r['n']} ({pct})",
+        "ci_text": None
+        if ci is None
+        else f"{ci['low']:.1%}".removesuffix("%") + f"–{ci['high']:.1%}",
+        "ci_high_pct": None if ci is None else f"{ci['high']:.1%}",
+    }
+
+
+def with_rate_display(payload: Any) -> Any:
+    """The payload with display strings added to every rate-shaped mapping, at any depth."""
+    if isinstance(payload, dict):
+        out = {k: with_rate_display(v) for k, v in payload.items()}
+        return out | rate_display(out) if is_rate(out) else out
+    if isinstance(payload, list):
+        return [with_rate_display(v) for v in payload]
+    return payload
+
+
 def write_json(path: Path, payload: Any) -> Path:
-    """Deterministic JSON: sorted keys, two-space indent, UTF-8, one trailing newline."""
+    """Deterministic JSON: sorted keys, two-space indent, UTF-8, one trailing newline. Every
+    rate-shaped mapping gets Python-formatted display strings (with_rate_display)."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
+    text = (
+        json.dumps(with_rate_display(payload), sort_keys=True, indent=2, ensure_ascii=False) + "\n"
+    )
     path.write_text(text, encoding="utf-8", newline="\n")
     return path
 

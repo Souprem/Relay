@@ -36,3 +36,6 @@ build/
 /web/public/data/
 /web/next-env.d.ts
 /web/tsconfig.tsbuildinfo
+# agent notes `next dev` regenerates; not part of the site
+/web/AGENTS.md
+/web/CLAUDE.md

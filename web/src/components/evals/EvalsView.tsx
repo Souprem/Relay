@@ -7,6 +7,7 @@ import { PageHeader, Section } from "@/components/ui/Section";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
 import { getRun, getRuns } from "@/lib/data";
 import { ciText, rateText, threshold } from "@/lib/format";
+import { UNSAFE_TEXT } from "@/lib/semantic";
 
 const DECISIONS = [
   "diagnosis_support",
@@ -124,7 +125,7 @@ export function EvalsView({ runId }: { runId: string }) {
       </Section>
 
       <Section id="compare" label={`All runs on ${dataset.id}`}>
-        <TableScroll>
+        <TableScroll hint>
           <table className="w-full min-w-[56rem]">
             <thead>
               <tr>
@@ -151,7 +152,7 @@ export function EvalsView({ runId }: { runId: string }) {
                   <Td num>{rateText(r.metrics.correct)}</Td>
                   <Td num className="text-ink-2">{ciText(r.metrics.correct)}</Td>
                   <Td num>{rateText(r.metrics.automation)}</Td>
-                  <Td num className={r.metrics.uar.count > 0 ? "font-medium text-unsafe" : ""}>
+                  <Td num className={r.metrics.uar.count > 0 ? `font-medium ${UNSAFE_TEXT}` : ""}>
                     {rateText(r.metrics.uar)}
                   </Td>
                   <Td num className="text-ink-2">{ciText(r.metrics.uar)}</Td>

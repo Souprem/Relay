@@ -85,7 +85,7 @@ export default function GatesPage() {
           </>
         }
       >
-        <TableScroll>
+        <TableScroll hint>
           <table className="w-full min-w-[52rem]">
             <thead>
               <tr>
@@ -102,7 +102,10 @@ export default function GatesPage() {
             <tbody>
               {data.gates.map((g) => (
                 <tr key={g.name} className="hover:bg-paper-2">
-                  <Td className="font-mono text-sm">{g.name}</Td>
+                  <Td className="font-mono text-sm">
+                    {g.name}
+                    {g.note ? <span className="block max-w-[28rem] font-sans text-label tracking-normal text-ink-3">{g.note}</span> : null}
+                  </Td>
                   <Td className="text-sm text-ink-2">{g.kind}</Td>
                   <Td className="font-mono text-sm text-ink-2">{g.dataset.replace("evals/", "")}</Td>
                   <Td>

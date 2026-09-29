@@ -66,3 +66,15 @@ describe("case filters", () => {
     expect(sorted.map((r) => r.id)).toEqual(["GOLD-TMP-17", "GOLD-STR-01", "AUTO-01"]);
   });
 });
+
+describe("parseFilters with known providers", () => {
+  it("drops an unknown provider or sort key", () => {
+    const known = ["jev-q-v0.2", "claude", "rules"];
+    const f = parseFilters(new URLSearchParams("provider=bogus&sort=nope"), known);
+    expect(f.provider).toBe("all");
+    expect(f.sort).toBe("id");
+    const g = parseFilters(new URLSearchParams("provider=claude&sort=rules"), known);
+    expect(g.provider).toBe("claude");
+    expect(g.sort).toBe("rules");
+  });
+});

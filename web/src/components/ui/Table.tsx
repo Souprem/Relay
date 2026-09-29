@@ -38,8 +38,23 @@ export function Td({
   );
 }
 
+/** On a phone, a visible cue that the table below scrolls sideways. */
+export function ScrollHint({ children = "Scroll sideways for every column →" }: { children?: React.ReactNode }) {
+  return (
+    <p aria-hidden="true" className="mb-0.5 text-label tracking-normal text-ink-3 md:hidden">
+      {children}
+    </p>
+  );
+}
+
 /** Horizontal scroll on narrow screens instead of squashing columns. `relative` keeps the
- * absolutely positioned screen-reader text inside the scroll box. */
-export function TableScroll({ children }: { children: React.ReactNode }) {
-  return <div className="relative -mx-3 overflow-x-auto px-3 md:mx-0 md:px-0">{children}</div>;
+ * absolutely positioned screen-reader text inside the scroll box. `hint` shows ScrollHint on a
+ * phone, for tables wider than one. */
+export function TableScroll({ children, hint = false }: { children: React.ReactNode; hint?: boolean }) {
+  return (
+    <>
+      {hint ? <ScrollHint /> : null}
+      <div className="relative -mx-3 overflow-x-auto px-3 md:mx-0 md:px-0">{children}</div>
+    </>
+  );
 }

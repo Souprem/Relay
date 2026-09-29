@@ -2,8 +2,9 @@ import Link from "next/link";
 
 import { ActionBadge } from "@/components/ui/ActionBadge";
 import { Td, TableScroll, Th } from "@/components/ui/Table";
-import { ciText, rateText } from "@/lib/format";
+import { ciText, ppText, rateText } from "@/lib/format";
 import type { CaseEntry, RegressionReport } from "@/lib/types";
+import { UNSAFE_TEXT } from "@/lib/semantic";
 
 const ROWS: [keyof RegressionReport["baseline"], string][] = [
   ["correct", "Correct action"],
@@ -13,16 +14,10 @@ const ROWS: [keyof RegressionReport["baseline"], string][] = [
   ["uar", "Unsafe / auto"],
 ];
 
-function pp(a: number | null, b: number | null): string {
-  if (a === null || b === null) return "—";
-  const d = (b - a) * 100;
-  return `${d >= 0 ? "+" : "−"}${Math.abs(d).toFixed(1)} pp`;
-}
-
 /** Baseline against candidate, each rate with its interval, as the regression gate prints it. */
 export function RegressionMetrics({ report }: { report: RegressionReport }) {
   return (
-    <TableScroll>
+    <TableScroll hint>
       <table className="w-full min-w-[44rem]">
         <thead>
           <tr>
@@ -43,9 +38,9 @@ export function RegressionMetrics({ report }: { report: RegressionReport }) {
                 <Td>{label}</Td>
                 <Td num>{rateText(a)}</Td>
                 <Td num className="text-ink-2">{ciText(a)}</Td>
-                <Td num className={key === "uar" && b.count > a.count ? "font-medium text-unsafe" : ""}>{rateText(b)}</Td>
+                <Td num className={key === "uar" && b.count > a.count ? `font-medium ${UNSAFE_TEXT}` : ""}>{rateText(b)}</Td>
                 <Td num className="text-ink-2">{ciText(b)}</Td>
-                <Td num>{pp(a.rate, b.rate)}</Td>
+                <Td num>{ppText(a.rate, b.rate)}</Td>
               </tr>
             );
           })}
@@ -59,7 +54,7 @@ export function CaseEntries({ title, entries, tone = "neutral" }: { title: strin
   if (entries.length === 0) return null;
   return (
     <div className="mt-2">
-      <p className={`font-mono text-sm font-medium ${tone === "unsafe" ? "text-unsafe" : "text-ink-2"}`}>
+      <p className={`font-mono text-sm font-medium ${tone === "unsafe" ? UNSAFE_TEXT : "text-ink-2"}`}>
         {title} ({entries.length})
       </p>
       <ul className="mt-1 grid gap-1">

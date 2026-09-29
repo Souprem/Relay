@@ -16,6 +16,12 @@ export interface Rate {
   n: number;
   rate: number | null;
   ci95: Interval | null;
+  // Display strings the exporter formats in Python (relay/site/common.py rate_display), so the
+  // site rounds exactly as README.md and docs/RESULTS.md do.
+  pct: string | null;
+  text: string;
+  ci_text: string | null;
+  ci_high_pct: string | null;
 }
 
 export interface Metrics {
@@ -181,7 +187,7 @@ export interface ProviderResult {
   run_id: string;
   question_set: string;
   policy: string;
-  thresholds: Record<string, number | string>;
+  thresholds: { version: string; auto_process: number; [name: string]: number | string };
   operating_point_source: string;
   note: string | null;
   decisions: DecisionView[];
@@ -381,6 +387,7 @@ export interface AblationRow {
   improved: number;
   automation: { baseline: Rate; ablated: Rate };
   uar: { baseline: Rate; ablated: Rate };
+  note: string | null;
 }
 
 export interface ExperimentsData {

@@ -23,17 +23,25 @@ export const DEFAULT_FILTERS: Filters = {
 const CATEGORIES = new Set(["STR", "MIS", "CON", "TMP", "TRK", "SMOKE"]);
 const EXPECTED = new Set(["AUTO_PROCESS", "REQUEST_INFO", "HUMAN_REVIEW"]);
 
-/** Filters from URL query params; unknown values fall back to the defaults. */
-export function parseFilters(params: URLSearchParams): Filters {
+const SORT_COLUMNS = ["id", "category", "expected"];
+
+/**
+ * Filters from URL query params; unknown values fall back to the defaults. `providers` is the
+ * known provider slugs: when given, an unknown provider or sort key falls back as well.
+ */
+export function parseFilters(params: URLSearchParams, providers?: readonly string[]): Filters {
   const category = params.get("category") ?? "all";
   const expected = params.get("expected") ?? "all";
+  const provider = params.get("provider") ?? "all";
+  const sort = params.get("sort") ?? "id";
+  const knownProvider = (slug: string) => !providers || providers.includes(slug);
   return {
     category: CATEGORIES.has(category) ? (category as Category) : "all",
     expected: EXPECTED.has(expected) ? (expected as Action) : "all",
-    provider: params.get("provider") ?? "all",
+    provider: provider !== "all" && knownProvider(provider) ? provider : "all",
     unsafe: params.get("unsafe") === "1",
     disagree: params.get("disagree") === "1",
-    sort: params.get("sort") ?? "id",
+    sort: SORT_COLUMNS.includes(sort) || knownProvider(sort) ? sort : "id",
     dir: params.get("dir") === "desc" ? "desc" : "asc",
   };
 }
@@ -51,7 +59,7 @@ export function filtersToParams(f: Filters): URLSearchParams {
   return p;
 }
 
-/** True when the model providers that ran this case chose different actions. */
+/** True when the providers that ran this case (the rules baseline included) chose different actions. */
 export function providersDisagree(row: CaseRow): boolean {
   return new Set(Object.values(row.results).map((r) => r.action)).size > 1;
 }

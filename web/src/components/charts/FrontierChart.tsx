@@ -39,6 +39,7 @@ export function FrontierChart({
       <ChartFrame
         title={`Automation against unsafe automation rate for ${label}, auto_process 0.50 to 0.99`}
         width={1104}
+        midWidth={760}
         height={360}
         xDomain={[0, xMax]}
         yDomain={[0, yMax]}
@@ -47,9 +48,30 @@ export function FrontierChart({
         xFormat={(v) => pct(v, 0)}
         yFormat={(v) => pct(v, yMax < 0.05 ? 1 : 0)}
         xLabel="Automation rate (share of cases auto-processed)"
+        xLabelNarrow="Automation rate"
         yLabel="Unsafe / automated"
       >
-        {({ x, y, inner }) => (
+        {({ x, y, inner, width, narrow, fs }) => {
+          // The operating-point annotation sits above its point; an end label within ~48px of the
+          // point would run into its leader line or text, so it is left out (VM-1).
+          const opX = op && op.uar !== null ? x(op.automation_rate) : null;
+          const opY = op && op.uar !== null ? y(op.uar) : null;
+          const nearOp = (p: FrontierPoint) =>
+            opX !== null && opY !== null && Math.hypot(x(p.automation_rate) - opX, y(p.uar ?? 0) - opY) < 48;
+          // Flip the annotation to the left of its point when it would run past the plot's right edge
+          // (0.6 em per mono character); the wide variants keep the original 60% rule.
+          const annotationWidth = narrow && op ? `${pct(op.automation_rate)} auto, ${op.unsafe}/${op.auto} unsafe`.length * fs(12) * 0.6 : 0;
+          const flip = op
+            ? narrow
+              ? (opX ?? 0) + 6 + annotationWidth > inner.right + 16
+              : op.automation_rate > xMax * 0.6
+            : false;
+          // The annotation rises above the highest curve point near it, so it never sits on the line.
+          const nearby = distinct.filter((p) => opX !== null && Math.abs(x(p.automation_rate) - opX) < (narrow ? 120 : 220));
+          const topY = Math.min(opY ?? Infinity, ...nearby.map((p) => y(p.uar ?? 0)));
+          const labelY = Math.max(inner.top + (narrow ? 26 : 12), topY - (narrow ? 44 : 32));
+          return (
+
           <g>
             <line
               x1={inner.left}
@@ -59,7 +81,7 @@ export function FrontierChart({
               stroke="var(--ink-3)"
               strokeDasharray="4 4"
             />
-            <text x={inner.right} y={y(ceiling) - 6} textAnchor="end" fontSize="11" fill="var(--ink-2)">
+            <text x={inner.right} y={y(ceiling) - 6} textAnchor="end" fontSize={fs(11)} fill="var(--ink-2)">
               {pct(ceiling, 0)} ceiling
             </text>
             <polyline
@@ -78,22 +100,28 @@ export function FrontierChart({
                 stroke="var(--ink-2)"
               />
             ))}
-            {first && first !== last ? (
-              <text x={x(first.automation_rate) + 6} y={y(first.uar ?? 0) + 14} fontSize="11" fill="var(--ink-3)">
-                t={threshold(first.auto_threshold)}
-              </text>
-            ) : null}
-            {last ? (
-              <text
-                x={x(last.automation_rate) + 6}
-                y={y(last.uar ?? 0) + 14}
-                textAnchor="start"
-                fontSize="11"
-                fill="var(--ink-3)"
-              >
-                t={threshold(usable[usable.length - 1].auto_threshold)}
-              </text>
-            ) : null}
+            {[first && first !== last ? first : null, last ? usable[usable.length - 1] : null].map((p, i) => {
+              if (!p) return null;
+              const at = i === 0 ? first : last;
+              const text = `t=${threshold(p.auto_threshold)}`;
+              const w = text.length * fs(11) * 0.6;
+              const px = x(at.automation_rate);
+              const py = y(at.uar ?? 0);
+              // Right of the point unless that runs past the edge; above it when below would sit on
+              // the x-axis tick labels.
+              const right = px + 6 + w <= width - 4;
+              const lx0 = right ? px + 6 : px - 6 - w;
+              const ly = py + 14 > inner.bottom - 2 ? py - 8 : py + 14;
+              // Leave the label out where it would touch the operating-point marker, leader or text.
+              const hitsLeader =
+                opX !== null && opY !== null && opX >= lx0 - 3 && opX <= lx0 + w + 3 && ly >= labelY - 16 && ly - 11 <= opY;
+              if (nearOp(at) || hitsLeader) return null;
+              return (
+                <text key={text + i} x={lx0} y={ly} fontSize={fs(11)} fill="var(--ink-3)">
+                  {text}
+                </text>
+              );
+            })}
             {op && op.uar !== null ? (
               <g>
                 <circle cx={x(op.automation_rate)} cy={y(op.uar)} r="6" fill="none" stroke="var(--ink)" strokeWidth="1.5" />
@@ -102,23 +130,39 @@ export function FrontierChart({
                   x1={x(op.automation_rate)}
                   x2={x(op.automation_rate)}
                   y1={y(op.uar) - 8}
-                  y2={y(op.uar) - 36}
+                  y2={labelY + 4}
                   stroke="var(--ink)"
                 />
-                <text
-                  x={x(op.automation_rate) + (op.automation_rate > xMax * 0.6 ? -6 : 6)}
-                  y={y(op.uar) - 40}
-                  textAnchor={op.automation_rate > xMax * 0.6 ? "end" : "start"}
-                  fontSize="12"
-                  fill="var(--ink)"
-                >
-                  operating point {threshold(op.auto_threshold)}: {pct(op.automation_rate)} automated, {op.unsafe}/
-                  {op.auto} unsafe
-                </text>
+                {narrow ? (
+                  <text
+                    x={x(op.automation_rate) + (flip ? -6 : 6)}
+                    y={labelY - fs(12) - 2}
+                    textAnchor={flip ? "end" : "start"}
+                    fontSize={fs(12)}
+                    fill="var(--ink)"
+                  >
+                    <tspan>operating point {threshold(op.auto_threshold)}</tspan>
+                    <tspan x={x(op.automation_rate) + (flip ? -6 : 6)} dy="1.2em">
+                      {pct(op.automation_rate)} auto, {op.unsafe}/{op.auto} unsafe
+                    </tspan>
+                  </text>
+                ) : (
+                  <text
+                    x={x(op.automation_rate) + (flip ? -6 : 6)}
+                    y={labelY}
+                    textAnchor={flip ? "end" : "start"}
+                    fontSize="12"
+                    fill="var(--ink)"
+                  >
+                    operating point {threshold(op.auto_threshold)}: {pct(op.automation_rate)} automated, {op.unsafe}/
+                    {op.auto} unsafe
+                  </text>
+                )}
               </g>
             ) : null}
           </g>
-        )}
+          );
+        }}
       </ChartFrame>
       <ChartData
         summary="Frontier data (every threshold)"

@@ -1,3 +1,4 @@
+import { roundInt } from "@/lib/format";
 import { niceMax, niceTicks } from "@/lib/scale";
 
 import { ChartData } from "./ChartData";
@@ -17,6 +18,7 @@ export function LineChart({
   xLabel,
   yLabel,
   yUnit,
+  table = true,
 }: {
   title: string;
   xs: number[];
@@ -24,6 +26,8 @@ export function LineChart({
   xLabel: string;
   yLabel: string;
   yUnit: string;
+  /** false when the same numbers are already in a visible table beside the chart. */
+  table?: boolean;
 }) {
   const yMax = niceMax(Math.max(...series.flatMap((s) => s.values)) * 1.1);
   const xMin = Math.min(...xs);
@@ -33,6 +37,7 @@ export function LineChart({
       <ChartFrame
         title={title}
         height={280}
+        marginRight={72}
         xDomain={[xMin, xMax]}
         yDomain={[0, yMax]}
         xTicks={xs}
@@ -42,7 +47,7 @@ export function LineChart({
         xLabel={xLabel}
         yLabel={`${yLabel} (${yUnit})`}
       >
-        {({ x, y }) => (
+        {({ x, y, fs }) => (
           <g>
             {series.map((s) => (
               <g key={s.name}>
@@ -59,20 +64,22 @@ export function LineChart({
                   x={x(xs[xs.length - 1]) + 8}
                   y={y(s.values[s.values.length - 1])}
                   dy="0.32em"
-                  fontSize="11"
+                  fontSize={fs(11)}
                   fill={s.emphasis ? "var(--ink)" : "var(--ink-2)"}
                 >
-                  {s.name} {Math.round(s.values[s.values.length - 1])}
+                  {s.name} {roundInt(s.values[s.values.length - 1])}
                 </text>
               </g>
             ))}
           </g>
         )}
       </ChartFrame>
-      <ChartData
-        columns={[xLabel, ...series.map((s) => `${s.name} (${yUnit})`)]}
-        rows={xs.map((xv, i) => [xv, ...series.map((s) => Math.round(s.values[i]))])}
-      />
+      {table ? (
+        <ChartData
+          columns={[xLabel, ...series.map((s) => `${s.name} (${yUnit})`)]}
+          rows={xs.map((xv, i) => [xv, ...series.map((s) => roundInt(s.values[i]))])}
+        />
+      ) : null}
     </figure>
   );
 }

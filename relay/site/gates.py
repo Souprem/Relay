@@ -23,7 +23,13 @@ from relay.evaluation.regression_run import (
 from relay.evaluation.shadow import build_shadow_report
 from relay.evaluation.tracediff import original_label, replay_run
 from relay.site.common import ExportContext, ExportError, rate_json, read_json, write_json
-from relay.site.registry import GATES_CONFIG, RESULTS_URL, WAIVER_EXAMPLE
+from relay.site.registry import (
+    CLAUDE_150,
+    CLAUDE_150_NOTE,
+    GATES_CONFIG,
+    RESULTS_URL,
+    WAIVER_EXAMPLE,
+)
 from relay.workflow.status import StatusStoreError, apply_transitions, state_digest
 
 GOLD = "evals/gold"
@@ -146,7 +152,7 @@ def gate_rows(repo: Path, *, strict_generated: bool) -> list[dict[str, Any]]:
             row
             | {
                 "verdict": result.verdict,
-                "note": None,
+                "note": CLAUDE_150_NOTE if CLAUDE_150 in spec.name else None,
                 "n": result.n,
                 "baseline": result.baseline.label,
                 "candidate": result.candidate.label,

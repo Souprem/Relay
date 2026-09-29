@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { GateVerdict } from "@/components/ui/Verdicts";
 import { ACTIONS, ACTION_SHORT, rateText, ciText } from "@/lib/format";
-import { ACTION_TEXT } from "@/lib/semantic";
+import { ACTION_TEXT, UNSAFE_TEXT } from "@/lib/semantic";
 import type { ShadowDemo } from "@/lib/types";
 
 function Ids({ ids }: { ids: string[] }) {
@@ -75,7 +75,7 @@ export function ShadowCard({ demo }: { demo: ShadowDemo }) {
           <Ids ids={demo.agreement.newly_auto} />
         </dd>
         <dt className="text-ink-3">Newly unsafe</dt>
-        <dd className={demo.newly_unsafe.length ? "text-unsafe" : ""}>
+        <dd className={demo.newly_unsafe.length ? UNSAFE_TEXT : ""}>
           <Ids ids={demo.newly_unsafe} />
         </dd>
         <dt className="text-ink-3">Still unsafe</dt>

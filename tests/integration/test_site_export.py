@@ -231,3 +231,60 @@ def test_category_comes_from_the_gold_id():
     assert category_of("GOLD-TRK-20") == "TRK"
     assert category_of("AUTO-01") == "SMOKE"
     assert category_of("GOLD-XYZ-01") == "SMOKE"
+
+
+def _rates(value, path="$"):
+    """Every rate-shaped mapping in an exported payload, with its JSON path."""
+    if isinstance(value, dict):
+        if {"count", "n", "rate", "ci95"} <= value.keys():
+            yield path, value
+        for key, child in value.items():
+            yield from _rates(child, f"{path}.{key}")
+    elif isinstance(value, list):
+        for i, child in enumerate(value):
+            yield from _rates(child, f"{path}[{i}]")
+
+
+def test_every_exported_rate_carries_python_formatted_display_strings(site_export):
+    """The site renders these strings instead of re-rounding in JS, so every rate it shows is
+    formatted exactly as the CLI, README.md and docs/RESULTS.md format it (f"{r:.1%}")."""
+    checked = 0
+    for path in sorted(site_export.rglob("*.json")):
+        for where, r in _rates(json.loads(path.read_text(encoding="utf-8"))):
+            label = f"{path.name}:{where}"
+            if r["rate"] is None:
+                assert r["pct"] is None, label
+                assert r["text"] == f"{r['count']}/{r['n']}", label
+            else:
+                assert r["pct"] == f"{r['rate']:.1%}", label
+                assert r["text"] == f"{r['count']}/{r['n']} ({r['rate']:.1%})", label
+            ci = r["ci95"]
+            if ci is None:
+                assert r["ci_text"] is None and r["ci_high_pct"] is None, label
+            else:
+                assert r["ci_text"] == f"{ci['low']:.1%}"[:-1] + f"–{ci['high']:.1%}", label
+                assert r["ci_high_pct"] == f"{ci['high']:.1%}", label
+            checked += 1
+    assert checked > 400
+
+
+def test_the_aware_shift_rates_match_results_md(site_export):
+    """docs/RESULTS.md: aware 297/400 (74.2%) correct, 13/400 (3.2%) automation. JS toFixed would
+    round both ties up (74.3%, 3.3%)."""
+    candidate = load(site_export, "experiments.json")["shift"]["regression"]["candidate"]
+    assert candidate["correct"]["text"] == "297/400 (74.2%)"
+    assert candidate["automation"]["text"] == "13/400 (3.2%)"
+    results = (REPO / "docs" / "RESULTS.md").read_text(encoding="utf-8")
+    assert "| 297/400 (74.2%) | 13/400 (3.2%) |" in results
+
+
+def test_claude_150_rows_carry_the_sample_note(site_export):
+    rows = load(site_export, "experiments.json")["ablation"]["rows"]
+    claude = [r for r in rows if r["run"] == "claude-150"]
+    assert len(claude) == 3
+    assert all("150-case sample" in r["note"] for r in claude)
+    assert all(r["note"] is None for r in rows if r["run"] != "claude-150")
+    gates = load(site_export, "gates.json")["gates"]
+    assert [g["name"] for g in gates if g["note"] and "150-case" in g["note"]] == [
+        "holdout-reproduce-claude-150"
+    ]
