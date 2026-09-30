@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { QuestionsLink } from "@/components/questions/QuestionsLink";
+import { CostCard } from "@/components/cost/CostCard";
 import { ReliabilityDiagram } from "@/components/charts/ReliabilityDiagram";
 import { ThresholdDial } from "@/components/charts/ThresholdDial";
 import { Disclosure } from "@/components/ui/Disclosure";
@@ -95,7 +96,9 @@ export function EvalsView({ runId }: { runId: string }) {
           <MetricCard label="Correct action" rate={m.correct} />
           <MetricCard label="Automation" rate={m.automation} />
           <MetricCard label="Unsafe / auto" rate={m.uar} />
+          <CostCard cost={run.cost} />
         </div>
+        <p className="mt-1 max-w-prose text-sm text-ink-3">Cost: {run.cost.source}.</p>
       </section>
 
       <Section
@@ -155,7 +158,7 @@ export function EvalsView({ runId }: { runId: string }) {
         </Disclosure>
         <Disclosure id="compare" label={`All runs on ${dataset.id}`} meta={`${dataset.runs.length} runs`}>
           <TableScroll hint>
-          <table className="w-full min-w-[56rem]">
+          <table className="w-full min-w-[68rem]">
             <thead>
               <tr>
                 <Th>Provider</Th>
@@ -166,6 +169,8 @@ export function EvalsView({ runId }: { runId: string }) {
                 <Th align="right">Automation</Th>
                 <Th align="right">Unsafe / auto</Th>
                 <Th align="right">95% CI</Th>
+                <Th align="right">Cost / case</Th>
+                <Th align="right">Total cost</Th>
               </tr>
             </thead>
             <tbody>
@@ -185,11 +190,18 @@ export function EvalsView({ runId }: { runId: string }) {
                     {rateText(r.metrics.uar)}
                   </Td>
                   <Td num className="text-ink-2">{ciText(r.metrics.uar)}</Td>
+                  <Td num title={r.cost.source}>{r.cost.per_case_text ?? "—"}</Td>
+                  <Td num title={r.cost.source}>{r.cost.total_text ?? "—"}</Td>
                 </tr>
               ))}
             </tbody>
           </table>
         </TableScroll>
+        <p className="mt-1 max-w-prose text-sm text-ink-3">
+          Cost is from the spend ledgers, or the traces&rsquo; own estimates for runs in no ledger. Rules and
+          ground truth make no provider call; &ldquo;—&rdquo; marks a run that reused another run&rsquo;s
+          stored answers. <Link href="/experiments/#cost" className="underline hover:text-ink">Cost and speed →</Link>
+        </p>
         </Disclosure>
       </div>
     </>

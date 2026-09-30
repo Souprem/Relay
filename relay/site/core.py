@@ -42,6 +42,7 @@ from relay.site.common import (
     trace_for,
     write_json,
 )
+from relay.site.cost import build_cost, run_costs
 from relay.site.findings import build_findings, build_hero
 from relay.site.questions import questions_compare, questions_page
 from relay.site.registry import (
@@ -199,6 +200,7 @@ def runs_index(run_payloads: dict[str, dict[str, Any]]) -> dict[str, Any]:
                     "auto_process": payload["operating_point"]["auto_process"],
                     "operating_point_source": r.operating_point_source,
                     "metrics": payload["metrics"],
+                    "cost": payload["cost"],
                 }
             )
         datasets.append(
@@ -447,6 +449,10 @@ def export_core(
         else:
             for spec in specs:
                 ctx.run_payloads[spec.run_id] = bundle_run_payload(repo, spec)
+    costs = run_costs(repo, ctx)
+    for run_id, payload in ctx.run_payloads.items():
+        payload["cost"] = costs[run_id]
+    ctx.cost = build_cost(repo, ctx, costs)
 
     written = [
         write_json(out / "runs" / f"{run_id}.json", payload)
@@ -466,6 +472,7 @@ def export_core(
             "claude_usd": _spend(repo, CLAUDE_SPEND),
             "jev_3d_usd": _spend(repo, JEV_SPEND),
         },
+        "cost": ctx.cost,
         "counts": {
             "cases": len(rows),
             "by_dataset": {d: len(c) for d, c in ctx.dataset_cases.items()},

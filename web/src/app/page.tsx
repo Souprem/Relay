@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CostLine } from "@/components/cost/CostLine";
 import { ArchitectureDiagram } from "@/components/home/ArchitectureDiagram";
 import { EntryCase } from "@/components/home/EntryCase";
 import { Findings } from "@/components/home/Findings";
@@ -35,6 +36,7 @@ export default function HomePage() {
 
       <section aria-label="Headline result" className="mt-5">
         <HeroFigures hero={index.hero} />
+        <CostLine headline={index.cost.comparison.headline} />
         <p className="mt-2 max-w-prose text-sm text-ink-2">
           These results measure agreement with synthetic labels, not clinical validation.
           Gold labels were written and checked by AI agents, not clinicians.

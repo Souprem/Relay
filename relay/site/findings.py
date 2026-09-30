@@ -291,9 +291,14 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
     claude_cost = _run_cost(repo, CLAUDE_SPEND, GOLD_CLAUDE)
     jev_cost = _run_cost(repo, JEV_SPEND, GOLD_V3_JEV)
     c, j = rate_display(claude["correct"]), rate_display(jev["correct"])
+    headline = ctx.cost["comparison"]["headline"]
+    ratio = headline["ratio"]
+    if (headline["claude"]["run_id"], headline["jev"]["run_id"]) != (GOLD_CLAUDE, GOLD_V3_JEV):
+        raise ExportError("the cost headline no longer pairs the gold Claude and Jev q-v0.3 runs")
     return {
         "id": "frontier-llm",
-        "title": "The gold comparison does not establish a clear model winner.",
+        "title": f"At similar gold accuracy, Jev cost about {ratio['fraction_text']} as much per "
+        f"case as {headline['claude']['label']}.",
         "body": [
             _t("On gold, with the same questions, Claude got "),
             _t(f"{claude['correct']['count']}/{claude['correct']['n']}"),
@@ -307,11 +312,12 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
                 f". The 95% intervals on correct actions ({c['ci_text']} and {j['ci_text']}) overlap. "
                 f"This {claude['correct']['n']}-case comparison does not establish equivalence or "
                 "a clear winner. Claude's gold run cost "
-                f"${claude_cost:.2f} at batch prices; Jev's q-v0.3 gold run, with more questions "
-                f"per case, cost ${jev_cost:.4f}."
+                f"${claude_cost:.2f} at batch prices, {headline['claude']['per_case_text']} per "
+                "case; Jev's q-v0.3 gold run, with more questions per case, cost "
+                f"${jev_cost:.4f}, {headline['jev']['per_case_text']} per case."
             ),
         ],
-        "link": _link("/evals/", "Every run"),
+        "link": _link("/experiments/#cost", "Cost and speed"),
         "source": f"{RESULTS_URL}#gold-set",
         "figures": {
             "claude": {
@@ -328,6 +334,7 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
                 "uar": jev["uar"],
             },
             "jev_q_v0_3_cost_usd": str(jev_cost),
+            "ratio": ratio,
         },
     }
 

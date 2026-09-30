@@ -114,11 +114,45 @@ recency rule, on 400 cases, the same stored Jev answers composed under the old p
 unsafe automations and under the new policy 0/13. The stale-to-aware gate passes, and shadow mode
 recommends PROMOTE. ([Policy shift](docs/RESULTS.md#policy-shift-immunara-v02))
 
-**The gold comparison does not establish a clear model winner.** On gold, with the same
-questions, Claude got 93/100 correct with 30 automated and 1 unsafe; Jev `q-v0.2` got 91/100 with
-29 automated and 1 unsafe. The 95% intervals on correct actions (86.1–97.1% and 83.6–95.8%)
-overlap. This 100-case comparison does not establish equivalence or a clear winner. Claude's gold run cost $1.56 at batch prices; Jev's
-`q-v0.3` gold run, with more questions per case, cost $0.0175. ([Gold set](docs/RESULTS.md#gold-set))
+**At similar gold accuracy, Jev cost about 1/89th as much per case as Claude Opus 5.** On gold,
+with the same questions, Claude got 93/100 correct with 30 automated and 1 unsafe; Jev `q-v0.2` got
+91/100 with 29 automated and 1 unsafe. The 95% intervals on correct actions (86.1–97.1% and
+83.6–95.8%) overlap. This 100-case comparison does not establish equivalence or a clear winner.
+Claude's gold run cost $1.56 at batch prices, $0.0156 per case; Jev's `q-v0.3` gold run, with more
+questions per case, cost $0.0175, $0.000175 per case. ([Gold set](docs/RESULTS.md#gold-set))
+
+## Cost and speed
+
+Cost per case on gold: Jev $0.00017 · Claude Opus 5 $0.016 (batch), about 89× more, at similar gold accuracy.
+
+| Dataset | Claude Opus 5 (batch), per case | Jev, per case | Claude ÷ Jev |
+|---|---|---|---|
+| `gold-v0.1` | $0.0156 | $0.000175 (`q-v0.3`) | 89× |
+| `gold-v0.1` | $0.0156 | $0.000115 (`q-v0.2`) | 136× |
+| `gen-v0.2-dev` | $0.0110 | $0.000112 (`q-v0.2`) | 98× |
+| `gen-v0.2-holdout` | $0.0164 (150-case sample) | $0.000112 (`q-v0.2`) | 146× |
+
+On the same 10 smoke cases, Claude Opus 5 (sync) took 5,169 ms p50 and 6,781 ms p95 per case; Jev
+q-v0.1 took 178 ms and 411 ms. In the parallelism bench (40 calls per size), Jev's p50 stayed
+between 177 and 191 ms with 1 to 20 questions per call. The Claude figure is a 10-case sample.
+
+Total spend: Claude $8.71 (ledger); Jev $0.715 ($0.502 in the Phase 3D ledger and $0.214 in trace
+estimates for the Phase 2 runs). Costs come from the committed spend ledgers
+([`claude-spend.json`](evals/baselines/claude-spend.json),
+[`jev-spend-3d.json`](evals/baselines/jev-spend-3d.json)) or, where a run is in no ledger, from its
+traces' estimated cost. The gen-v0.2-dev Claude figure includes the 22 cancelled cases' re-run.
+
+- Claude was run as Opus 5 (claude-opus-5), the most capable and most expensive tier. Cheaper
+  Claude models (Sonnet, Haiku) were not tested and would narrow the gap.
+- Claude's batch figures already include the 50% Message Batches discount; at non-batch prices
+  they would be about twice as high.
+- “Similar accuracy” means not distinguishable on 100 gold cases, not proven equal.
+- Prices are as billed in September 2026: Claude at list prices as of 2026-09-25, Jev at $0.042
+  per million input tokens.
+- The Claude latency sample is 10 cases (one sync run on the smoke set); Claude's batch runs record
+  no latency.
+- Jev's Phase 2 runs are in no ledger; their cost is the sum of the traces' own estimates, which
+  match the ledger wherever a Jev run is in one.
 
 ## What's inside
 
