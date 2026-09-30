@@ -14,6 +14,7 @@ export default function HomePage() {
   const index = getIndex();
   const easy = getCase(index.entry_cases.easy);
   const hard = getCase(index.entry_cases.hard);
+  const failure = getCase("GOLD-TMP-17");
   const example = easy.providers[0];
   return (
     <>
@@ -26,13 +27,23 @@ export default function HomePage() {
           records why.
         </h1>
         <p className="mt-2 text-md text-ink-2">
-          Jev answers narrow questions about each case with probabilities; a versioned policy
+          Relay evaluates synthetic medication-coverage requests. Jev answers narrow questions
+          about the evidence with probabilities; a versioned policy
           engine, not the model, decides what happens to the case.
         </p>
       </header>
 
       <section aria-label="Headline result" className="mt-5">
         <HeroFigures hero={index.hero} />
+        <p className="mt-2 max-w-prose text-sm text-ink-2">
+          These results measure agreement with synthetic labels, not clinical validation.
+          Gold labels were written and checked by AI agents, not clinicians.
+        </p>
+        <p className="mt-2 text-md">
+          <Link href={`/cases/${failure.id}/#changed`} className="text-ink underline decoration-rule-strong hover:decoration-ink">
+            See the paused-treatment failure and fix →
+          </Link>
+        </p>
         <div className="mt-3">
           <Disclosure id="results" label="Full results table" meta={`${index.headline.length} runs`}>
             <p className="max-w-prose text-md text-ink-2">
@@ -61,6 +72,7 @@ export default function HomePage() {
       <Section id="pipeline" label="How a case moves">
         <ArchitectureDiagram
           caseId={easy.id}
+          documents={easy.input.documents.map((doc) => doc.kind.replaceAll("_", " "))}
           providerLabel={`${example.label} @${threshold(example.thresholds.auto_process)}`}
           decisions={example.decisions}
           gates={example.gates}
@@ -74,6 +86,11 @@ export default function HomePage() {
 
       <Section id="start" label="Start with a case">
         <ul className="max-w-[56rem] border-t border-rule">
+          <EntryCase
+            kind="A design failure"
+            detail={failure}
+            summary="Jev and Claude both missed a treatment pause; changing the questions resolved this case."
+          />
           <EntryCase
             kind="An easy case"
             detail={easy}

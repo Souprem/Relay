@@ -79,8 +79,8 @@ def gating_finding(ctx: ExportContext) -> dict[str, Any]:
     rules = _metrics(ctx, HOLDOUT_V2_RULES)
     return {
         "id": "gating",
-        "title": "Confidence gating automated about a quarter of held-out cases without an "
-        "unsafe approval.",
+        "title": "Confidence gating automated about a quarter of held-out cases with no "
+        "unsafe approvals observed.",
         "body": [
             _t(f"Jev q-v0.3 at {_at(ctx, HOLDOUT_V3_JEV)} on gen-v0.3-holdout auto-processed "),
             _t(_txt(v3["automation"])),
@@ -229,7 +229,7 @@ def contradiction_finding(repo: Path) -> dict[str, Any]:
             _t("With contradiction detection disabled, "),
             _t(" and ".join(cases) + " become newly unsafe", "unsafe"),
             _t(
-                f" on gold for all {len(gold)} model providers. On the holdouts it only costs "
+                f" on gold for all {len(gold)} model configurations. On the holdouts it only costs "
                 f"automation: Jev q-v0.2 goes from {auto(v2)} automated and Jev q-v0.3 from "
                 f"{auto(v3)}, still "
             ),
@@ -293,7 +293,7 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
     c, j = rate_display(claude["correct"]), rate_display(jev["correct"])
     return {
         "id": "frontier-llm",
-        "title": "A frontier LLM matched, but did not beat, narrow typed judgments.",
+        "title": "The gold comparison does not establish a clear model winner.",
         "body": [
             _t("On gold, with the same questions, Claude got "),
             _t(f"{claude['correct']['count']}/{claude['correct']['n']}"),
@@ -304,8 +304,9 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
             _t(f" with {jev['automation']['count']} automated and "),
             _t(f"{jev['uar']['count']} unsafe", "unsafe" if jev["uar"]["count"] else None),
             _t(
-                f". The 95% intervals on correct actions ({c['ci_text']} and {j['ci_text']}) overlap, so "
-                f"{claude['correct']['n']} cases cannot separate them. Claude's gold run cost "
+                f". The 95% intervals on correct actions ({c['ci_text']} and {j['ci_text']}) overlap. "
+                f"This {claude['correct']['n']}-case comparison does not establish equivalence or "
+                "a clear winner. Claude's gold run cost "
                 f"${claude_cost:.2f} at batch prices; Jev's q-v0.3 gold run, with more questions "
                 f"per case, cost ${jev_cost:.4f}."
             ),
@@ -353,7 +354,7 @@ def build_hero(ctx: ExportContext) -> dict[str, Any]:
             {
                 "id": "unsafe",
                 "value": f"{uar['count']} of {uar['n']}",
-                "label": "automations were unsafe",
+                "label": "unsafe automations observed",
                 "caption": f"95% upper bound {rate_display(uar)['ci_high_pct']}",
             },
             {

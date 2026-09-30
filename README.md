@@ -86,7 +86,7 @@ table; gold is not a blind test for `q-v0.3`.
 
 ## What I found
 
-**Confidence gating automated about a quarter of held-out cases without an unsafe approval.**
+**Confidence gating automated about a quarter of held-out cases with no unsafe approvals observed.**
 Jev `q-v0.3` at 0.81 on `gen-v0.3-holdout` auto-processed 244/1000 (24.4%) of cases, 0/244
 unsafe (95% upper bound 1.5%), and chose the correct action for 921/1000 (92.1%). On
 `gen-v0.2-holdout` the rules baseline automated 134/1000 (13.4%) with 667/1000 (66.7%) correct,
@@ -103,7 +103,7 @@ dropped from 0.97 to 0.81.
 ([Question set q-v0.3](docs/RESULTS.md#question-set-q-v03-interrupted-courses))
 
 **The contradiction gate is doing real work, and it has a cost.** With contradiction detection
-disabled, `GOLD-CON-03` and `GOLD-CON-13` become newly unsafe on gold for all 3 model providers. On
+disabled, `GOLD-CON-03` and `GOLD-CON-13` become newly unsafe on gold for all 3 model configurations. On
 the holdouts it only costs automation: Jev `q-v0.2` goes from 252 to 277 of 1000 automated and Jev
 `q-v0.3` from 244 to 261 of 1000, still 0/277 and 0/261 unsafe. Disabling the missing-evidence gate
 changed no automation and no unsafe count in any of the 10 runs, a null result.
@@ -114,10 +114,10 @@ recency rule, on 400 cases, the same stored Jev answers composed under the old p
 unsafe automations and under the new policy 0/13. The stale-to-aware gate passes, and shadow mode
 recommends PROMOTE. ([Policy shift](docs/RESULTS.md#policy-shift-immunara-v02))
 
-**A frontier LLM matched, but did not beat, narrow typed judgments.** On gold, with the same
+**The gold comparison does not establish a clear model winner.** On gold, with the same
 questions, Claude got 93/100 correct with 30 automated and 1 unsafe; Jev `q-v0.2` got 91/100 with
 29 automated and 1 unsafe. The 95% intervals on correct actions (86.1–97.1% and 83.6–95.8%)
-overlap, so 100 cases cannot separate them. Claude's gold run cost $1.56 at batch prices; Jev's
+overlap. This 100-case comparison does not establish equivalence or a clear winner. Claude's gold run cost $1.56 at batch prices; Jev's
 `q-v0.3` gold run, with more questions per case, cost $0.0175. ([Gold set](docs/RESULTS.md#gold-set))
 
 ## What's inside
@@ -205,7 +205,9 @@ or newer is needed.
 The same build is published automatically to GitHub Pages at
 <https://souprem.github.io/Relay/> on every push to `main`
 (`.github/workflows/pages.yml`), with `NEXT_PUBLIC_BASE_PATH=/Relay` set so links and assets
-resolve under that prefix. Locally, leave `NEXT_PUBLIC_BASE_PATH` unset.
+resolve under that prefix. Publishing restores the generated datasets from their committed
+manifests and exports with `--strict-generated`, so every gate and experiment breakdown is
+included. Locally, leave `NEXT_PUBLIC_BASE_PATH` unset.
 
 ```bash
 # From the repository root: export the data (writes web/public/data, git-ignored)

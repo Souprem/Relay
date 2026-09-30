@@ -62,6 +62,7 @@ def test_the_build_job_steps_run_in_order():
     uses = [s.get("uses", "") for s in steps()]
     expected_runs = [
         "uv sync --frozen",
+        "uv run python -m scripts.prepare_dashboard",
         "export-site --out web/public/data",
         "npm ci",
         "npm run build",
@@ -78,10 +79,12 @@ def test_the_build_job_steps_run_in_order():
     assert checkout_pos < configure_pos < upload_pos
 
 
-def test_export_site_runs_offline_with_no_generated_datasets():
+def test_export_site_requires_verified_generated_datasets():
     commands = "\n".join(runs())
-    assert "uv run relay --env-file .no-such.env export-site --out web/public/data" in commands
-    assert "generate" not in commands
+    assert "uv run python -m scripts.prepare_dashboard" in commands
+    assert (
+        "uv run relay --env-file .no-such.env export-site --out web/public/data --strict-generated"
+    ) in commands
 
 
 def test_the_build_step_uses_the_pages_base_path():

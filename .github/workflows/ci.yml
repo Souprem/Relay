@@ -82,8 +82,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Export the dashboard's JSON data from committed artifacts (offline; no provider keys)
-        run: uv run relay --env-file .no-such.env export-site --out web/public/data
+      - name: Restore and verify generated datasets (offline; no provider keys)
+        run: uv run python -m scripts.prepare_dashboard
+
+      - name: Export all dashboard results, requiring every generated dataset
+        run: uv run relay --env-file .no-such.env export-site --out web/public/data --strict-generated
 
       - name: Set up Node 22
         uses: actions/setup-node@v4

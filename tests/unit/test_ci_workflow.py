@@ -139,6 +139,7 @@ def test_the_web_job_steps_run_in_order():
     commands = "\n".join(runs("web"))
     expected = [
         "uv sync --frozen",
+        "uv run python -m scripts.prepare_dashboard",
         "export-site --out web/public/data",
         "npm ci",
         "npm run typecheck",
@@ -152,7 +153,9 @@ def test_the_web_job_steps_run_in_order():
 
 def test_the_web_job_exports_site_data_offline():
     commands = "\n".join(runs("web"))
-    assert "uv run relay --env-file .no-such.env export-site --out web/public/data" in commands
+    assert (
+        "uv run relay --env-file .no-such.env export-site --out web/public/data --strict-generated"
+    ) in commands
 
 
 def test_the_web_job_builds_with_the_pages_base_path():

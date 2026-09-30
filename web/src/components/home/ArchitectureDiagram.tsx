@@ -3,7 +3,6 @@ import { ACTION_VAR, GATE_ACTION } from "@/lib/semantic";
 import type { Action, DecisionView, GateRow } from "@/lib/types";
 
 const ACTIONS: Action[] = ["AUTO_PROCESS", "REQUEST_INFO", "HUMAN_REVIEW"];
-const DOCS = ["physician note", "medication history", "lab report", "fax cover", "insurance card"];
 
 function barValue(d: DecisionView): number {
   return d.kind === "choice" ? (d.probability ?? 0) : (d.p_yes ?? 0);
@@ -15,6 +14,7 @@ function barText(d: DecisionView): string {
 
 interface Props {
   caseId: string;
+  documents: string[];
   providerLabel: string;
   decisions: DecisionView[];
   gates: GateRow[];
@@ -42,7 +42,7 @@ function StageTitle({ x, y, n, title }: { x: number; y: number; n: string; title
 }
 
 /** The pipeline, drawn with one real case moving through it (desktop: left to right). */
-function Wide({ caseId, providerLabel, decisions, gates, action }: Props) {
+function Wide({ caseId, documents, providerLabel, decisions, gates, action }: Props) {
   const top = 44;
   return (
     <svg viewBox="0 0 1152 300" role="img" aria-labelledby="arch-title" className="hidden h-auto w-full font-mono md:block">
@@ -51,8 +51,8 @@ function Wide({ caseId, providerLabel, decisions, gates, action }: Props) {
       </title>
       {/* 1 documents */}
       <StageTitle x={0} y={16} n="1" title="Case documents" />
-      {DOCS.map((d, i) => (
-        <g key={d}>
+      {documents.map((d, i) => (
+        <g key={`${d}-${i}`}>
           <rect x={0.5} y={top + i * 40 + 0.5} width={176} height={30} fill="var(--paper)" stroke="var(--rule-strong)" />
           <text x={12} y={top + i * 40 + 20} fontSize="12" fill="var(--ink)">
             {d}
@@ -165,9 +165,9 @@ function Wide({ caseId, providerLabel, decisions, gates, action }: Props) {
 }
 
 /** The same pipeline stacked vertically for narrow screens. */
-function Narrow({ caseId, providerLabel, decisions, gates, action }: Props) {
+function Narrow({ caseId, documents, providerLabel, decisions, gates, action }: Props) {
   const rows: { title: string; lines: string[] }[] = [
-    { title: "1 Case documents", lines: [DOCS.slice(0, 2).join(" · "), DOCS.slice(2).join(" · ")] },
+    { title: "1 Case documents", lines: documents },
     {
       title: `2 Judgments (${providerLabel}, ${caseId})`,
       lines: decisions.map((d) => `${(DECISION_LABELS[d.id] ?? d.id).padEnd(24)}${barText(d)}`),

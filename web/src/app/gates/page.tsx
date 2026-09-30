@@ -91,8 +91,8 @@ export default function GatesPage() {
     <>
       <PageHeader eyebrow="Gates" title="How do you know a change made it safer?">
         <p>
-          Every change is replayed against an accepted baseline on the same frozen cases, and CI
-          runs these gates on every push, with no provider keys.
+          These checks replay stored decisions against an accepted baseline on the same frozen
+          cases. CI runs them on every push, with no provider keys.
         </p>
         <Disclosure label="How this is measured" variant="inline" className="mt-0.5">
           <p className="text-sm text-ink-2">
@@ -106,12 +106,15 @@ export default function GatesPage() {
       </PageHeader>
 
       <p className="mt-4 flex flex-wrap items-baseline gap-x-1 text-md text-ink">
-        <GateVerdict verdict={failed ? "FAIL" : "PASS"} />
+        <GateVerdict verdict={failed ? "FAIL" : skipped ? "SKIPPED" : "PASS"} />
         <span>
           {passed === data.gates.length
             ? `All ${data.gates.length} committed gates pass.`
-            : `${passed} of ${data.gates.length} committed gates pass${skipped ? `; ${skipped} need generated datasets that are not on this machine and are skipped` : ""}.`}
+            : `${passed} of ${data.gates.length} committed gates pass${skipped ? `; ${skipped} were skipped because their datasets were missing when this site was exported` : ""}.`}
         </span>
+      </p>
+      <p className="mt-1 max-w-prose text-sm text-ink-2">
+        Passing gates can still retain unsafe cases already present in the baseline.
       </p>
 
       <Section id="fail" label="A gate that fails on purpose">

@@ -45,7 +45,7 @@ export function DiffPanel({ diff }: { diff: Diff }) {
         </p>
       ) : null}
 
-      <Disclosure label="Full comparison" meta="before and after, every judgment" className="mt-2 border-b border-rule">
+      <Disclosure label="Full comparison" meta="before and after, every judgment" hashIds={["changed"]} className="mt-2 border-b border-rule">
       <p className="max-w-prose text-md text-ink-2">{diff.summary}</p>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         {[
