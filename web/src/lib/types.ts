@@ -79,6 +79,103 @@ export interface Hero {
   figures: HeroFigure[];
 }
 
+// The cost block (relay/site/cost.py): every money figure arrives as a display string.
+
+export interface RunCost {
+  run_id: string;
+  dataset: string;
+  provider: string;
+  label: string;
+  question_set: string;
+  mode: "sync" | "batch" | null;
+  n: number;
+  total_usd: string | null;
+  per_case_usd: string | null;
+  trace_estimate_usd: string;
+  total_text: string | null;
+  per_case_text: string | null;
+  kind: "ledger" | "ledger-sum" | "trace-estimate" | "no-call" | "reused";
+  source: string;
+}
+
+export interface CostSide {
+  run_id: string;
+  label: string;
+  question_set: string;
+  mode: "sync" | "batch" | null;
+  n: number;
+  per_case_usd: string;
+  per_case_text: string;
+  per_case_short: string;
+  total_text: string;
+  source: string;
+  kind: RunCost["kind"];
+  estimate_label: string | null;
+  correct: Rate;
+}
+
+export interface CostRatio {
+  value: number;
+  rounded: number;
+  text: string;
+  fraction_text: string;
+}
+
+export interface LatencySample {
+  run_id: string;
+  dataset: string;
+  label: string;
+  question_set: string;
+  n: number;
+  p50_ms: number;
+  p95_ms: number;
+}
+
+export interface CostData {
+  comparison: {
+    dataset: string;
+    headline: {
+      claude: CostSide;
+      jev: CostSide;
+      ratio: CostRatio;
+      text: string;
+      estimate_note: string | null;
+      summary: string;
+    };
+    rows: { dataset: string; claude: CostSide; jev: CostSide; ratio: CostRatio; note: string | null }[];
+    ratio_range: { low: number; high: number };
+  };
+  latency: {
+    claude_sync: LatencySample;
+    jev_smoke: LatencySample;
+    jev_bench: {
+      source: string;
+      model: string;
+      dataset: string;
+      calls_per_size: number;
+      sizes: number[];
+      p50_ms_low: number;
+      p50_ms_high: number;
+    };
+    ratio_p50: CostRatio;
+    summary: string;
+  };
+  totals: {
+    claude_ledger_usd: string;
+    claude_ledger_text: string;
+    jev_ledger_usd: string;
+    jev_ledger_text: string;
+    jev_trace_estimate_usd: string;
+    jev_trace_estimate_text: string;
+    jev_trace_estimate_runs: string[];
+    jev_total_usd: string;
+    jev_total_text: string;
+  };
+  runs: RunCost[];
+  caveats: string[];
+  link: string;
+}
+
 export interface SiteIndex {
   schema_version: number;
   exported_at: string;
@@ -87,6 +184,7 @@ export interface SiteIndex {
   hero: Hero;
   headline: HeadlineRow[];
   spend: { claude_usd: string; jev_3d_usd: string };
+  cost: CostData;
   counts: { cases: number; by_dataset: Record<string, number>; runs: number };
   entry_cases: { easy: string; hard: string };
   findings: Finding[];
@@ -145,6 +243,7 @@ export interface RunDetail {
     invalid_excluded: number;
     partial_choice_distributions: number;
   };
+  cost: RunCost;
   identity: {
     provider_versions: string[];
     question_set_versions: string[];
@@ -164,6 +263,7 @@ export interface RunSummary {
   auto_process: number;
   operating_point_source: string;
   metrics: Metrics;
+  cost: RunCost;
 }
 
 export interface RunsIndex {
@@ -432,6 +532,7 @@ export interface AblationRow {
 }
 
 export interface ExperimentsData {
+  cost: CostData & { title: string };
   qv03: {
     title: string;
     link: string;

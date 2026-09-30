@@ -38,6 +38,6 @@ def export_site(
     prepare_out(out)
     written, ctx = export_core(repo, out, exported_at=exported_at, git_sha=git_sha)
     written += export_gates(repo, out, ctx, strict_generated=strict_generated)
-    written += export_experiments(repo, out, strict_generated=strict_generated)
+    written += export_experiments(repo, out, ctx, strict_generated=strict_generated)
     written += export_questions(out, ctx)
     return sorted(written)

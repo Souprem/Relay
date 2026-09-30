@@ -291,9 +291,19 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
     claude_cost = _run_cost(repo, CLAUDE_SPEND, GOLD_CLAUDE)
     jev_cost = _run_cost(repo, JEV_SPEND, GOLD_V3_JEV)
     c, j = rate_display(claude["correct"]), rate_display(jev["correct"])
+    headline = ctx.cost["comparison"]["headline"]
+    ratio = headline["ratio"]
+    [v3_per_case] = [
+        r["jev"]["per_case_text"]
+        for r in ctx.cost["comparison"]["rows"]
+        if r["dataset"] == "gold-v0.1" and r["jev"]["run_id"] == GOLD_V3_JEV
+    ]
+    if (headline["claude"]["run_id"], headline["jev"]["run_id"]) != (GOLD_CLAUDE, GOLD_V2_JEV):
+        raise ExportError("the cost headline no longer pairs the gold Claude and Jev q-v0.2 runs")
     return {
         "id": "frontier-llm",
-        "title": "The gold comparison does not establish a clear model winner.",
+        "title": "At similar gold accuracy and with the same questions, Jev cost about "
+        f"{ratio['fraction_text']} as much per case as {headline['claude']['label']}.",
         "body": [
             _t("On gold, with the same questions, Claude got "),
             _t(f"{claude['correct']['count']}/{claude['correct']['n']}"),
@@ -307,11 +317,15 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
                 f". The 95% intervals on correct actions ({c['ci_text']} and {j['ci_text']}) overlap. "
                 f"This {claude['correct']['n']}-case comparison does not establish equivalence or "
                 "a clear winner. Claude's gold run cost "
-                f"${claude_cost:.2f} at batch prices; Jev's q-v0.3 gold run, with more questions "
-                f"per case, cost ${jev_cost:.4f}."
+                f"${claude_cost:.2f} at batch prices, {headline['claude']['per_case_text']} per "
+                f"case; Jev q-v0.2's gold run cost {headline['jev']['total_text']}, "
+                f"{headline['jev']['per_case_text']} per case, a trace estimate (its run is in no "
+                "ledger; the estimate matches the ledger wherever both exist). Jev's q-v0.3 gold "
+                f"run, with more questions per case, cost ${jev_cost:.4f} in the ledger, "
+                f"{v3_per_case} per case."
             ),
         ],
-        "link": _link("/evals/", "Every run"),
+        "link": _link("/experiments/#cost", "Cost and speed"),
         "source": f"{RESULTS_URL}#gold-set",
         "figures": {
             "claude": {
@@ -328,6 +342,7 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
                 "uar": jev["uar"],
             },
             "jev_q_v0_3_cost_usd": str(jev_cost),
+            "ratio": ratio,
         },
     }
 

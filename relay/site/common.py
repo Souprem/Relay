@@ -38,6 +38,7 @@ class ExportContext:
     loaded_runs: dict[str, LoadedRun] = field(default_factory=dict)
     dataset_cases: dict[str, list[PriorAuthCase]] = field(default_factory=dict)
     run_payloads: dict[str, dict[str, Any]] = field(default_factory=dict)
+    cost: dict[str, Any] = field(default_factory=dict)  # relay.site.cost.build_cost
 
 
 RATE_KEYS = frozenset({"count", "n", "rate", "ci95"})

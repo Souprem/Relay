@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { LineChart } from "@/components/charts/LineChart";
+import { CostBars } from "@/components/cost/CostBars";
 import { RegressionMetrics } from "@/components/gates/RegressionTable";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { PageHeader, Section } from "@/components/ui/Section";
@@ -53,12 +54,16 @@ export default function ExperimentsPage() {
   const sizes = x.parallelism.sizes;
   const abl = ablationStatements(x.ablation.rows);
   const claudeNote = x.ablation.rows.find((r) => r.note)?.note ?? null;
+  const cost = x.cost;
+  const head = cost.comparison.headline;
+  const lat = cost.latency;
   return (
     <>
       <PageHeader eyebrow="Experiments" title="Four changes, each measured before it was believed">
         <p>
           Each section states what was tried, the rule fixed in advance, and what the committed
-          runs show, including the results that did not go the way we hoped.
+          runs show, including the results that did not go the way we hoped. The last section
+          compares what Jev and Claude cost per case, and how fast they answered.
         </p>
       </PageHeader>
 
@@ -331,6 +336,143 @@ export default function ExperimentsPage() {
           </table>
         </TableScroll>
         <MethodLink href={x.ablation.link} />
+          </div>
+        </Disclosure>
+      </Section>
+      <Section
+        id="cost"
+        label={cost.title}
+        title={`On gold with the same questions, ${head.jev.label} cost ${head.jev.per_case_text} per case${head.jev.estimate_label ? ` (${head.jev.estimate_label})` : ""} and ${head.claude.label} ${head.claude.per_case_text} at batch prices: about ${head.ratio.text} more for Claude.`}
+        lede={head.summary}
+      >
+        <CostBars headline={head} />
+        <Disclosure label="Show details" hashIds={["cost"]} variant="inline" className="mt-2">
+          <div className="max-w-prose text-md text-ink-2">
+            Across the datasets both providers ran, Claude cost {cost.comparison.ratio_range.low}× to{" "}
+            {cost.comparison.ratio_range.high}× as much per case as Jev. At the median, Claude (sync) took{" "}
+            {lat.claude_sync.p50_ms.toLocaleString("en-US")} ms per case and Jev {lat.jev_smoke.p50_ms} ms, about{" "}
+            {lat.ratio_p50.text} longer, on a {lat.claude_sync.n}-case sample.
+          </div>
+          <div className="mt-3">
+            <h3 className="text-label font-semibold uppercase text-ink-2">Claude ÷ Jev, per case</h3>
+            <TableScroll>
+              <table className="mt-1 w-full min-w-[40rem]">
+                <thead>
+                  <tr>
+                    <Th>Dataset</Th>
+                    <Th align="right">Claude</Th>
+                    <Th align="right">Jev</Th>
+                    <Th align="right">Ratio</Th>
+                    <Th>Note</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cost.comparison.rows.map((r) => (
+                    <tr key={`${r.dataset}-${r.jev.run_id}`}>
+                      <Td className="whitespace-nowrap font-mono text-sm">{r.dataset}</Td>
+                      <Td num className="whitespace-nowrap">
+                        {r.claude.per_case_text}
+                        <span className="text-ink-3"> · n {r.claude.n}</span>
+                      </Td>
+                      <Td num className="whitespace-nowrap">
+                        {r.jev.per_case_text}
+                        <span className="text-ink-3"> · {r.jev.question_set}</span>
+                      </Td>
+                      <Td num className="font-medium">{r.ratio.text}</Td>
+                      <Td className="text-sm text-ink-2">{r.note ?? ""}</Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroll>
+
+            <h3 className="mt-4 text-label font-semibold uppercase text-ink-2">Every Jev and Claude run</h3>
+            <TableScroll hint>
+              <table className="mt-1 w-full min-w-[60rem]">
+                <thead>
+                  <tr>
+                    <Th>Provider</Th>
+                    <Th>Question set</Th>
+                    <Th>Mode</Th>
+                    <Th>Run</Th>
+                    <Th align="right">Cases</Th>
+                    <Th align="right">Total</Th>
+                    <Th align="right">Per case</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cost.runs.map((r) => (
+                    <tr key={r.run_id} className="hover:bg-paper-2">
+                      <Td className="whitespace-nowrap">{r.provider === "claude" ? head.claude.label : "Jev"}</Td>
+                      <Td className="whitespace-nowrap font-mono text-sm">{r.question_set}</Td>
+                      <Td className="text-sm">{r.mode ?? "—"}</Td>
+                      <Td className="text-sm">
+                        <Link href={`/evals/${r.run_id}/`} className="font-mono underline decoration-rule-strong hover:decoration-ink">
+                          {r.run_id.slice(-6)}
+                        </Link>
+                        <span className="text-ink-3"> · {r.dataset}</span>
+                        <span className="block text-label tracking-normal text-ink-3">{r.source}</span>
+                      </Td>
+                      <Td num>{r.n}</Td>
+                      <Td num>{r.total_text ?? "—"}</Td>
+                      <Td num>{r.per_case_text ?? "—"}</Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroll>
+
+            <h3 className="mt-4 text-label font-semibold uppercase text-ink-2">Latency per case</h3>
+            <TableScroll>
+              <table className="mt-1 w-full min-w-[32rem]">
+                <thead>
+                  <tr>
+                    <Th>Provider</Th>
+                    <Th>Run</Th>
+                    <Th align="right">Cases</Th>
+                    <Th align="right">p50 ms</Th>
+                    <Th align="right">p95 ms</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[lat.claude_sync, lat.jev_smoke].map((s) => (
+                    <tr key={s.run_id}>
+                      <Td>
+                        {s.label}
+                        {s === lat.claude_sync ? <span className="text-ink-3"> (sync)</span> : null}
+                      </Td>
+                      <Td className="text-sm">
+                        <Link href={`/evals/${s.run_id}/`} className="font-mono underline decoration-rule-strong hover:decoration-ink">
+                          {s.run_id.slice(-6)}
+                        </Link>
+                        <span className="text-ink-3"> · {s.dataset}</span>
+                      </Td>
+                      <Td num>{s.n}</Td>
+                      <Td num>{s.p50_ms.toLocaleString("en-US")}</Td>
+                      <Td num>{s.p95_ms.toLocaleString("en-US")}</Td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableScroll>
+            <p className="mt-2 max-w-prose text-md text-ink-2">
+              {lat.summary}{" "}
+              <Link href="#parallelism" className="underline hover:text-ink">The bench</Link>.
+            </p>
+
+            <p className="mt-3 max-w-prose text-md text-ink-2">
+              Total spend: Claude {cost.totals.claude_ledger_text} (ledger); Jev {cost.totals.jev_total_text} (
+              {cost.totals.jev_ledger_text} in the Phase 3D ledger and {cost.totals.jev_trace_estimate_text} in
+              trace estimates for the Phase 2 runs).
+            </p>
+
+            <h3 className="mt-4 text-label font-semibold uppercase text-ink-2">Caveats</h3>
+            <ul className="mt-1 max-w-prose list-disc pl-2 text-md text-ink-2">
+              {cost.caveats.map((c) => (
+                <li key={c} className="mt-0.5">{c}</li>
+              ))}
+            </ul>
+            <MethodLink href={cost.link} />
           </div>
         </Disclosure>
       </Section>

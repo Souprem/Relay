@@ -12,7 +12,7 @@ from types import ModuleType
 from typing import Any
 
 from relay.evaluation.regression import RegressionResult
-from relay.site.common import ExportError, read_json, write_json
+from relay.site.common import ExportContext, ExportError, read_json, write_json
 from relay.site.gates import regression_json
 from relay.site.registry import CLAUDE_150, CLAUDE_150_NOTE, RESULTS_URL
 
@@ -191,8 +191,11 @@ def ablation_section(repo: Path) -> dict[str, Any]:
     }
 
 
-def export_experiments(repo: Path, out: Path, *, strict_generated: bool) -> list[Path]:
+def export_experiments(
+    repo: Path, out: Path, ctx: ExportContext, *, strict_generated: bool
+) -> list[Path]:
     payload = {
+        "cost": ctx.cost | {"title": "Cost and speed"},
         "qv03": qv03_section(repo, strict_generated=strict_generated),
         "shift": shift_section(repo),
         "parallelism": parallelism_section(repo),
