@@ -35,12 +35,18 @@ GOLD = "gold-v0.1"
 GOLD_CLAUDE = "run_20260926T011730Z_f1852f"
 GOLD_V2_JEV = "run_20260925T170857Z_b95be9"
 GOLD_V3_JEV = "run_20260927T072623Z_ad6f44"
-# The headline pairs Claude with Jev's costlier question set, whose cost is in a ledger.
-HEADLINE_JEV = GOLD_V3_JEV
+# The headline is like for like: the same gold cases and the same questions (q-v0.2), the
+# 93/100 against 91/100 accuracy pairing. Jev q-v0.2's gold cost is a trace estimate.
+HEADLINE_JEV = GOLD_V2_JEV
 # (dataset, Claude run, Jev run, note) for the per-dataset cost ratios.
 PAIRS: tuple[tuple[str, str, str, str | None], ...] = (
-    (GOLD, GOLD_CLAUDE, GOLD_V3_JEV, "Jev's costlier question set; the headline pair."),
-    (GOLD, GOLD_CLAUDE, GOLD_V2_JEV, "The same question set Claude was asked."),
+    (
+        GOLD,
+        GOLD_CLAUDE,
+        GOLD_V2_JEV,
+        "The same questions Claude was asked; the headline pair. Jev's cost is a trace estimate.",
+    ),
+    (GOLD, GOLD_CLAUDE, GOLD_V3_JEV, "Jev's costlier question set; its cost is in the ledger."),
     ("gen-v0.2-dev", "run_20260925T191752Z_288946", "run_20260925T071231Z_6f0b73", None),
     (
         "gen-v0.2-holdout",
@@ -231,6 +237,8 @@ def _side(ctx: ExportContext, costs: dict[str, dict[str, Any]], run_id: str) -> 
         "per_case_short": usd_sig(Decimal(cost["per_case_usd"]), 2),
         "total_text": cost["total_text"],
         "source": cost["source"],
+        "kind": cost["kind"],
+        "estimate_label": "trace estimate" if cost["kind"] == "trace-estimate" else None,
         "correct": payload["metrics"]["correct"],
     }
 
@@ -255,13 +263,19 @@ def comparison(ctx: ExportContext, costs: dict[str, dict[str, Any]]) -> dict[str
             }
         )
     headline = next(r for r in rows if r["dataset"] == GOLD and r["jev"]["run_id"] == HEADLINE_JEV)
-    same_questions = next(
-        r for r in rows if r["dataset"] == GOLD and r["jev"]["run_id"] == GOLD_V2_JEV
-    )
+    ledgered = next(r for r in rows if r["dataset"] == GOLD and r["jev"]["run_id"] == GOLD_V3_JEV)
     ratios = [r["ratio"]["rounded"] for r in rows]
     claude, jev = headline["claude"], headline["jev"]
-    c = rate_display(claude["correct"])
-    j2 = rate_display(same_questions["jev"]["correct"])
+    if claude["question_set"].split("+")[0] != jev["question_set"]:
+        raise ExportError("the headline pair no longer shares a question set")
+    c, j = rate_display(claude["correct"]), rate_display(jev["correct"])
+    estimate = f" ({jev['estimate_label']})" if jev["estimate_label"] else ""
+    note = (
+        f"{jev['label']}'s gold run is in no ledger, so its cost is the sum of its traces' "
+        "estimated cost, which matches the ledger wherever a Jev run is in one."
+        if jev["estimate_label"]
+        else ""
+    )
     return {
         "dataset": GOLD,
         "headline": {
@@ -269,20 +283,22 @@ def comparison(ctx: ExportContext, costs: dict[str, dict[str, Any]]) -> dict[str
             "jev": jev,
             "ratio": headline["ratio"],
             "text": (
-                f"Cost per case on gold: Jev {jev['per_case_short']} · {CLAUDE_LABEL} "
-                f"{claude['per_case_short']} (batch), about {headline['ratio']['text']} more, at "
-                "similar gold accuracy."
+                f"Cost per case on gold, same questions: {jev['label']} {jev['per_case_text']}"
+                f"{estimate} · {CLAUDE_LABEL} {claude['per_case_text']} (batch), about "
+                f"{headline['ratio']['text']} more, at similar gold accuracy."
             ),
+            "estimate_note": note or None,
             "summary": (
-                f"On the same {claude['n']} gold cases, {CLAUDE_LABEL} cost "
-                f"{claude['per_case_text']} per case at batch prices and Jev "
-                f"{jev['question_set']} {jev['per_case_text']}, about "
-                f"{headline['ratio']['text']} less. Their correct actions "
-                f"({claude['correct']['count']}/{claude['correct']['n']} for Claude, "
-                f"{same_questions['jev']['correct']['count']}/"
-                f"{same_questions['jev']['correct']['n']} for Jev q-v0.2 with the same questions) "
-                f"have overlapping 95% intervals ({c['ci_text']} and {j2['ci_text']})."
-            ),
+                f"On the same {claude['n']} gold cases with the same questions, {CLAUDE_LABEL} "
+                f"cost {claude['per_case_text']} per case at batch prices and {jev['label']} "
+                f"{jev['per_case_text']}: Claude cost about {headline['ratio']['text']} as much. "
+                "Their correct "
+                f"actions ({claude['correct']['count']}/{claude['correct']['n']} and "
+                f"{jev['correct']['count']}/{jev['correct']['n']}) have overlapping 95% intervals "
+                f"({c['ci_text']} and {j['ci_text']}). {note} {ledgered['jev']['label']}, whose "
+                f"gold run is in the ledger, cost {ledgered['jev']['per_case_text']} per case, "
+                f"so Claude cost {ledgered['ratio']['text']} as much."
+            ).replace("  ", " "),
         },
         "rows": rows,
         "ratio_range": {"low": min(ratios), "high": max(ratios)},

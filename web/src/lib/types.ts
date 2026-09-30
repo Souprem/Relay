@@ -109,6 +109,8 @@ export interface CostSide {
   per_case_short: string;
   total_text: string;
   source: string;
+  kind: RunCost["kind"];
+  estimate_label: string | null;
   correct: Rate;
 }
 
@@ -132,7 +134,14 @@ export interface LatencySample {
 export interface CostData {
   comparison: {
     dataset: string;
-    headline: { claude: CostSide; jev: CostSide; ratio: CostRatio; text: string; summary: string };
+    headline: {
+      claude: CostSide;
+      jev: CostSide;
+      ratio: CostRatio;
+      text: string;
+      estimate_note: string | null;
+      summary: string;
+    };
     rows: { dataset: string; claude: CostSide; jev: CostSide; ratio: CostRatio; note: string | null }[];
     ratio_range: { low: number; high: number };
   };

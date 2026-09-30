@@ -27,15 +27,19 @@ function side(label: string, perCase: string, short: string, text: string, mode:
     per_case_short: short,
     total_text: "$1",
     source: "ledger",
+    kind: (label.startsWith("Jev") ? "trace-estimate" : "ledger") as "trace-estimate" | "ledger",
+    estimate_label: label.startsWith("Jev") ? "trace estimate" : null,
     correct: rate,
   };
 }
 
 const headline: CostData["comparison"]["headline"] = {
   claude: side("Claude Opus 5", "0.01560455", "$0.016", "$0.0156", "batch"),
-  jev: side("Jev q-v0.3", "0.00017497", "$0.00017", "$0.000175", "sync"),
-  ratio: { value: 89.18, rounded: 89, text: "89×", fraction_text: "1/89th" },
-  text: "Cost per case on gold: Jev $0.00017 · Claude Opus 5 $0.016 (batch), about 89× more, at similar gold accuracy.",
+  jev: side("Jev q-v0.2", "0.00011513082", "$0.00012", "$0.000115", "sync"),
+  ratio: { value: 135.54, rounded: 136, text: "136×", fraction_text: "1/136th" },
+  text:
+    "Cost per case on gold, same questions: Jev q-v0.2 $0.000115 (trace estimate) · Claude Opus 5 $0.0156 (batch), about 136× more, at similar gold accuracy.",
+  estimate_note: "From the traces' estimated cost.",
   summary: "",
 };
 
@@ -53,9 +57,10 @@ describe("CostBars", () => {
     const bars = [...container.querySelectorAll<HTMLElement>("dd span[style]")];
     expect(bars.map((b) => b.style.width)).toEqual([
       "max(2px, 100%)",
-      `max(2px, ${(0.00017497 / 0.01560455) * 100}%)`,
+      `max(2px, ${(0.00011513082 / 0.01560455) * 100}%)`,
     ]);
     expect(screen.getByText("$0.0156")).toBeInTheDocument();
-    expect(screen.getByText("$0.000175")).toBeInTheDocument();
+    expect(screen.getByText("$0.000115")).toBeInTheDocument();
+    expect(screen.getByText("Jev q-v0.2, sync (trace estimate)")).toBeInTheDocument();
   });
 });

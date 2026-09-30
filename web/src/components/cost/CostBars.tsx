@@ -10,12 +10,17 @@ export function CostBars({ headline }: { headline: CostData["comparison"]["headl
   const max = Math.max(Number(claude.per_case_usd), Number(jev.per_case_usd));
   const rows = [
     { key: "claude", label: `${claude.label}, ${claude.mode}`, side: claude, tone: "bg-ink-3" },
-    { key: "jev", label: `${jev.label}, ${jev.mode}`, side: jev, tone: "bg-ink" },
+    {
+      key: "jev",
+      label: `${jev.label}, ${jev.mode}${jev.estimate_label ? ` (${jev.estimate_label})` : ""}`,
+      side: jev,
+      tone: "bg-ink",
+    },
   ];
   return (
     <figure className="max-w-[40rem]">
       <figcaption className="text-label font-semibold uppercase text-ink-2">
-        Cost per case on {headline.claude.n} gold cases · linear scale from $0
+        Cost per case on {headline.claude.n} gold cases, same questions · linear scale from $0
       </figcaption>
       <dl className="mt-1 grid grid-cols-[minmax(0,1fr)] gap-y-1 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-x-2">
         {rows.map((r) => {

@@ -342,7 +342,7 @@ export default function ExperimentsPage() {
       <Section
         id="cost"
         label={cost.title}
-        title={`On gold, Jev cost ${head.jev.per_case_text} per case and ${head.claude.label} ${head.claude.per_case_text} at batch prices: about ${head.ratio.text} more for Claude.`}
+        title={`On gold with the same questions, ${head.jev.label} cost ${head.jev.per_case_text} per case${head.jev.estimate_label ? ` (${head.jev.estimate_label})` : ""} and ${head.claude.label} ${head.claude.per_case_text} at batch prices: about ${head.ratio.text} more for Claude.`}
         lede={head.summary}
       >
         <CostBars headline={head} />

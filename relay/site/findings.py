@@ -293,12 +293,17 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
     c, j = rate_display(claude["correct"]), rate_display(jev["correct"])
     headline = ctx.cost["comparison"]["headline"]
     ratio = headline["ratio"]
-    if (headline["claude"]["run_id"], headline["jev"]["run_id"]) != (GOLD_CLAUDE, GOLD_V3_JEV):
-        raise ExportError("the cost headline no longer pairs the gold Claude and Jev q-v0.3 runs")
+    [v3_per_case] = [
+        r["jev"]["per_case_text"]
+        for r in ctx.cost["comparison"]["rows"]
+        if r["dataset"] == "gold-v0.1" and r["jev"]["run_id"] == GOLD_V3_JEV
+    ]
+    if (headline["claude"]["run_id"], headline["jev"]["run_id"]) != (GOLD_CLAUDE, GOLD_V2_JEV):
+        raise ExportError("the cost headline no longer pairs the gold Claude and Jev q-v0.2 runs")
     return {
         "id": "frontier-llm",
-        "title": f"At similar gold accuracy, Jev cost about {ratio['fraction_text']} as much per "
-        f"case as {headline['claude']['label']}.",
+        "title": "At similar gold accuracy and with the same questions, Jev cost about "
+        f"{ratio['fraction_text']} as much per case as {headline['claude']['label']}.",
         "body": [
             _t("On gold, with the same questions, Claude got "),
             _t(f"{claude['correct']['count']}/{claude['correct']['n']}"),
@@ -313,8 +318,11 @@ def frontier_finding(repo: Path, ctx: ExportContext) -> dict[str, Any]:
                 f"This {claude['correct']['n']}-case comparison does not establish equivalence or "
                 "a clear winner. Claude's gold run cost "
                 f"${claude_cost:.2f} at batch prices, {headline['claude']['per_case_text']} per "
-                "case; Jev's q-v0.3 gold run, with more questions per case, cost "
-                f"${jev_cost:.4f}, {headline['jev']['per_case_text']} per case."
+                f"case; Jev q-v0.2's gold run cost {headline['jev']['total_text']}, "
+                f"{headline['jev']['per_case_text']} per case, a trace estimate (its run is in no "
+                "ledger; the estimate matches the ledger wherever both exist). Jev's q-v0.3 gold "
+                f"run, with more questions per case, cost ${jev_cost:.4f} in the ledger, "
+                f"{v3_per_case} per case."
             ),
         ],
         "link": _link("/experiments/#cost", "Cost and speed"),

@@ -11,9 +11,10 @@ export function CostLine({ headline }: { headline: CostData["comparison"]["headl
   return (
     <p className="mt-3 border-t border-rule pt-1.5 text-md text-ink-2">
       <span data-testid="cost-sentence">
-        <span className="text-ink">Cost per case on gold:</span> Jev{" "}
-        <span className="num text-ink">{jev.per_case_short}</span> · {claude.label}{" "}
-        <span className="num text-ink">{claude.per_case_short}</span> (batch), about{" "}
+        <span className="text-ink">Cost per case on gold, same questions:</span> <span className="whitespace-nowrap">{jev.label}</span>{" "}
+        <span className="num text-ink">{jev.per_case_text}</span>
+        {jev.estimate_label ? <span title={headline.estimate_note ?? undefined}> ({jev.estimate_label})</span> : null} ·{" "}
+        {claude.label} <span className="num text-ink">{claude.per_case_text}</span> (batch), about{" "}
         <span className="num font-medium text-ink">{ratio.text}</span> more, at similar gold accuracy.
       </span>{" "}
       <Link

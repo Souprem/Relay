@@ -120,30 +120,46 @@ def test_unledgered_jev_runs_use_their_trace_estimates_and_free_runs_cost_nothin
     assert costs[JEV_GOLD_V2]["per_case_text"] == "$0.000115"
 
 
-def test_the_headline_ratio_is_computed_from_the_gold_ledger_entries(site_export):
+def test_the_headline_ratio_is_like_for_like_on_gold(site_export):
     headline = _cost(site_export)["comparison"]["headline"]
     claude = Decimal(_entry("claude-spend.json", CLAUDE_GOLD)["cost_usd"]) / 100
-    jev = Decimal(_entry("jev-spend-3d.json", JEV_GOLD_V3)["cost_usd"]) / 100
+    jev = _trace_cost(JEV_GOLD_V2) / 100
     ratio = claude / jev
     assert headline["claude"]["run_id"] == CLAUDE_GOLD
-    assert headline["jev"]["run_id"] == JEV_GOLD_V3
+    assert headline["jev"]["run_id"] == JEV_GOLD_V2
+    assert headline["jev"]["question_set"] == "q-v0.2"
+    assert headline["claude"]["question_set"].startswith("q-v0.2+")
+    assert headline["jev"]["kind"] == "trace-estimate"
+    assert headline["jev"]["estimate_label"] == "trace estimate"
     assert headline["ratio"]["value"] == float(ratio)
-    assert headline["ratio"]["rounded"] == round(ratio) == 89
-    assert headline["ratio"]["text"] == "89×"
-    assert headline["ratio"]["fraction_text"] == "1/89th"
+    assert headline["ratio"]["rounded"] == round(ratio) == 136
+    assert headline["ratio"]["text"] == "136×"
+    assert headline["ratio"]["fraction_text"] == "1/136th"
     assert (
-        (headline["jev"]["per_case_short"], headline["claude"]["per_case_short"])
+        (headline["jev"]["per_case_text"], headline["claude"]["per_case_text"])
         == (
-            usd_sig(jev, 2),
-            usd_sig(claude, 2),
+            usd_sig(jev),
+            usd_sig(claude),
         )
-        == ("$0.00017", "$0.016")
+        == ("$0.000115", "$0.0156")
     )
     assert headline["text"] == (
-        "Cost per case on gold: Jev $0.00017 · Claude Opus 5 $0.016 (batch), about 89× more, "
-        "at similar gold accuracy."
+        "Cost per case on gold, same questions: Jev q-v0.2 $0.000115 (trace estimate) · "
+        "Claude Opus 5 $0.0156 (batch), about 136× more, at similar gold accuracy."
     )
+    assert "estimated cost" in headline["estimate_note"]
     assert _counts(headline["claude"]["correct"]) == (93, 100)
+    assert _counts(headline["jev"]["correct"]) == (91, 100)
+
+
+def test_the_ledgered_q_v0_3_row_stays_in_the_comparison(site_export):
+    rows = _cost(site_export)["comparison"]["rows"]
+    [row] = [r for r in rows if r["dataset"] == "gold-v0.1" and r["jev"]["run_id"] == JEV_GOLD_V3]
+    claude = Decimal(_entry("claude-spend.json", CLAUDE_GOLD)["cost_usd"])
+    jev = Decimal(_entry("jev-spend-3d.json", JEV_GOLD_V3)["cost_usd"])
+    assert row["ratio"]["value"] == float(claude / jev)
+    assert row["ratio"]["text"] == "89×"
+    assert row["jev"]["kind"] == "ledger" and row["jev"]["estimate_label"] is None
 
 
 def _counts(rate: dict) -> tuple[int, int]:
@@ -158,6 +174,7 @@ def test_every_comparison_row_divides_the_exported_per_case_costs(site_export):
         assert row["ratio"]["rounded"] == round(ratio)
         assert row["claude"]["mode"] == "batch"
     assert rows[("gold-v0.1", JEV_GOLD_V2)]["ratio"]["text"] == "136×"
+    assert rows[("gold-v0.1", JEV_GOLD_V3)]["ratio"]["text"] == "89×"
     assert rows[("gen-v0.2-dev", "run_20260925T071231Z_6f0b73")]["ratio"]["text"] == "98×"
     assert rows[("gen-v0.2-holdout", "run_20260925T075242Z_fd455f")]["ratio"]["text"] == "146×"
     assert comparison["ratio_range"] == {"low": 89, "high": 146}
@@ -224,8 +241,8 @@ def test_the_frontier_finding_title_leads_with_the_exported_ratio(site_export):
     finding = next(f for f in index["findings"] if f["id"] == "frontier-llm")
     ratio = index["cost"]["comparison"]["headline"]["ratio"]
     assert finding["title"] == (
-        f"At similar gold accuracy, Jev cost about {ratio['fraction_text']} as much per case as "
-        "Claude Opus 5."
+        "At similar gold accuracy and with the same questions, Jev cost about "
+        f"{ratio['fraction_text']} as much per case as Claude Opus 5."
     )
     assert finding["figures"]["ratio"] == ratio
     assert finding["link"]["href"] == "/experiments/#cost"
@@ -266,6 +283,7 @@ def test_the_readme_cost_section_quotes_the_exported_strings(site_export):
     section = _readme_cost()
     flat = _flat(section)
     assert cost["comparison"]["headline"]["text"] in flat
+    assert _flat(cost["comparison"]["headline"]["estimate_note"]) in flat
     assert _flat(cost["latency"]["summary"]) in flat
     for caveat in cost["caveats"]:
         assert _flat(caveat) in flat, caveat
